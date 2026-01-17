@@ -1,0 +1,411 @@
+version: '3.8'
+
+services:
+  # Hardened PostgreSQL with Security Features
+  postgres-security:
+    image: postgres:15-alpine
+    container_name: postgres-security
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${SECURITY_DATABASE_NAME:-ecommerce_security}
+      POSTGRES_USER: ${SECURITY_DATABASE_USER:-security_user}
+      POSTGRES_PASSWORD: ${SECURITY_DATABASE_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    volumes:
+      - postgres_security_data:/var/lib/postgresql/data
+      - ./security/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./security/postgresql.conf:/etc/postgresql/postgresql.conf
+    networks:
+      - security-backend
+    ports:
+      - "${SECURITY_DB_PORT:-5433}:5432"
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis with Security Configuration
+  redis-security:
+    image: redis:7-alpine
+    container_name: redis-security
+    restart: unless-stopped
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass ${REDIS_SECURITY_PASSWORD}
+    volumes:
+      - redis_security_data:/data
+      - ./security/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - security-backend
+    ports:
+      - "${REDIS_SECURITY_PORT:-6380}:6379"
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+    user: "999:999"
+
+  # Security API Service
+  security-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.security
+    container_name: security-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${SECURITY_DATABASE_USER:-security_user}:${SECURITY_DATABASE_PASSWORD}@postgres-security:5432/${SECURITY_DATABASE_NAME:-ecommerce_security}
+      REDIS_URL: redis://:${REDIS_SECURITY_PASSWORD}@redis-security:6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      MFA_SECRET_KEY: ${MFA_SECRET_KEY}
+      SECURITY_LOG_LEVEL: info
+      RATE_LIMIT_WINDOW_MS: 900000
+      RATE_LIMIT_MAX_REQUESTS: 100
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      WAF_ENABLED: true
+      SECURITY_HEADERS_ENABLED: true
+      SESSION_SECRET: ${SESSION_SECRET}
+      API_KEY_ENCRYPTION_KEY: ${API_KEY_ENCRYPTION_KEY}
+    volumes:
+      - ./security/certs:/app/certs:ro
+      - ./security/logs:/app/logs
+    networks:
+      - security-backend
+      - security-frontend
+    ports:
+      - "${SECURITY_API_PORT:-3001}:3000"
+    depends_on:
+      - postgres-security
+      - redis-security
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/uploads
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Web Application Firewall (ModSecurity)
+  waf:
+    image: owasp/modsecurity-crs:nginx
+    container_name: waf
+    restart: unless-stopped
+    volumes:
+      - ./security/modsecurity.conf:/etc/nginx/modsecurity.d/modsecurity.conf:ro
+      - ./security/crs-setup.conf:/etc/nginx/modsecurity.d/crs-setup.conf:ro
+      - ./security/nginx-waf.conf:/etc/nginx/nginx.conf:ro
+      - ./security/logs:/var/log/nginx
+    networks:
+      - security-frontend
+      - security-backend
+    ports:
+      - "${WAF_PORT:-8080}:80"
+      - "${WAF_SSL_PORT:-8443}:443"
+    depends_on:
+      - security-api
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+
+  # Security Monitoring (ELK Stack)
+  elasticsearch-security:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch-security
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=${ELASTIC_SECURITY_PASSWORD}
+      - xpack.security.transport.ssl.enabled=false
+      - xpack.security.http.ssl.enabled=false
+    volumes:
+      - elasticsearch_security_data:/usr/share/elasticsearch/data
+      - ./security/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    networks:
+      - security-backend
+    ports:
+      - "${ELASTICSEARCH_SECURITY_PORT:-9201}:9200"
+    security_opt:
+      - no-new-privileges:true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  logstash-security:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: logstash-security
+    restart: unless-stopped
+    environment:
+      - "LS_JAVA_OPTS=-Xmx512m -Xms512m"
+    volumes:
+      - ./security/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - ./security/logs:/var/log/security:ro
+    networks:
+      - security-backend
+    depends_on:
+      - elasticsearch-security
+    security_opt:
+      - no-new-privileges:true
+
+  kibana-security:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana-security
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch-security:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_SECURITY_PASSWORD}
+    volumes:
+      - ./security/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    networks:
+      - security-backend
+    ports:
+      - "${KIBANA_SECURITY_PORT:-5602}:5601"
+    depends_on:
+      - elasticsearch-security
+    security_opt:
+      - no-new-privileges:true
+
+  # Security Scanning Service
+  security-scanner:
+    image: owasp/zap2docker-stable
+    container_name: security-scanner
+    restart: "no"
+    command: zap.sh -daemon -host 0.0.0.0 -port 8090 -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true
+    networks:
+      - security-backend
+    ports:
+      - "${ZAP_PORT:-8090}:8090"
+    volumes:
+      - ./security/scans:/zap/wrk
+    security_opt:
+      - no-new-privileges:true
+    profiles:
+      - scanning
+
+  # Vulnerability Scanner (Trivy)
+  vulnerability-scanner:
+    image: aquasec/trivy:latest
+    container_name: vulnerability-scanner
+    restart: "no"
+    command: server --listen 0.0.0.0 --port 8081
+    networks:
+      - security-backend
+    ports:
+      - "${TRIVY_PORT:-8081}:8081"
+    volumes:
+      - trivy_cache:/root/.cache/trivy
+      - ./security/reports:/reports
+    security_opt:
+      - no-new-privileges:true
+    profiles:
+      - scanning
+
+  # Secret Management (HashiCorp Vault)
+  vault:
+    image: vault:1.15.0
+    container_name: vault
+    restart: unless-stopped
+    environment:
+      VAULT_ADDR: http://0.0.0.0:8200
+      VAULT_API_ADDR: http://0.0.0.0:8200
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_ROOT_TOKEN}
+    volumes:
+      - vault_data:/vault/data
+      - ./security/vault-config:/vault/config
+    networks:
+      - security-backend
+    ports:
+      - "${VAULT_PORT:-8201}:8200"
+    security_opt:
+      - no-new-privileges:true
+    cap_add:
+      - IPC_LOCK
+    command: server -config=/vault/config/vault.hcl
+
+  # Intrusion Detection System (Suricata)
+  ids:
+    image: jasonish/suricata:latest
+    container_name: ids
+    restart: unless-stopped
+    environment:
+      - SURICATA_INTERFACE=eth0
+    volumes:
+      - ./security/suricata.yaml:/etc/suricata/suricata.yaml:ro
+      - ./security/logs:/var/log/suricata
+    networks:
+      - security-backend
+      - security-monitoring
+    security_opt:
+      - no-new-privileges:true
+    cap_add:
+      - NET_ADMIN
+      - SYS_NICE
+      - SYS_RESOURCE
+    profiles:
+      - ids
+
+  # Security Metrics (Prometheus)
+  prometheus-security:
+    image: prom/prometheus:latest
+    container_name: prometheus-security
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./security/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_security_data:/prometheus
+    networks:
+      - security-backend
+    ports:
+      - "${PROMETHEUS_SECURITY_PORT:-9091}:9090"
+    security_opt:
+      - no-new-privileges:true
+
+  # Security Dashboard (Grafana)
+  grafana-security:
+    image: grafana/grafana:latest
+    container_name: grafana-security
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_SECURITY_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_SECURITY_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_security_data:/var/lib/grafana
+      - ./security/grafana/provisioning:/etc/grafana/provisioning
+      - ./security/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - security-backend
+    ports:
+      - "${GRAFANA_SECURITY_PORT:-3002}:3000"
+    depends_on:
+      - prometheus-security
+    security_opt:
+      - no-new-privileges:true
+    user: "472:472"
+
+  # Certificate Management (Certbot)
+  certbot:
+    image: certbot/certbot:latest
+    container_name: certbot
+    restart: "no"
+    volumes:
+      - ./security/certbot/conf:/etc/letsencrypt
+      - ./security/certbot/www:/var/www/certbot
+    command: certonly --webroot --webroot-path=/var/www/certbot --email ${CERTBOT_EMAIL} --agree-tos --no-eff-email -d ${DOMAIN_NAME}
+    profiles:
+      - certificates
+
+  # Security Backup Service
+  security-backup:
+    image: alpine:latest
+    container_name: security-backup
+    restart: "no"
+    environment:
+      BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-0 2 * * *}
+      S3_BUCKET: ${BACKUP_S3_BUCKET}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - postgres_security_data:/backup/postgres
+      - elasticsearch_security_data:/backup/elasticsearch
+      - vault_data:/backup/vault
+      - ./security/backup-script.sh:/backup/backup-script.sh:ro
+    command: sh -c "chmod +x /backup/backup-script.sh && crond -f"
+    security_opt:
+      - no-new-privileges:true
+    profiles:
+      - backup
+
+  # Security Testing Service
+  security-tests:
+    build:
+      context: ./security/tests
+      dockerfile: Dockerfile
+    container_name: security-tests
+    restart: "no"
+    environment:
+      TARGET_URL: http://security-api:3000
+      ZAP_API_KEY: ${ZAP_API_KEY}
+      TEST_SCHEDULE: ${TEST_SCHEDULE:-0 3 * * *}
+    volumes:
+      - ./security/test-results:/app/results
+    networks:
+      - security-backend
+    depends_on:
+      - security-api
+    security_opt:
+      - no-new-privileges:true
+    profiles:
+      - testing
+
+networks:
+  security-backend:
+    driver: bridge
+    internal: true
+  security-frontend:
+    driver: bridge
+  security-monitoring:
+    driver: bridge
+
+volumes:
+  postgres_security_data:
+    driver: local
+  redis_security_data:
+    driver: local
+  elasticsearch_security_data:
+    driver: local
+  vault_data:
+    driver: local
+  prometheus_security_data:
+    driver: local
+  grafana_security_data:
+    driver: local
+  trivy_cache:
+    driver: local

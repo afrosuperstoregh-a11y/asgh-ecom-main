@@ -1,0 +1,131 @@
+# Test Environment Docker Compose Configuration
+# Used for CI/CD integration testing
+
+version: '3.8'
+
+services:
+  # Test Database
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: postgres-test
+    environment:
+      - POSTGRES_DB=ecommerce_test
+      - POSTGRES_USER=test_user
+      - POSTGRES_PASSWORD=test_password
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    networks:
+      - test
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Test Redis
+  redis-test:
+    image: redis:7-alpine
+    container_name: redis-test
+    command: redis-server --requirepass test_password
+    volumes:
+      - redis_test_data:/data
+    networks:
+      - test
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Test Elasticsearch
+  elasticsearch-test:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch-test
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_test_data:/usr/share/elasticsearch/data
+    networks:
+      - test
+    ports:
+      - "9201:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Test API Service
+  api-test:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      target: runner
+    container_name: api-test
+    environment:
+      - NODE_ENV=test
+      - DATABASE_URL=postgresql://test_user:test_password@postgres-test:5432/ecommerce_test
+      - REDIS_URL=redis://:test_password@redis-test:6379
+      - ELASTICSEARCH_URL=http://elasticsearch-test:9200
+      - JWT_SECRET=test-jwt-secret
+      - STRIPE_SECRET_KEY=test-stripe-key
+      - SENDGRID_API_KEY=test-sendgrid-key
+      - TWILIO_ACCOUNT_SID=test-twilio-sid
+      - TWILIO_AUTH_TOKEN=test-twilio-token
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+      elasticsearch-test:
+        condition: service_healthy
+    networks:
+      - test
+    ports:
+      - "3002:3001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Test Client Service
+  client-test:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: runner
+    container_name: client-test
+    environment:
+      - NODE_ENV=test
+      - NEXT_PUBLIC_APP_URL=http://localhost:3003
+      - API_URL=http://api-test:3001
+    depends_on:
+      - api-test
+    networks:
+      - test
+    ports:
+      - "3003:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  test:
+    driver: bridge
+
+volumes:
+  postgres_test_data:
+    driver: local
+  redis_test_data:
+    driver: local
+  elasticsearch_test_data:
+    driver: local

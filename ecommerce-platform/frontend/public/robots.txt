@@ -1,0 +1,46 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout/
+Disallow: /account/
+Disallow: /cart/
+Disallow: /wishlist/
+Disallow: /search/
+
+# Sitemap location
+Sitemap: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'}/sitemap.xml
+
+# Crawl-delay: 10
+# Uncomment above and set appropriate crawl delay if needed
+
+# Additional rules for specific bots
+User-agent: Googlebot
+Allow: /*
+Disallow: /api/
+Disallow: /admin/
+
+# Block AI bots
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: GPTBot
+Disallow: /
+
+# Development environments
+User-agent: *
+Disallow: /*?*
+Allow: /*?s=*
+
+# Block image hotlinking
+# RewriteRule \.(jpe?g|gif|bmp|png)$ - [F,NC,L]
+
+# Block common exploits
+# Block SQL injection
+RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2})
+RewriteRule ^(.*)$ index.php [F,L]

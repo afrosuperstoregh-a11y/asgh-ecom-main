@@ -1,0 +1,160 @@
+# Security Monitoring Configuration for Prometheus
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "security-alerts.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Security API Metrics
+  - job_name: 'security-api'
+    static_configs:
+      - targets: ['security-api:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Web Application Firewall Metrics
+  - job_name: 'waf'
+    static_configs:
+      - targets: ['waf:8080']
+    metrics_path: '/nginx_status'
+    scrape_interval: 10s
+
+  # Intrusion Detection System
+  - job_name: 'ids'
+    static_configs:
+      - targets: ['ids:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Security Scanner Metrics
+  - job_name: 'security-scanner'
+    static_configs:
+      - targets: ['security-scanner:8090']
+    metrics_path: '/JSON'
+    scrape_interval: 60s
+
+  # Vulnerability Scanner Metrics
+  - job_name: 'vulnerability-scanner'
+    static_configs:
+      - targets: ['vulnerability-scanner:8081']
+    metrics_path: '/metrics'
+    scrape_interval: 300s
+
+  # Vault Metrics
+  - job_name: 'vault'
+    static_configs:
+      - targets: ['vault:8200']
+    metrics_path: '/v1/sys/metrics'
+    scrape_interval: 30s
+    scheme: https
+    tls_config:
+      insecure_skip_verify: true
+
+  # PostgreSQL Security Metrics
+  - job_name: 'postgres-security'
+    static_configs:
+      - targets: ['postgres-security:5433']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Redis Security Metrics
+  - job_name: 'redis-security'
+    static_configs:
+      - targets: ['redis-security:6380']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Elasticsearch Security Metrics
+  - job_name: 'elasticsearch-security'
+    static_configs:
+      - targets: ['elasticsearch-security:9201']
+    metrics_path: '/_prometheus/metrics'
+    scrape_interval: 30s
+
+  # Node Exporter for System Security Metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 10s
+
+  # Process Exporter for Security Process Monitoring
+  - job_name: 'process-exporter'
+    static_configs:
+      - targets: ['process-exporter:9256']
+    scrape_interval: 10s
+
+  # Custom Security Metrics Exporter
+  - job_name: 'security-metrics'
+    static_configs:
+      - targets: ['security-metrics:9464']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+# Recording rules for security metrics
+recording_rules:
+  - name: security.rules
+    rules:
+      # Authentication failure rate
+      - record: security:auth_failures_rate
+        expr: rate(security_events_total{type="LOGIN_FAILURE"}[5m])
+        
+      # MFA failure rate
+      - record: security:mfa_failures_rate
+        expr: rate(security_events_total{type="MFA_CHALLENGE",outcome="FAILED"}[5m])
+        
+      # Suspicious login attempts
+      - record: security:suspicious_logins_rate
+        expr: rate(security_events_total{type="SUSPICIOUS_LOGIN"}[5m])
+        
+      # Data access requests
+      - record: security:data_access_requests_rate
+        expr: rate(security_events_total{type="DATA_ACCESS"}[5m])
+        
+      # Security policy violations
+      - record: security:policy_violations_rate
+        expr: rate(security_events_total{type="SECURITY_POLICY_VIOLATION"}[5m])
+        
+      # WAF blocked requests
+      - record: security:waf_blocked_rate
+        expr: rate(nginx_http_requests_total{status=~"4.."}[5m])
+        
+      # Session anomalies
+      - record: security:session_anomalies_rate
+        expr: rate(security_events_total{type=~"ANOMALOUS_BEHAVIOR|DEVICE_TRUST_CHANGE|LOCATION_ANOMALY"}[5m])
+        
+      # Vulnerability scan results
+      - record: security:vulnerabilities_total
+        expr: security_scan_findings_total
+        
+      # High severity vulnerabilities
+      - record: security:high_vulnerabilities_total
+        expr: security_scan_findings_total{severity="HIGH"} + security_scan_findings_total{severity="CRITICAL"}
+        
+      # Active sessions
+      - record: security:active_sessions_total
+        expr: security_sessions_active_total
+        
+      # Failed login attempts by IP
+      - record: security:failed_logins_by_ip
+        expr: sum by (ip_address) (rate(security_events_total{type="LOGIN_FAILURE"}[5m]))
+        
+      # Data breaches reported
+      - record: security:data_breaches_total
+        expr: security_data_breaches_total
+        
+      # Consent records
+      - record: security:consent_records_total
+        expr: security_consent_records_total
+        
+      # DSR requests
+      - record: security:dsr_requests_total
+        expr: security_dsr_requests_total

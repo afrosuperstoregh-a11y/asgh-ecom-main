@@ -1,0 +1,448 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enhanced User model with authentication fields
+model User {
+  id                String  @id @default(uuid())
+  email             String  @unique
+  name              String?
+  password          String?
+  phone             String?
+  emailVerified     Boolean @default(false)
+  emailVerificationToken String?
+  emailVerificationExpires DateTime?
+  resetPasswordToken String?
+  resetPasswordExpires DateTime?
+  lastLoginAt       DateTime?
+  loginAttempts     Int     @default(0)
+  lockedUntil       DateTime?
+  avatar            String?
+  dateOfBirth       DateTime?
+  gender            String?
+  timezone          String  @default("UTC")
+  language          String  @default("en")
+  isActive          Boolean @default(true)
+  isGuest           Boolean @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  carts             Cart[]
+  orders            Order[]
+  addresses         Address[]
+  paymentMethods    PaymentMethod[]
+  reviews           ProductReview[]
+  sessions          UserSession[]
+  socialAccounts    SocialAccount[]
+  wishlistItems     WishlistItem[]
+  userTokens        UserToken[]
+  
+  @@map("users")
+}
+
+// User sessions for JWT token management
+model UserSession {
+  id           String   @id @default(uuid())
+  userId       String
+  token        String   @unique
+  refreshToken String?  @unique
+  deviceInfo   Json?    // {userAgent, ip, device, browser, os}
+  isActive     Boolean  @default(true)
+  expiresAt    DateTime
+  lastUsedAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  
+  // Relations
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_sessions")
+}
+
+// Social account linking
+model SocialAccount {
+  id           String      @id @default(uuid())
+  userId       String
+  provider     SocialProvider
+  providerId   String
+  accessToken  String?
+  refreshToken String?
+  email        String?
+  name         String?
+  avatar       String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  // Relations
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerId])
+  @@map("social_accounts")
+}
+
+// User tokens for various purposes (2FA, email verification, etc.)
+model UserToken {
+  id        String      @id @default(uuid())
+  userId    String
+  token     String      @unique
+  type      TokenType
+  purpose   String?
+  expiresAt DateTime
+  usedAt    DateTime?
+  metadata  Json?
+  createdAt DateTime    @default(now())
+  
+  // Relations
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_tokens")
+}
+
+// Wishlist functionality
+model WishlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  addedAt   DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, productId])
+  @@map("wishlist_items")
+}
+
+model Category {
+  id          String @id @default(uuid())
+  name        String @unique
+  slug        String @unique
+  description String?
+  image       String?
+  parentId    String?
+  isActive    Boolean @default(true)
+  sortOrder   Int @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
+  
+  @@map("categories")
+}
+
+model Product {
+  id          String @id @default(uuid())
+  name        String
+  slug        String @unique
+  description String?
+  shortDesc   String?
+  sku         String @unique
+  price       Decimal
+  comparePrice Decimal?
+  cost        Decimal?
+  trackInventory Boolean @default(true)
+  stock       Int @default(0)
+  weight      Decimal?
+  dimensions  Json? // {length, width, height}
+  images      Json? // Array of image URLs
+  tags        Json? // Array of tags
+  status      ProductStatus @default(DRAFT)
+  featured    Boolean @default(false)
+  categoryId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  category    Category @relation(fields: [categoryId], references: [id])
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  reviews     ProductReview[]
+  wishlistItems WishlistItem[]
+  
+  @@map("products")
+}
+
+model ProductReview {
+  id        String @id @default(uuid())
+  productId String
+  userId    String?
+  rating    Int // 1-5
+  title     String?
+  content   String?
+  verified  Boolean @default(false)
+  helpful   Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  product   Product @relation(fields: [productId], references: [id])
+  user      User? @relation(fields: [userId], references: [id])
+  
+  @@map("product_reviews")
+}
+
+model Cart {
+  id        String @id @default(uuid())
+  userId    String?
+  sessionId String?
+  status    CartStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user      User? @relation(fields: [userId], references: [id])
+  items     CartItem[]
+  
+  @@unique([userId, status])
+  @@unique([sessionId, status])
+  @@map("carts")
+}
+
+model CartItem {
+  id        String @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int
+  price     Decimal // Price at time of adding to cart
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  cart      Cart @relation(fields: [cartId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+  
+  @@unique([cartId, productId])
+  @@map("cart_items")
+}
+
+model Address {
+  id        String @id @default(uuid())
+  userId    String
+  type      AddressType @default(SHIPPING)
+  firstName String
+  lastName  String
+  company   String?
+  address1  String
+  address2  String?
+  city      String
+  province  String
+  country   String
+  postalCode String
+  phone     String?
+  isDefault Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user      User @relation(fields: [userId], references: [id])
+  
+  @@map("addresses")
+}
+
+model Order {
+  id                String @id @default(uuid())
+  orderNumber       String @unique
+  userId            String?
+  guestEmail        String?
+  status            OrderStatus @default(PENDING)
+  currency          String @default("USD")
+  subtotal          Decimal
+  taxAmount         Decimal @default(0)
+  shippingAmount    Decimal @default(0)
+  discountAmount    Decimal @default(0)
+  total             Decimal
+  notes             String?
+  shippingAddress   Json? // Address data snapshot
+  billingAddress    Json? // Address data snapshot
+  paymentStatus     PaymentStatus @default(PENDING)
+  paymentMethod     String?
+  paymentId         String?
+  trackingNumber    String?
+  shippedAt         DateTime?
+  deliveredAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  user              User? @relation(fields: [userId], references: [id])
+  items             OrderItem[]
+  payments          Payment[]
+  
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String @id @default(uuid())
+  orderId     String
+  productId   String
+  productName String // Product name snapshot
+  productSku  String // Product SKU snapshot
+  quantity    Int
+  price       Decimal // Price at time of purchase
+  total       Decimal // quantity * price
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  order       Order @relation(fields: [orderId], references: [id])
+  product     Product @relation(fields: [productId], references: [id])
+  
+  @@map("order_items")
+}
+
+model PaymentMethod {
+  id            String @id @default(uuid())
+  userId        String
+  type          PaymentMethodType @default(CARD)
+  provider      String // stripe, paypal, etc.
+  providerId    String // Token from payment provider
+  last4         String?
+  brand         String? // visa, mastercard, etc.
+  expiryMonth   Int?
+  expiryYear    Int?
+  isDefault     Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  user          User @relation(fields: [userId], references: [id])
+  
+  @@map("payment_methods")
+}
+
+model Payment {
+  id            String @id @default(uuid())
+  orderId       String
+  paymentMethodId String?
+  amount        Decimal
+  currency      String @default("USD")
+  status        PaymentStatus @default(PENDING)
+  provider      String // stripe, paypal, etc.
+  providerId    String // Payment ID from provider
+  failureCode   String?
+  failureReason String?
+  metadata      Json? // Additional provider data
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  order         Order @relation(fields: [orderId], references: [id])
+  
+  @@map("payments")
+}
+
+model Refund {
+  id            String @id @default(uuid())
+  paymentId     String
+  amount        Decimal
+  reason        String?
+  status        RefundStatus @default(PENDING)
+  providerId    String // Refund ID from provider
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@map("refunds")
+}
+
+model Coupon {
+  id            String @id @default(uuid())
+  code          String @unique
+  name          String
+  description   String?
+  type          CouponType @default(PERCENTAGE)
+  value         Decimal
+  minimumAmount Decimal?
+  maximumDiscount Decimal?
+  usageLimit    Int?
+  usageCount    Int @default(0)
+  isActive      Boolean @default(true)
+  startsAt      DateTime
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@map("coupons")
+}
+
+// Authentication Enums
+enum SocialProvider {
+  GOOGLE
+  FACEBOOK
+  APPLE
+  TWITTER
+  LINKEDIN
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  TWO_FACTOR
+  ACCOUNT_VERIFICATION
+  PHONE_VERIFICATION
+}
+
+// Existing Enums
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum CartStatus {
+  ACTIVE
+  ABANDONED
+  CONVERTED
+}
+
+enum AddressType {
+  SHIPPING
+  BILLING
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethodType {
+  CARD
+  BANK_ACCOUNT
+  DIGITAL_WALLET
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}

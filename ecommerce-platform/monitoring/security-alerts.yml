@@ -1,0 +1,331 @@
+# Security Alerting Rules
+groups:
+  - name: security.authentication
+    rules:
+      # High rate of failed logins
+      - alert: HighFailedLoginRate
+        expr: security:auth_failures_rate > 10
+        for: 2m
+        labels:
+          severity: warning
+          category: authentication
+        annotations:
+          summary: "High rate of failed login attempts detected"
+          description: "Failed login rate is {{ $value }} attempts per second over the last 2 minutes"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/failed-logins"
+
+      # Brute force attack detected
+      - alert: BruteForceAttack
+        expr: security:auth_failures_rate > 50
+        for: 1m
+        labels:
+          severity: critical
+          category: authentication
+        annotations:
+          summary: "Brute force attack detected"
+          description: "Failed login rate is {{ $value }} attempts per second, indicating a potential brute force attack"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/brute-force"
+
+      # MFA failures
+      - alert: HighMFAFailureRate
+        expr: security:mfa_failures_rate > 5
+        for: 3m
+        labels:
+          severity: warning
+          category: authentication
+        annotations:
+          summary: "High MFA failure rate detected"
+          description: "MFA failure rate is {{ $value }} attempts per second"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/mfa-failures"
+
+      # Suspicious login patterns
+      - alert: SuspiciousLoginActivity
+        expr: security:suspicious_logins_rate > 2
+        for: 5m
+        labels:
+          severity: warning
+          category: authentication
+        annotations:
+          summary: "Suspicious login activity detected"
+          description: "Suspicious login rate is {{ $value }} attempts per second"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/suspicious-activity"
+
+  - name: security.authorization
+    rules:
+      # Privilege escalation attempts
+      - alert: PrivilegeEscalationAttempt
+        expr: increase(security_events_total{type="PRIVILEGE_ESCALATION"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          category: authorization
+        annotations:
+          summary: "Privilege escalation attempt detected"
+          description: "Privilege escalation attempt detected from {{ $labels.ip_address }}"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/privilege-escalation"
+
+      # Unauthorized access attempts
+      - alert: UnauthorizedAccessAttempt
+        expr: increase(security_events_total{type="UNAUTHORIZED_ACCESS"}[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          category: authorization
+        annotations:
+          summary: "Multiple unauthorized access attempts"
+          description: "{{ $value }} unauthorized access attempts in the last 5 minutes"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/unauthorized-access"
+
+  - name: security.data_protection
+    rules:
+      # Data access anomalies
+      - alert: DataAccessAnomaly
+        expr: security:data_access_requests_rate > 20
+        for: 5m
+        labels:
+          severity: warning
+          category: data_protection
+        annotations:
+          summary: "Unusual data access pattern detected"
+          description: "Data access rate is {{ $value }} requests per second"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/data-access"
+
+      # Data deletion events
+      - alert: DataDeletionEvent
+        expr: increase(security_events_total{type="DATA_DELETION"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          category: data_protection
+        annotations:
+          summary: "Data deletion event detected"
+          description: "Data deletion event detected from {{ $labels.ip_address }}"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/data-deletion"
+
+      # Data breach reported
+      - alert: DataBreachReported
+        expr: increase(security_data_breaches_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          category: data_protection
+        annotations:
+          summary: "Data breach reported"
+          description: "Data breach has been reported and requires immediate attention"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/data-breach"
+
+  - name: security.network
+    rules:
+      # WAF blocking high rate
+      - alert: HighWAFBlockRate
+        expr: security:waf_blocked_rate > 100
+        for: 2m
+        labels:
+          severity: warning
+          category: network
+        annotations:
+          summary: "High WAF block rate detected"
+          description: "WAF is blocking {{ $value }} requests per second"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/waf-blocking"
+
+      # DDoS attack indicators
+      - alert: PotentialDDoSAttack
+        expr: security:waf_blocked_rate > 1000
+        for: 1m
+        labels:
+          severity: critical
+          category: network
+        annotations:
+          summary: "Potential DDoS attack detected"
+          description: "WAF block rate of {{ $value }} requests per second indicates potential DDoS attack"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/ddos"
+
+      # Session anomalies
+      - alert: SessionAnomalyDetected
+        expr: security:session_anomalies_rate > 5
+        for: 3m
+        labels:
+          severity: warning
+          category: network
+        annotations:
+          summary: "Session anomaly detected"
+          description: "Session anomaly rate is {{ $value }} events per second"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/session-anomalies"
+
+  - name: security.vulnerability
+    rules:
+      # Critical vulnerabilities found
+      - alert: CriticalVulnerabilitiesFound
+        expr: security_scan_findings_total{severity="CRITICAL"} > 0
+        for: 0m
+        labels:
+          severity: critical
+          category: vulnerability
+        annotations:
+          summary: "Critical vulnerabilities discovered"
+          description: "{{ $value }} critical vulnerabilities found during security scan"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/vulnerabilities"
+
+      # High severity vulnerabilities
+      - alert: HighSeverityVulnerabilities
+        expr: security:high_vulnerabilities_total > 5
+        for: 0m
+        labels:
+          severity: warning
+          category: vulnerability
+        annotations:
+          summary: "Multiple high severity vulnerabilities"
+          description: "{{ $value }} high severity vulnerabilities found"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/vulnerabilities"
+
+      # Vulnerability scan failure
+      - alert: VulnerabilityScanFailed
+        expr: security_scan_status{status="FAILED"} == 1
+        for: 0m
+        labels:
+          severity: warning
+          category: vulnerability
+        annotations:
+          summary: "Vulnerability scan failed"
+          description: "Security scan for {{ $labels.target }} has failed"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/scan-failure"
+
+  - name: security.compliance
+    rules:
+      # GDPR data subject requests
+      - alert: HighDSRRequestRate
+        expr: rate(security_dsr_requests_total[1h]) > 10
+        for: 5m
+        labels:
+          severity: info
+          category: compliance
+        annotations:
+          summary: "High rate of GDPR data subject requests"
+          description: "DSR request rate is {{ $value }} requests per hour"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/dsr-requests"
+
+      # Consent withdrawal spike
+      - alert: ConsentWithdrawalSpike
+        expr: increase(security_consent_records_total{status="WITHDRAWN"}[1h]) > 50
+        for: 0m
+        labels:
+          severity: warning
+          category: compliance
+        annotations:
+          summary: "Unusual consent withdrawal activity"
+          description: "{{ $value }} consent withdrawals in the last hour"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/consent"
+
+      # Compliance violations
+      - alert: ComplianceViolation
+        expr: security:policy_violations_rate > 1
+        for: 5m
+        labels:
+          severity: warning
+          category: compliance
+        annotations:
+          summary: "Security policy violation detected"
+          description: "Security policy violation rate is {{ $value }} per second"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/compliance"
+
+  - name: security.infrastructure
+    rules:
+      # Security service down
+      - alert: SecurityServiceDown
+        expr: up{job=~"security-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: infrastructure
+        annotations:
+          summary: "Security service is down"
+          description: "Security service {{ $labels.job }} has been down for more than 1 minute"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/service-down"
+
+      # High memory usage on security services
+      - alert: SecurityServiceHighMemory
+        expr: (process_resident_memory_bytes / 1024 / 1024) > 1024
+        for: 5m
+        labels:
+          severity: warning
+          category: infrastructure
+        annotations:
+          summary: "High memory usage on security service"
+          description: "{{ $labels.job }} is using {{ $value }}MB of memory"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/high-memory"
+
+      # High CPU usage on security services
+      - alert: SecurityServiceHighCPU
+        expr: rate(process_cpu_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          category: infrastructure
+        annotations:
+          summary: "High CPU usage on security service"
+          description: "{{ $labels.job }} CPU usage is {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/high-cpu"
+
+      # Disk space low on security logs
+      - alert: SecurityLogsDiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/var/log/security"} / node_filesystem_size_bytes{mountpoint="/var/log/security"}) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          category: infrastructure
+        annotations:
+          summary: "Low disk space for security logs"
+          description: "Security log partition has {{ $value | humanizePercentage }} free space"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/disk-space"
+
+  - name: security.session
+    rules:
+      # Too many active sessions
+      - alert: TooManyActiveSessions
+        expr: security:active_sessions_total > 10000
+        for: 5m
+        labels:
+          severity: warning
+          category: session
+        annotations:
+          summary: "Unusual number of active sessions"
+          description: "{{ $value }} active sessions detected"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/sessions"
+
+      # Long-lived sessions
+      - alert: LongLivedSessions
+        expr: security_session_duration_seconds > 86400
+        for: 0m
+        labels:
+          severity: info
+          category: session
+        annotations:
+          summary: "Long-lived sessions detected"
+          description: "Sessions older than 24 hours detected"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/long-sessions"
+
+  - name: security.threat_intelligence
+    rules:
+      # Known malicious IPs detected
+      - alert: MaliciousIPDetected
+        expr: increase(security_events_total{type="MALICIOUS_REQUEST"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          category: threat_intelligence
+        annotations:
+          summary: "Requests from known malicious IP detected"
+          description: "Malicious IP {{ $labels.ip_address }} detected"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/malicious-ip"
+
+      # Injection attacks detected
+      - alert: InjectionAttackDetected
+        expr: increase(security_events_total{type=~"INJECTION_ATTACK|XSS_ATTEMPT|CSRF_ATTEMPT"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          category: threat_intelligence
+        annotations:
+          summary: "Injection attack detected"
+          description: "{{ $labels.type }} attack detected from {{ $labels.ip_address }}"
+          runbook_url: "https://docs.your-domain.com/security/runbooks/injection-attack"

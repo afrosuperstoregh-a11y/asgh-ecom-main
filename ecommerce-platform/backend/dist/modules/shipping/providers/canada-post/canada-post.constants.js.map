@@ -1,0 +1,1 @@
+{"version":3,"file":"canada-post.constants.js","sourceRoot":"","sources":["../../../../../src/modules/shipping/providers/canada-post/canada-post.constants.ts"],"names":[],"mappings":";;;AACa,QAAA,wBAAwB,GAAG,oBAAoB,CAAC;AAChD,QAAA,wBAAwB,GAAG,0BAA0B,CAAC;AAEtD,QAAA,qBAAqB,GAAG;IACnC,IAAI,EAAE,gBAAgB;IACtB,QAAQ,EAAE,0BAA0B;IACpC,KAAK,EAAE,uCAAuC;IAC9C,QAAQ,EAAE,0CAA0C;CACrD,CAAC"}

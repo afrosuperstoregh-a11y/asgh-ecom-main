@@ -1,0 +1,633 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Master Database
+  postgres-master:
+    image: postgres:15-alpine
+    container_name: ecommerce-postgres-master
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ecommerce}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+      POSTGRES_REPLICATION_USER: ${POSTGRES_REPLICATION_USER:-replicator}
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD:-replicator123}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_master_data:/var/lib/postgresql/data
+      - ./postgres/master.conf:/etc/postgresql/postgresql.conf:ro
+      - ./postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - ./api/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-ecommerce}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+
+  # PostgreSQL Replica 1
+  postgres-replica-1:
+    image: postgres:15-alpine
+    container_name: ecommerce-postgres-replica-1
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ecommerce}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+      PGUSER: ${POSTGRES_USER:-postgres}
+      POSTGRES_MASTER_SERVICE: postgres-master
+      POSTGRES_REPLICATION_USER: ${POSTGRES_REPLICATION_USER:-replicator}
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD:-replicator123}
+    volumes:
+      - postgres_replica1_data:/var/lib/postgresql/data
+      - ./postgres/replica.conf:/etc/postgresql/postgresql.conf:ro
+    ports:
+      - "5433:5432"
+    networks:
+      - backend
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    command: |
+      bash -c "
+      if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+        pg_basebackup -h postgres-master -D /var/lib/postgresql/data -U ${POSTGRES_REPLICATION_USER:-replicator} -v -P -W
+        echo 'standby_mode = on' >> /var/lib/postgresql/data/recovery.conf
+        echo 'primary_conninfo = ''host=postgres-master port=5432 user=${POSTGRES_REPLICATION_USER:-replicator}''' >> /var/lib/postgresql/data/recovery.conf
+      fi
+      postgres -c config_file=/etc/postgresql/postgresql.conf
+      "
+
+  # PostgreSQL Replica 2
+  postgres-replica-2:
+    image: postgres:15-alpine
+    container_name: ecommerce-postgres-replica-2
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ecommerce}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+      PGUSER: ${POSTGRES_USER:-postgres}
+      POSTGRES_MASTER_SERVICE: postgres-master
+      POSTGRES_REPLICATION_USER: ${POSTGRES_REPLICATION_USER:-replicator}
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD:-replicator123}
+    volumes:
+      - postgres_replica2_data:/var/lib/postgresql/data
+      - ./postgres/replica.conf:/etc/postgresql/postgresql.conf:ro
+    ports:
+      - "5434:5432"
+    networks:
+      - backend
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    command: |
+      bash -c "
+      if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+        pg_basebackup -h postgres-master -D /var/lib/postgresql/data -U ${POSTGRES_REPLICATION_USER:-replicator} -v -P -W
+        echo 'standby_mode = on' >> /var/lib/postgresql/data/recovery.conf
+        echo 'primary_conninfo = ''host=postgres-master port=5432 user=${POSTGRES_REPLICATION_USER:-replicator}''' >> /var/lib/postgresql/data/recovery.conf
+      fi
+      postgres -c config_file=/etc/postgresql/postgresql.conf
+      "
+
+  # PgBouncer Connection Pooler
+  pgbouncer:
+    image: pgbouncer/pgbouncer:latest
+    container_name: ecommerce-pgbouncer
+    restart: unless-stopped
+    environment:
+      DATABASES_HOST: postgres-master
+      DATABASES_PORT: 5432
+      DATABASES_USER: ${POSTGRES_USER:-postgres}
+      DATABASES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+      DATABASES_DBNAME: ${POSTGRES_DB:-ecommerce}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 20
+      MIN_POOL_SIZE: 5
+      RESERVE_POOL_SIZE: 5
+      RESERVE_POOL_TIMEOUT: 5
+      SERVER_RESET_QUERY: DISCARD ALL
+      ADMIN_USERS: ${POSTGRES_USER:-postgres}
+      STATS_USERS: ${POSTGRES_USER:-postgres}
+    volumes:
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./pgbouncer/users.txt:/etc/pgbouncer/users.txt:ro
+    ports:
+      - "6432:6432"
+    networks:
+      - backend
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      postgres-replica-1:
+        condition: service_healthy
+      postgres-replica-2:
+        condition: service_healthy
+
+  # Redis Cluster Master
+  redis-master:
+    image: redis:7-alpine
+    container_name: ecommerce-redis-master
+    restart: unless-stopped
+    command: |
+      redis-server 
+      --appendonly yes 
+      --cluster-enabled yes 
+      --cluster-config-file nodes.conf 
+      --cluster-node-timeout 5000 
+      --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - redis_master_data:/data
+    ports:
+      - "6379:6379"
+      - "16379:16379"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Redis Cluster Slave 1
+  redis-slave-1:
+    image: redis:7-alpine
+    container_name: ecommerce-redis-slave-1
+    restart: unless-stopped
+    command: |
+      redis-server 
+      --appendonly yes 
+      --cluster-enabled yes 
+      --cluster-config-file nodes.conf 
+      --cluster-node-timeout 5000 
+      --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - redis_slave1_data:/data
+    ports:
+      - "6380:6379"
+      - "16380:16379"
+    networks:
+      - backend
+    depends_on:
+      redis-master:
+        condition: service_healthy
+
+  # Redis Cluster Slave 2
+  redis-slave-2:
+    image: redis:7-alpine
+    container_name: ecommerce-redis-slave-2
+    restart: unless-stopped
+    command: |
+      redis-server 
+      --appendonly yes 
+      --cluster-enabled yes 
+      --cluster-config-file nodes.conf 
+      --cluster-node-timeout 5000 
+      --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - redis_slave2_data:/data
+    ports:
+      - "6381:6379"
+      - "16381:16379"
+    networks:
+      - backend
+    depends_on:
+      redis-master:
+        condition: service_healthy
+
+  # Redis Queue Worker
+  redis-queue:
+    image: redis:7-alpine
+    container_name: ecommerce-redis-queue
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - redis_queue_data:/data
+    ports:
+      - "6382:6379"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # API Server Instance 1
+  api-1:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      target: ${NODE_ENV:-production}
+    container_name: ecommerce-api-1
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3001
+      INSTANCE_ID: api-1
+      
+      # Database (with connection pooling)
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres123}@pgbouncer:6432/${POSTGRES_DB:-ecommerce}
+      DATABASE_READ_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres123}@postgres-replica-1:5432/${POSTGRES_DB:-ecommerce}
+      
+      # Redis Cluster
+      REDIS_CLUSTER_NODES: redis-master:6379,redis-slave-1:6379,redis-slave-2:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis-master:6379
+      REDIS_QUEUE_URL: redis://:${REDIS_PASSWORD:-redis123}@redis-queue:6379
+      
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-super-secret-refresh-key-change-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      
+      # Performance
+      CACHE_TTL_DEFAULT: ${CACHE_TTL_DEFAULT:-3600}
+      CACHE_TTL_SHORT: ${CACHE_TTL_SHORT:-300}
+      CACHE_TTL_LONG: ${CACHE_TTL_LONG:-86400}
+      ENABLE_COMPRESSION: ${ENABLE_COMPRESSION:-true}
+      
+      # Rate Limiting
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+      
+      # Monitoring
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
+      DATADOG_API_KEY: ${DATADOG_API_KEY:-}
+      
+      # Email (SendGrid)
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-your-sendgrid-api-key}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@yourcompany.com}
+      FROM_NAME: ${FROM_NAME:-Your Company}
+      
+      # SMS (Twilio)
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-your-twilio-account-sid}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-your-twilio-auth-token}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-+1234567890}
+      
+      # File Upload
+      UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-5242880}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FILE: ${LOG_FILE:-/app/logs/app.log}
+      
+    volumes:
+      - api_uploads:/app/uploads
+      - api_logs:/app/logs
+    networks:
+      - backend
+      - frontend
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis-master:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # API Server Instance 2
+  api-2:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      target: ${NODE_ENV:-production}
+    container_name: ecommerce-api-2
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3001
+      INSTANCE_ID: api-2
+      
+      # Database (with connection pooling)
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres123}@pgbouncer:6432/${POSTGRES_DB:-ecommerce}
+      DATABASE_READ_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres123}@postgres-replica-2:5432/${POSTGRES_DB:-ecommerce}
+      
+      # Redis Cluster
+      REDIS_CLUSTER_NODES: redis-master:6379,redis-slave-1:6379,redis-slave-2:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis-master:6379
+      REDIS_QUEUE_URL: redis://:${REDIS_PASSWORD:-redis123}@redis-queue:6379
+      
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-super-secret-refresh-key-change-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      
+      # Performance
+      CACHE_TTL_DEFAULT: ${CACHE_TTL_DEFAULT:-3600}
+      CACHE_TTL_SHORT: ${CACHE_TTL_SHORT:-300}
+      CACHE_TTL_LONG: ${CACHE_TTL_LONG:-86400}
+      ENABLE_COMPRESSION: ${ENABLE_COMPRESSION:-true}
+      
+      # Rate Limiting
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+      
+      # Monitoring
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
+      DATADOG_API_KEY: ${DATADOG_API_KEY:-}
+      
+      # Email (SendGrid)
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-your-sendgrid-api-key}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@yourcompany.com}
+      FROM_NAME: ${FROM_NAME:-Your Company}
+      
+      # SMS (Twilio)
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-your-twilio-account-sid}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-your-twilio-auth-token}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-+1234567890}
+      
+      # File Upload
+      UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-5242880}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FILE: ${LOG_FILE:-/app/logs/app.log}
+      
+    volumes:
+      - api_uploads:/app/uploads
+      - api_logs:/app/logs
+    networks:
+      - backend
+      - frontend
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis-master:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Background Job Processor
+  job-processor:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      target: ${NODE_ENV:-production}
+    container_name: ecommerce-job-processor
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      JOB_PROCESSOR: true
+      
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres123}@pgbouncer:6432/${POSTGRES_DB:-ecommerce}
+      
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis-queue:6379
+      
+      # Email (SendGrid)
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-your-sendgrid-api-key}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@yourcompany.com}
+      FROM_NAME: ${FROM_NAME:-Your Company}
+      
+      # SMS (Twilio)
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-your-twilio-account-sid}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-your-twilio-auth-token}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-+1234567890}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FILE: ${LOG_FILE:-/app/logs/jobs.log}
+      
+    volumes:
+      - api_uploads:/app/uploads
+      - api_logs:/app/logs
+    networks:
+      - backend
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis-queue:
+        condition: service_healthy
+    command: npm run jobs:process
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Client Application
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: ${NODE_ENV:-production}
+    container_name: ecommerce-client
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      
+      # Performance
+      NEXT_PUBLIC_ENABLE_ANALYTICS: ${NEXT_PUBLIC_ENABLE_ANALYTICS:-true}
+      NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID:-}
+      NEXT_PUBLIC_HOTJAR_ID: ${NEXT_PUBLIC_HOTJAR_ID:-}
+      
+      # CDN Configuration
+      NEXT_PUBLIC_CDN_URL: ${NEXT_PUBLIC_CDN_URL:-}
+      
+      # Feature Flags
+      NEXT_PUBLIC_ENABLE_SOCIAL_LOGIN: ${NEXT_PUBLIC_ENABLE_SOCIAL_LOGIN:-true}
+      NEXT_PUBLIC_ENABLE_2FA: ${NEXT_PUBLIC_ENABLE_2FA:-false}
+      
+    networks:
+      - frontend
+    depends_on:
+      - api-1
+      - api-2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Nginx Load Balancer
+  nginx-lb:
+    image: nginx:alpine
+    container_name: ecommerce-nginx-lb
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/lb.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - api_uploads:/var/www/uploads:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - frontend
+    depends_on:
+      api-1:
+        condition: service_healthy
+      api-2:
+        condition: service_healthy
+      client:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ecommerce-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+      - backend
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    profiles:
+      - monitoring
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ecommerce-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin123}
+      GF_USERS_ALLOW_SIGN_UP: false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3001:3000"
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+
+  # Redis Commander (Development)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: ecommerce-redis-commander
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      REDIS_HOSTS: master:redis-master:6379:0:${REDIS_PASSWORD:-redis123},slave1:redis-slave-1:6379:0:${REDIS_PASSWORD:-redis123},slave2:redis-slave-2:6379:0:${REDIS_PASSWORD:-redis123},queue:redis-queue:6379:0:${REDIS_PASSWORD:-redis123}
+    networks:
+      - backend
+    depends_on:
+      - redis-master
+      - redis-slave-1
+      - redis-slave-2
+      - redis-queue
+    profiles:
+      - development
+
+  # Database Administration
+  adminer:
+    image: adminer:latest
+    container_name: ecommerce-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: pgbouncer
+    networks:
+      - backend
+    depends_on:
+      - pgbouncer
+    profiles:
+      - development
+
+volumes:
+  postgres_master_data:
+    driver: local
+  postgres_replica1_data:
+    driver: local
+  postgres_replica2_data:
+    driver: local
+  redis_master_data:
+    driver: local
+  redis_slave1_data:
+    driver: local
+  redis_slave2_data:
+    driver: local
+  redis_queue_data:
+    driver: local
+  api_uploads:
+    driver: local
+  api_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  nginx_logs:
+    driver: local
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true
+  monitoring:
+    driver: bridge

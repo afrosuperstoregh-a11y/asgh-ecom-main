@@ -1,0 +1,80 @@
+Make sure you create, update, and enhance all required files and codes. Inject all codes into the ecommerce-platform folder as well.
+
+docker-compose up --build -d           #Build and start all services
+docker-compose up -d                   #Start the services 
+docker-compose up --build -d           #start the application 
+docker-compose up -d --build           #build app
+docker-compose up --build              #build app
+docker-compose down                    #stop the application
+docker ps -a                           #check if there are new containers.
+docker-compose logs -f                 #View logs
+
+
+
+# Clean up any existing containers and volumes
+docker-compose -f ecommerce-platform/docker-compose.yml down -v
+
+# Remove any existing images
+docker rmi ecommerce-client ecommerce-platform-api --force
+
+# Rebuild and start the services
+docker-compose -f ecommerce-platform/docker-compose.yml up -d --build
+
+
+# Start all services
+docker-compose up --build
+
+# Access the application at http://localhost:3000
+# API will be available at http://localhost:3001
+# Database will be available at localhost:5432
+# Redis will be available at localhost:6379
+# Prisma Studio at http://localhost:5555
+
+
+App: http://localhost:3000
+API: http://localhost:3001
+Prisma Studio: http://localhost:5555
+Database: localhost:5432 (postgres:postgres123)
+Redis: localhost:6379 (password: redis123)
+
+
+
+Access the admin panel:
+Frontend: http://localhost:3000/admin
+API: http://localhost:3001/api/admin
+
+Login credentials:
+Email: admin@example.com
+Password: admin123
+
+✅ SUCCESS: Both containers are now running!
+
+API Server: Running on http://localhost:3001 ✅
+Database: PostgreSQL running on port 5432 ✅
+Redis: Running on port 6379 ✅
+Nginx: Running on port 80 ✅
+Client: Running on port 3000 ✅ (FIXED!)
+
+🌐 Access Points:
+API: http://localhost:3001
+Frontend: http://localhost:3000
+Products API: http://localhost:3001/api/products
+Health Check: http://localhost:3001/health
+
+🎉 Docker build issues resolved! Both frontend and backend are accessible.
+
+
+
+
+After it's running, we can:
+
+Set up the basic layout and navigation
+Create product listing and detail pages
+Set up authentication (login/register)
+Connect to our API at localhost:3001
+
+
+
+proceed with setting up the Next.js client application next - DONE
+
+

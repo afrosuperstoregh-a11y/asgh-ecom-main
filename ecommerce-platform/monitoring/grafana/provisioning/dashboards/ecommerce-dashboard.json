@@ -1,0 +1,229 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "E-commerce Platform Overview",
+    "tags": ["ecommerce", "production"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Response Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "99th percentile"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Response Time (seconds)"
+          }
+        ],
+        "gridPos": {
+          "x": 0,
+          "y": 0,
+          "w": 12,
+          "h": 8
+        }
+      },
+      {
+        "id": 2,
+        "title": "API Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "Requests/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests per second"
+          }
+        ],
+        "gridPos": {
+          "x": 12,
+          "y": 0,
+          "w": 12,
+          "h": 8
+        }
+      },
+      {
+        "id": 3,
+        "title": "API Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m])",
+            "legendFormat": "Error Rate"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Error Rate (%)",
+            "max": 1,
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "x": 0,
+          "y": 8,
+          "w": 12,
+          "h": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Database Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "pg_stat_activity_count",
+            "legendFormat": "Active Connections"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Connections"
+          }
+        ],
+        "gridPos": {
+          "x": 12,
+          "y": 8,
+          "w": 12,
+          "h": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "Redis Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "redis_memory_used_bytes / redis_memory_max_bytes * 100",
+            "legendFormat": "Memory Usage %"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Memory Usage (%)",
+            "max": 100,
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "x": 0,
+          "y": 16,
+          "w": 12,
+          "h": 8
+        }
+      },
+      {
+        "id": 6,
+        "title": "System CPU Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "100 - (avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "CPU Usage (%)",
+            "max": 100,
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "x": 12,
+          "y": 16,
+          "w": 12,
+          "h": 8
+        }
+      },
+      {
+        "id": 7,
+        "title": "Business Metrics - Orders",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(order_completed_total[1h])",
+            "legendFormat": "Orders/Hour"
+          }
+        ],
+        "gridPos": {
+          "x": 0,
+          "y": 24,
+          "w": 6,
+          "h": 8
+        }
+      },
+      {
+        "id": 8,
+        "title": "Business Metrics - Conversion Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(order_completed_total[1h]) / rate(cart_creation_total[1h]) * 100",
+            "legendFormat": "Conversion Rate %"
+          }
+        ],
+        "gridPos": {
+          "x": 6,
+          "y": 24,
+          "w": 6,
+          "h": 8
+        }
+      },
+      {
+        "id": 9,
+        "title": "Business Metrics - Cart Abandonment",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(cart_abandonment_total[1h]) / rate(cart_creation_total[1h]) * 100",
+            "legendFormat": "Abandonment Rate %"
+          }
+        ],
+        "gridPos": {
+          "x": 12,
+          "y": 24,
+          "w": 6,
+          "h": 8
+        }
+      },
+      {
+        "id": 10,
+        "title": "Business Metrics - Payment Success Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(payment_completed_total[5m]) / rate(payment_attempted_total[5m]) * 100",
+            "legendFormat": "Payment Success %"
+          }
+        ],
+        "gridPos": {
+          "x": 18,
+          "y": 24,
+          "w": 6,
+          "h": 8
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s"
+  }
+}
