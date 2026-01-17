@@ -9,15 +9,14 @@ async function getSitemapData() {
   const categories: any[] = []; // Fetch categories from your API
   const pages = ['/about', '/contact', '/privacy', '/terms'];
 
-  return { products, categories, pages };
+  return { products, pages };
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const { products, categories, pages } = await getSitemapData();
+  const { products, pages } = await getSitemapData();
   
   return generateSitemap({
     products,
-    categories,
     pages,
   });
 }

@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next';
-import { Product, Category } from '@/types';
+import { Product, products } from '@/data/products';
 import siteConfig from './config';
 
 type SitemapEntry = {
@@ -18,13 +18,11 @@ type SitemapEntry = {
 
 type SitemapData = {
   products?: Product[];
-  categories?: Category[];
   pages?: string[];
 };
 
 export default async function generateSitemap({
   products = [],
-  categories = [],
   pages = [],
 }: SitemapData = {}): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.siteUrl;
@@ -66,19 +64,19 @@ export default async function generateSitemap({
 
   // Dynamic product routes
   const productRoutes: SitemapEntry[] = products.map((product) => ({
-    url: `${baseUrl}/products/${product.slug}`,
-    lastModified: product.updatedAt || now,
+    url: `${baseUrl}/products/${product.id}`,
+    lastModified: now,
     changeFrequency: 'weekly',
     priority: 0.8,
   }));
 
   // Dynamic category routes
-  const categoryRoutes: SitemapEntry[] = categories.map((category) => ({
-    url: `${baseUrl}/categories/${category.slug}`,
-    lastModified: category.updatedAt || now,
-    changeFrequency: 'weekly',
-    priority: 0.7,
-  }));
+  const categoryRoutes: SitemapEntry[] = [
+    { url: `${baseUrl}/categories`, lastModified: now, changeFrequency: 'weekly' },
+    { url: `${baseUrl}/categories/clothing`, lastModified: now, changeFrequency: 'weekly' },
+    { url: `${baseUrl}/categories/electronics`, lastModified: now, changeFrequency: 'weekly' },
+    { url: `${baseUrl}/categories/accessories`, lastModified: now, changeFrequency: 'weekly' },
+  ];
 
   // Additional pages
   const additionalPages: SitemapEntry[] = pages.map((page) => ({

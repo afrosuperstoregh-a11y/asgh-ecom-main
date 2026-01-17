@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: afrosuperstore_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - frontend
+      - backend
+      - api
+    networks:
+      - afrosuperstore_network
+    restart: unless-stopped
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./ecommerce-platform/frontend
+      dockerfile: Dockerfile
+    image: afrosuperstore/frontend:latest
+    container_name: afrosuperstore_frontend
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SITE_URL=https://www.afrosuperstore.ca
+      - NEXT_PUBLIC_API_URL=https://www.afrosuperstore.ca/api
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+    volumes:
+      - ./logs/frontend:/app/logs
+    networks:
+      - afrosuperstore_network
+    restart: unless-stopped
+
+  # Backend (NestJS)
+  backend:
+    build:
+      context: ./ecommerce-platform/backend
+      dockerfile: Dockerfile
+    image: afrosuperstore/backend:latest
+    container_name: afrosuperstore_backend
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - JWT_SECRET=${JWT_SECRET}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./logs/backend:/app/logs
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - afrosuperstore_network
+    restart: unless-stopped
+
+  # API Service
+  api:
+    build:
+      context: ./ecommerce-platform/api
+      dockerfile: Dockerfile
+    image: afrosuperstore/api:latest
+    container_name: afrosuperstore_api
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./logs/api:/app/logs
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - afrosuperstore_network
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: afrosuperstore_postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - afrosuperstore_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: afrosuperstore_redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - afrosuperstore_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  afrosuperstore_network:
+    driver: bridge

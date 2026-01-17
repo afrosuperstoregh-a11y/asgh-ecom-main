@@ -4,6 +4,7 @@ interface PerformanceMetrics {
   // Core Web Vitals
   CLS: number; // Cumulative Layout Shift
   FID: number; // First Input Delay
+  INP: number; // Interaction to Next Paint
   LCP: number; // Largest Contentful Paint
   FCP: number; // First Contentful Paint
   TTFB: number; // Time to First Byte
@@ -14,7 +15,7 @@ interface PerformanceMetrics {
 }
 
 const METRICS_TO_TRACK: (keyof PerformanceMetrics)[] = [
-  'CLS', 'FID', 'LCP', 'FCP', 'TTFB', 'FMP', 'TTI', 'TBT'
+  'CLS', 'FID', 'INP', 'LCP', 'FCP', 'TTFB', 'FMP', 'TTI', 'TBT'
 ];
 
 // Store metrics for batch reporting
@@ -77,13 +78,13 @@ export const initPerformanceMonitoring = () => {
   if (process.env.NODE_ENV !== 'production') return;
   
   // Use the web-vitals library if available
-  if (typeof window.webVitals === 'function') {
-    import('web-vitals').then(({ getCLS, getFID, getLCP, getFCP, getTTFB }) => {
-      getCLS(trackMetric.bind(null, 'CLS'));
-      getFID(trackMetric.bind(null, 'FID'));
-      getLCP(trackMetric.bind(null, 'LCP'));
-      getFCP(trackMetric.bind(null, 'FCP'));
-      getTTFB(trackMetric.bind(null, 'TTFB'));
+  if (typeof (window as any).webVitals === 'function') {
+    import('web-vitals').then(({ onCLS, onINP, onLCP, onFCP, onTTFB }) => {
+      onCLS((metric) => trackMetric('CLS', metric.value));
+      onINP((metric) => trackMetric('INP', metric.value));
+      onLCP((metric) => trackMetric('LCP', metric.value));
+      onFCP((metric) => trackMetric('FCP', metric.value));
+      onTTFB((metric) => trackMetric('TTFB', metric.value));
     });
   }
   

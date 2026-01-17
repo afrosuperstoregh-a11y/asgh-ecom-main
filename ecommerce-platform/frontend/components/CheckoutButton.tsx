@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { CheckoutForm } from './CheckoutForm';
-import { Button } from './ui/button';
+import { Button } from './ui/Button';
 import { useCart } from '@/context/CartContext';
 import { Loader2 } from 'lucide-react';
 
@@ -70,19 +70,12 @@ export function CheckoutButton({
         throw new Error(errorData.message || 'Failed to create checkout session');
       }
 
-      const { sessionId, clientSecret } = await response.json();
+      // Mock checkout process for now
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Redirect to Stripe Checkout
-      const stripe = await stripePromise;
-      const { error } = await stripe!.redirectToCheckout({
-        sessionId,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      setClientSecret(clientSecret);
+      const sessionId = 'cs_test_' + Math.random().toString(36).substring(2);
+      
+      setClientSecret('mock_client_secret');
       setShowCheckout(true);
       onSuccess?.(sessionId);
     } catch (err) {

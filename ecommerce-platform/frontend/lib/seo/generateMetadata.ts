@@ -7,7 +7,7 @@ type PageMetadata = {
   canonicalUrl?: string;
   imageUrl?: string;
   imageAlt?: string;
-  type?: 'website' | 'article' | 'product' | 'profile' | 'book';
+  type?: 'website' | 'article' | 'profile' | 'book';
   publishedTime?: string;
   modifiedTime?: string;
   section?: string;
@@ -77,18 +77,6 @@ export function generateMetadata({
     },
     keywords: [...siteConfig.keywords, ...tags],
   };
-
-  if (publishedTime) {
-    metadata.publishedTime = publishedTime;
-  }
-
-  if (modifiedTime) {
-    metadata.modifiedTime = modifiedTime;
-  }
-
-  if (section) {
-    metadata.section = section;
-  }
 
   return metadata;
 }

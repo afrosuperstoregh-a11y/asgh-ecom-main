@@ -45,7 +45,7 @@ export default function CategoryPage() {
   const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
 
   useEffect(() => {
-    const slug = params.slug as string;
+    const slug = params?.slug as string;
     const foundCategory = categories.find(cat => cat.slug === slug);
     
     if (!foundCategory) {
@@ -72,7 +72,7 @@ export default function CategoryPage() {
       setProducts(mockProducts);
       setLoading(false);
     }, 500);
-  }, [params.slug]);
+  }, [params?.slug]);
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());

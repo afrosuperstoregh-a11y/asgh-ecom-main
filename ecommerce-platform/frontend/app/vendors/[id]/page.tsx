@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { 
   Star, 
   MapPin, 
@@ -15,6 +15,7 @@ import {
   ShoppingCart,
   Truck,
   Shield,
+  Store,
   Clock,
   CheckCircle,
   MessageSquare,
@@ -80,7 +81,7 @@ interface VendorProduct {
 
 export default function VendorStorefront() {
   const params = useParams();
-  const vendorId = params.id as string;
+  const vendorId = params?.id as string;
   
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [products, setProducts] = useState<VendorProduct[]>([]);

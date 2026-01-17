@@ -30,3 +30,12 @@ export function truncateString(str: string, length: number): string {
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 11);
 }
+
+/**
+ * Utility function to concatenate class names conditionally
+ * @param inputs - Class names to combine
+ * @returns Combined class string
+ */
+export function cn(...inputs: (string | undefined | null | false)[]): string {
+  return inputs.filter(Boolean).join(' ');
+}

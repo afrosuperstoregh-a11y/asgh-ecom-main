@@ -44,7 +44,8 @@ export const useAnalytics = () => {
 
   // Track page view manually if needed
   const trackPage = useCallback((pageTitle: string, additionalParams: EventParams = {}) => {
-    trackPageView(window.location.pathname, pageTitle, additionalParams);
+    trackPageView(window.location.pathname, pageTitle);
+    // Additional params could be logged separately if needed
   }, []);
 
   // Track custom event

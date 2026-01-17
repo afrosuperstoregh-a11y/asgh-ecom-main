@@ -105,49 +105,49 @@ export default function AdminLayout({
       name: 'Products',
       href: '/admin/products',
       icon: Package,
-      current: pathname.startsWith('/admin/products')
+      current: pathname?.startsWith('/admin/products') || false
     },
     {
       name: 'Orders',
       href: '/admin/orders',
       icon: ShoppingCart,
-      current: pathname.startsWith('/admin/orders')
+      current: pathname?.startsWith('/admin/orders') || false
     },
     {
       name: 'Customers',
       href: '/admin/customers',
       icon: Users,
-      current: pathname.startsWith('/admin/customers')
+      current: pathname?.startsWith('/admin/customers') || false
     },
     {
       name: 'Categories',
       href: '/admin/categories',
       icon: Store,
-      current: pathname.startsWith('/admin/categories')
+      current: pathname?.startsWith('/admin/categories') || false
     },
     {
       name: 'Promotions',
       href: '/admin/promotions',
       icon: Tag,
-      current: pathname.startsWith('/admin/promotions')
+      current: pathname?.startsWith('/admin/promotions') || false
     },
     {
       name: 'Analytics',
       href: '/admin/analytics',
       icon: TrendingUp,
-      current: pathname.startsWith('/admin/analytics')
+      current: pathname?.startsWith('/admin/analytics') || false
     },
     {
       name: 'Payments',
       href: '/admin/payments',
       icon: CreditCard,
-      current: pathname.startsWith('/admin/payments')
+      current: pathname?.startsWith('/admin/payments') || false
     },
     {
       name: 'Settings',
       href: '/admin/settings',
       icon: Settings,
-      current: pathname.startsWith('/admin/settings')
+      current: pathname?.startsWith('/admin/settings') || false
     }
   ];
 

@@ -2,12 +2,46 @@
 
 import React, { useState } from 'react';
 
+interface TrackingUpdate {
+  date: string;
+  location: string;
+  status: string;
+  description: string;
+}
+
+interface TrackingItem {
+  name: string;
+  quantity: number;
+  price: number;
+  image: string;
+}
+
+interface TrackingData {
+  orderNumber: string;
+  orderDate: string;
+  status: string;
+  estimatedDelivery: string;
+  trackingNumber: string;
+  carrier: string;
+  currentLocation: string;
+  updates: TrackingUpdate[];
+  items: TrackingItem[];
+  shippingAddress: {
+    name: string;
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+  };
+}
+
 const TrackPage = () => {
   const [formData, setFormData] = useState({
     orderNumber: '',
     email: ''
   });
-  const [trackingData, setTrackingData] = useState<any>(null);
+  const [trackingData, setTrackingData] = useState<TrackingData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
