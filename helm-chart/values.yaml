@@ -1,0 +1,179 @@
+# Default values for asca-ecom.
+# This is a YAML-formatted file.
+
+# Global settings
+global:
+  imageRegistry: ghcr.io
+  imagePullSecrets: []
+  storageClass: ""
+
+# Frontend settings
+frontend:
+  replicaCount: 3
+  image:
+    repository: burnatec/asca_ecom/frontend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+# Backend settings
+backend:
+  replicaCount: 2
+  image:
+    repository: burnatec/asca_ecom/backend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  
+  service:
+    type: ClusterIP
+    port: 3001
+    targetPort: 3001
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+
+# API settings
+api:
+  replicaCount: 2
+  image:
+    repository: burnatec/asca_ecom/api
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  
+  service:
+    type: ClusterIP
+    port: 3002
+    targetPort: 3002
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+
+# Ingress settings
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  
+  hosts:
+    - host: asca-ecom.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: api
+    - host: www.asca-ecom.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: api
+  
+  tls:
+    - secretName: asca-ecom-tls
+      hosts:
+        - asca-ecom.com
+        - www.asca-ecom.com
+
+# PostgreSQL database
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "changeme"
+    database: "asca_ecom"
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+
+# Redis cache
+redis:
+  enabled: true
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+
+# Monitoring
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+  grafana:
+    enabled: true
+  loki:
+    enabled: true
+
+# Secrets
+secrets:
+  jwtSecret: "your-jwt-secret-here"
+  databaseUrl: "postgresql://postgres:changeme@postgresql:5432/asca_ecom"
+  stripeSecret: "sk_test_your-stripe-secret"
+
+# Environment variables
+env:
+  nodeEnv: "production"
+  nextPublicApiUrl: "https://asca-ecom.com/api"

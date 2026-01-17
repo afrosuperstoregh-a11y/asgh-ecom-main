@@ -1,0 +1,100 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Code Analysis
+  code-analysis:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: |
+        cd ecommerce-platform/frontend && npm ci
+        cd ../backend && npm ci
+        cd ../api && npm ci
+
+    - name: Run ESLint on all packages
+      run: |
+        cd ecommerce-platform/frontend && npm run lint --if-present
+        cd ../backend && npm run lint --if-present
+        cd ../api && npm run lint --if-present
+
+    - name: Run Prettier check
+      run: |
+        cd ecommerce-platform/frontend && npm run format:check --if-present
+        cd ../backend && npm run format:check --if-present
+        cd ../api && npm run format:check --if-present
+
+    - name: Run TypeScript checks
+      run: |
+        cd ecommerce-platform/frontend && npm run type-check --if-present
+        cd ../backend && npm run build
+        cd ../api && npm run build --if-present
+
+  # Dependency Audit
+  security-audit:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Audit dependencies
+      run: |
+        cd ecommerce-platform/frontend && npm audit --audit-level=high
+        cd ../backend && npm audit --audit-level=high
+        cd ../api && npm audit --audit-level=high
+
+  # Performance Testing
+  performance-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: |
+        cd ecommerce-platform/frontend && npm ci
+
+    - name: Build frontend
+      run: |
+        cd ecommerce-platform/frontend && npm run build
+
+    - name: Run Lighthouse CI
+      run: |
+        cd ecommerce-platform/frontend
+        npm install -g @lhci/cli@0.12.x
+        lhci autorun
+      env:
+        LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+    - name: Upload Lighthouse results
+      uses: actions/upload-artifact@v3
+      with:
+        name: lighthouse-results
+        path: ecommerce-platform/frontend/.lighthouseci

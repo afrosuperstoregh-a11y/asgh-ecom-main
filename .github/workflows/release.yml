@@ -1,0 +1,110 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Create Release
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Generate changelog from commits since last tag
+        echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+        git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          ## Changes in this release
+          ${{ steps.changelog.outputs.CHANGELOG }}
+          
+          ## Docker Images
+          - Frontend: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:${{ github.ref_name }}
+          - Backend: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:${{ github.ref_name }}
+          - API: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:${{ github.ref_name }}
+        draft: false
+        prerelease: false
+
+  # Build and Push Release Images
+  build-release:
+    needs: create-release
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        service: [frontend, backend, api]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}
+        tags: |
+          type=ref,event=tag
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./ecommerce-platform/${{ matrix.service }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  # Deploy Release
+  deploy-release:
+    needs: [create-release, build-release]
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy release
+      run: |
+        echo "Deploying release ${{ github.ref_name }} to production..."
+        # Add your release deployment commands here
+        # For example: helm upgrade --install asca-ecom ./helm-chart --set imageTag=${{ github.ref_name }}
+
+    - name: Notify release
+      run: |
+        echo "🚀 Release ${{ github.ref_name }} deployed successfully!"
+        # Add release notification here
