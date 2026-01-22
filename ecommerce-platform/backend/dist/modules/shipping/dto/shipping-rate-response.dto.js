@@ -10,8 +10,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ShippingRatesResponseDto = exports.ShippingRateDto = void 0;
+const openapi = require("@nestjs/swagger");
 const swagger_1 = require("@nestjs/swagger");
 class ShippingRateDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { serviceName: { required: true, type: () => String }, serviceCode: { required: true, type: () => String }, price: { required: true, type: () => Number }, deliveryDate: { required: true, type: () => String }, deliveryDays: { required: true, type: () => Number }, isFastest: { required: false, type: () => Boolean }, isCheapest: { required: false, type: () => Boolean } };
+    }
 }
 exports.ShippingRateDto = ShippingRateDto;
 __decorate([
@@ -66,6 +70,9 @@ __decorate([
     __metadata("design:type", Boolean)
 ], ShippingRateDto.prototype, "isCheapest", void 0);
 class ShippingRatesResponseDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { rates: { required: true, type: () => [require("./shipping-rate-response.dto").ShippingRateDto] }, originPostalCode: { required: true, type: () => String }, destinationPostalCode: { required: true, type: () => String } };
+    }
 }
 exports.ShippingRatesResponseDto = ShippingRatesResponseDto;
 __decorate([

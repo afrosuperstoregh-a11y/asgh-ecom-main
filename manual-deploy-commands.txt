@@ -1,0 +1,42 @@
+# AfroSuperStore Manual Deployment Commands
+# Copy and paste these commands one by one into your SSH session
+
+# STEP 1: Connect to server
+ssh dh_t5hb7x@vps68200.dreamhostps.com
+
+# STEP 2: Create directory structure (run these commands in SSH session)
+mkdir -p ~/afrosuperstore.ca
+mkdir -p ~/afrosuperstore.ca/nginx
+mkdir -p ~/afrosuperstore.ca/nginx/ssl
+mkdir -p ~/afrosuperstore.ca/logs
+mkdir -p ~/afrosuperstore.ca/database
+mkdir -p ~/afrosuperstore.ca/ecommerce-platform
+
+# STEP 3: Verify directories were created
+ls -la ~/afrosuperstore.ca/
+
+# STEP 4: Exit SSH and return to local machine to copy files
+exit
+
+# STEP 5: Copy files from local machine (run these in local terminal)
+scp docker-compose.dreamhost.yml dh_t5hb7x@vps68200.dreamhostps.com:~/afrosuperstore.ca/docker-compose.yml
+scp -r nginx/ dh_t5hb7x@vps68200.dreamhostps.com:~/afrosuperstore.ca/
+scp -r ecommerce-platform/ dh_t5hb7x@vps68200.dreamhostps.com:~/afrosuperstore.ca/
+scp .env.dreamhost dh_t5hb7x@vps68200.dreamhostps.com:~/afrosuperstore.ca/.env
+
+# STEP 6: Connect back to server to start services
+ssh dh_t5hb7x@vps68200.dreamhostps.com
+
+# STEP 7: Start Docker services
+cd ~/afrosuperstore.ca
+docker-compose down
+docker-compose up -d --build
+
+# STEP 8: Check service status
+docker-compose ps
+
+# STEP 9: Check logs if needed
+docker-compose logs
+
+# STEP 10: Exit SSH
+exit

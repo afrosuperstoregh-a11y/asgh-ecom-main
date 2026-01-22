@@ -7,7 +7,11 @@ export declare enum ShipmentStatus {
     DELIVERED = "DELIVERED",
     FAILED = "FAILED",
     RETURNED = "RETURNED",
-    CANCELLED = "CANCELLED"
+    CANCELLED = "CANCELLED",
+    AVAILABLE_FOR_PICKUP = "AVAILABLE_FOR_PICKUP",
+    EXCEPTION = "EXCEPTION",
+    NOT_FOUND = "NOT_FOUND",
+    UNKNOWN = "UNKNOWN"
 }
 export declare class Shipment {
     id: number;

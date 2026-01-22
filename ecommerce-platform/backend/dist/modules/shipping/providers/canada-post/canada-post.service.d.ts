@@ -1,9 +1,9 @@
 import { OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
-import { RedisService } from 'src/common/redis/redis.service';
-import { CreateShipmentDto } from '../dto/create-shipment.dto';
-import { ShipmentResponseDto, TrackShipmentResponseDto } from '../dto/shipment-response.dto';
+import { RedisService } from '@/common/redis/redis.services';
+import { CreateShipmentDto } from '@/modules/shipping/dto/create-shipment.dto';
+import { ShipmentResponseDto, TrackShipmentResponseDto } from '@/modules/shipping/dto/shipment-response.dto';
 export declare class CanadaPostService implements OnModuleInit {
     private readonly configService;
     private readonly httpService;

@@ -9,16 +9,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var CanadaPostService_1;
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CanadaPostService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const axios_1 = require("@nestjs/axios");
 const rxjs_1 = require("rxjs");
-const redis_service_1 = require("src/common/redis/redis.service");
+const redis_services_1 = require("../../../../common/redis/redis.services");
 const canada_post_utils_1 = require("./canada-post.utils");
-const shipment_response_dto_1 = require("../dto/shipment-response.dto");
+const shipment_response_dto_1 = require("../../dto/shipment-response.dto");
 let CanadaPostService = CanadaPostService_1 = class CanadaPostService {
     constructor(configService, httpService, redisService) {
         this.configService = configService;
@@ -41,10 +40,15 @@ let CanadaPostService = CanadaPostService_1 = class CanadaPostService {
                 ? this.configService.get('CANADA_POST_PROD_SECRET', '')
                 : this.configService.get('CANADA_POST_DEV_SECRET', ''),
             customerNumber: this.configService.get('CANADA_POST_CUSTOMER_NUMBER', ''),
-            contractId: this.configService.get('CANADA_POST_CONTRACT_ID'),
+            contractId: this.configService.get('CANADA_POST_CONTRACT_ID', ''),
             baseUrl: isProduction
                 ? 'https://soa-gw.canadapost.ca'
                 : 'https://ct.soa-gw.canadapost.ca',
+            endpoints: {
+                rates: '/rs/ship/price',
+                shipment: '/rs/shipment',
+                tracking: '/vis/track/pin'
+            }
         };
         if (!this.config.apiKey || !this.config.secret || !this.config.customerNumber) {
             this.logger.warn('Canada Post configuration is incomplete. Shipping features may not work correctly.');
@@ -70,7 +74,7 @@ let CanadaPostService = CanadaPostService_1 = class CanadaPostService {
                 preferences: {
                     showPackingInstructions: true,
                     showPostageRate: true,
-                    showInsuredValue: isInsured,
+                    showInsuredValue: isInsured ?? false,
                 },
                 ...(requiresSignature && { options: { signatureRequired: true } }),
                 ...(isInsured && insuredValue && {
@@ -83,7 +87,7 @@ let CanadaPostService = CanadaPostService_1 = class CanadaPostService {
             };
             const response = await this.makeRequest({
                 method: 'POST',
-                url: `${this.config.baseUrl}/rs/${this.config.customerNumber}/shipment`,
+                url: `${this.config.baseUrl}${this.config.endpoints.shipment}`,
                 data: shipmentRequest,
             });
             const shipmentResponse = {
@@ -100,7 +104,7 @@ let CanadaPostService = CanadaPostService_1 = class CanadaPostService {
                 status: shipment_response_dto_1.ShipmentStatus.CREATED,
                 sender: formattedSender,
                 recipient: formattedRecipient,
-                items: items.map(item => ({
+                items: items.map((item) => ({
                     description: item.description,
                     quantity: item.quantity,
                     weight: item.weight,
@@ -189,6 +193,7 @@ exports.CanadaPostService = CanadaPostService;
 exports.CanadaPostService = CanadaPostService = CanadaPostService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [config_1.ConfigService,
-        axios_1.HttpService, typeof (_a = typeof redis_service_1.RedisService !== "undefined" && redis_service_1.RedisService) === "function" ? _a : Object])
+        axios_1.HttpService,
+        redis_services_1.RedisService])
 ], CanadaPostService);
 //# sourceMappingURL=canada-post.service.js.map

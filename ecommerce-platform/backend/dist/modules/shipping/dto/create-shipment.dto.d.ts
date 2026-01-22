@@ -1,4 +1,4 @@
-import { ShippingDimensionsDto } from './shipping-rate-request.dto';
+import { ShippingDimensionsDto, AddressDto } from './shared.dto';
 export declare enum PackageType {
     PARCEL = "parcel",
     DOCUMENT = "document",
@@ -22,18 +22,6 @@ export declare class PackageItemDto {
     sku?: string;
     hsCode?: string;
     originCountry?: string;
-}
-export declare class AddressDto {
-    name: string;
-    company?: string;
-    address1: string;
-    address2?: string;
-    city: string;
-    province: string;
-    postalCode: string;
-    country: string;
-    phone?: string;
-    email?: string;
 }
 export declare class CreateShipmentDto {
     orderId: number;

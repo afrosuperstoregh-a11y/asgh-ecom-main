@@ -1,28 +1,99 @@
 Make sure you create, update, and enhance all required files and codes. Inject all codes into the ecommerce-platform folder as well.
 
-docker-compose up --build -d           #Build and start all services
-docker-compose up -d                   #Start the services 
-docker-compose up --build -d           #start the application 
-docker-compose up -d --build           #build app
-docker-compose up --build              #build app
-docker-compose down                    #stop the application
-docker ps -a                           #check if there are new containers.
-docker-compose logs -f                 #View logs
+
+The username that owns the files for afrosuperstore.ca is dh_t5hb7x.
+When connecting via SSH, the connection should look like this:
+
+# SSH to your server
+dh_t5hb7x@vps68200.dreamhostps.com 
+ssh dh_t5hb7x@vps68200.dreamhostps.com -p 22
+Password: Iamtech@100
+ 
+
+
+# Check current directory
+pwd
+
+NB: That explains the issue. You are currently
+connected with a different FTP user. Please log 
+out of your current SSH session and reconnect 
+using the dh_t5hb7x FTP user.
+
+# Install npm on VPS
+curl -L https://www.npmjs.com/install.sh | sh
+
+# Check correct directory structure
+ls -la ~/
+find /home -name "ecommerce-platform" -type d 2>/dev/null
 
 
 
-# Clean up any existing containers and volumes
-docker-compose -f ecommerce-platform/docker-compose.yml down -v
-
-# Remove any existing images
-docker rmi ecommerce-client ecommerce-platform-api --force
-
-# Rebuild and start the services
-docker-compose -f ecommerce-platform/docker-compose.yml up -d --build
+The thing is that you do not have any configuration 
+to make the app load. And there are no index files 
+for apache to load from either.
 
 
-# Start all services
-docker-compose up --build
+Solutions
+Option 1: Find the correct project path on VPS
+bash
+# Find where your project is actually located
+find /home -name "ecommerce-platform" -type d 2>/dev/null
+# Or search more broadly
+find / -name "package.json" -path "*/ecommerce-platform/*" 2>/dev/null
+
+Option 2: If you need to upload/deploy the project first
+bash
+# Navigate to your project directory first
+cd /path/to/your/local/project
+# Then deploy to VPS using your deployment script
+./deploy.sh
+
+Option 3: Check if npm is in PATH on VPS
+bash
+# Check if npm is in PATH
+echo $PATH
+# Try full path if npm isn't in PATH
+/usr/local/bin/npm --version
+# Or add to PATH
+export PATH="/usr/local/bin:$PATH"
+Next Steps
+Find the actual project location on your VPS using the find commands above
+Navigate to the correct directory
+Run npm install once you're in the right location
+Which approach would you like to try first? Do you need help locating your project on the VPS, or do you need to deploy it there first?
+
+ 
+# 1. Check if Node.js is available
+node --version
+npm --version
+
+# 2. If not available, ask DreamHost support to install Node.js 18+
+# 3. Upload your project files
+scp -r ecommerce-platform/ dh_t5hb7x@vps68200.dreamhostps.com:~/afrosuperstore.ca/
+
+# 4. On the VPS, navigate to project
+cd afrosuperstore.ca/ecommerce-platform
+
+# 5. Install dependencies for each service
+npm install
+cd api && npm install && cd ..
+cd backend && npm install && cd ..
+cd frontend && npm install && cd ..
+
+# 6. Set up environment variables
+cp .env.example .env
+# Edit .env with your database and API keys
+
+# 7. Build the frontend
+cd frontend && npm run build && cd ..
+
+# 8. Start services (you'll need a process manager like PM2)
+npm install -g pm2
+pm2 start backend/dist/main.js --name "backend"
+pm2 start api/dist/main.js --name "api" 
+pm2 start frontend/next-server.js --name "frontend"
+
+
 
 # Access the application at http://localhost:3000
 # API will be available at http://localhost:3001

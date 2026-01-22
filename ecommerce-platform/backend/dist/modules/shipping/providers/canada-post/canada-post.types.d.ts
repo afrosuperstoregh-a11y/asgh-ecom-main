@@ -1,10 +1,15 @@
 export interface CanadaPostConfig {
-    env: 'development' | 'production';
     apiKey: string;
-    secret: string;
-    baseUrl: string;
     customerNumber: string;
-    contractId?: string;
+    contractId: string;
+    env: 'development' | 'production';
+    baseUrl: string;
+    secret?: string;
+    endpoints: {
+        rates: string;
+        shipment: string;
+        tracking: string;
+    };
 }
 export interface CanadaPostAddress {
     name: string;

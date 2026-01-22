@@ -6,5 +6,5 @@ export declare class CanadaPostController {
     constructor(canadaPostService: CanadaPostService);
     getRates(rateRequest: ShippingRateRequestDto): Promise<ShippingRatesResponseDto>;
     createShipment(): Promise<void>;
-    trackShipment(trackingNumber: string): Promise<TrackShipmentResponseDto>;
+    trackShipment(trackingNumber: string): Promise<import("../dto/shipment-response.dto").TrackShipmentResponseDto>;
 }

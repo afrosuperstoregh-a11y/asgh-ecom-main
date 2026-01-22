@@ -9,10 +9,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateShipmentDto = exports.AddressDto = exports.PackageItemDto = exports.ShipmentPurpose = exports.PackageType = void 0;
+exports.CreateShipmentDto = exports.PackageItemDto = exports.ShipmentPurpose = exports.PackageType = void 0;
+const openapi = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
-const shipping_rate_request_dto_1 = require("./shipping-rate-request.dto");
+const shared_dto_1 = require("./shared.dto");
 var PackageType;
 (function (PackageType) {
     PackageType["PARCEL"] = "parcel";
@@ -30,6 +31,9 @@ var ShipmentPurpose;
     ShipmentPurpose["OTHER"] = "OTHER";
 })(ShipmentPurpose || (exports.ShipmentPurpose = ShipmentPurpose = {}));
 class PackageItemDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { description: { required: true, type: () => String }, quantity: { required: true, type: () => Number }, weight: { required: true, type: () => Number }, dimensions: { required: true, type: () => require("./shared.dto").ShippingDimensionsDto }, value: { required: false, type: () => Number }, sku: { required: false, type: () => String }, hsCode: { required: false, type: () => String }, originCountry: { required: false, type: () => String } };
+    }
 }
 exports.PackageItemDto = PackageItemDto;
 __decorate([
@@ -49,8 +53,8 @@ __decorate([
 ], PackageItemDto.prototype, "weight", void 0);
 __decorate([
     (0, class_validator_1.ValidateNested)(),
-    (0, class_transformer_1.Type)(() => shipping_rate_request_dto_1.ShippingDimensionsDto),
-    __metadata("design:type", shipping_rate_request_dto_1.ShippingDimensionsDto)
+    (0, class_transformer_1.Type)(() => shared_dto_1.ShippingDimensionsDto),
+    __metadata("design:type", shared_dto_1.ShippingDimensionsDto)
 ], PackageItemDto.prototype, "dimensions", void 0);
 __decorate([
     (0, class_validator_1.IsNumber)(),
@@ -72,65 +76,15 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], PackageItemDto.prototype, "originCountry", void 0);
-class AddressDto {
-}
-exports.AddressDto = AddressDto;
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], AddressDto.prototype, "name", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], AddressDto.prototype, "company", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], AddressDto.prototype, "address1", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], AddressDto.prototype, "address2", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], AddressDto.prototype, "city", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], AddressDto.prototype, "province", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], AddressDto.prototype, "postalCode", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], AddressDto.prototype, "country", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], AddressDto.prototype, "phone", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], AddressDto.prototype, "email", void 0);
 class CreateShipmentDto {
     constructor() {
         this.packageType = PackageType.PARCEL;
         this.purpose = ShipmentPurpose.SOLD;
         this.requiresSignature = false;
         this.isInsured = false;
+    }
+    static _OPENAPI_METADATA_FACTORY() {
+        return { orderId: { required: true, type: () => Number }, packageType: { required: false, default: PackageType.PARCEL, enum: require("./create-shipment.dto").PackageType }, purpose: { required: false, default: ShipmentPurpose.SOLD, enum: require("./create-shipment.dto").ShipmentPurpose }, sender: { required: true, type: () => require("./shared.dto").AddressDto }, recipient: { required: true, type: () => require("./shared.dto").AddressDto }, items: { required: true, type: () => [require("./create-shipment.dto").PackageItemDto], minItems: 1 }, serviceCode: { required: false, type: () => String }, requiresSignature: { required: false, type: () => Boolean, default: false }, isInsured: { required: false, type: () => Boolean, default: false }, insuredValue: { required: false, type: () => Number }, instructions: { required: false, type: () => String }, metadata: { required: false, type: () => Object } };
     }
 }
 exports.CreateShipmentDto = CreateShipmentDto;
@@ -153,13 +107,13 @@ __decorate([
 ], CreateShipmentDto.prototype, "purpose", void 0);
 __decorate([
     (0, class_validator_1.ValidateNested)(),
-    (0, class_transformer_1.Type)(() => AddressDto),
-    __metadata("design:type", AddressDto)
+    (0, class_transformer_1.Type)(() => shared_dto_1.AddressDto),
+    __metadata("design:type", shared_dto_1.AddressDto)
 ], CreateShipmentDto.prototype, "sender", void 0);
 __decorate([
     (0, class_validator_1.ValidateNested)(),
-    (0, class_transformer_1.Type)(() => AddressDto),
-    __metadata("design:type", AddressDto)
+    (0, class_transformer_1.Type)(() => shared_dto_1.AddressDto),
+    __metadata("design:type", shared_dto_1.AddressDto)
 ], CreateShipmentDto.prototype, "recipient", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),

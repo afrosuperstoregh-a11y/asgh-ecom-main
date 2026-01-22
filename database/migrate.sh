@@ -1,15 +1,15 @@
 #!/bin/bash
-
-# Database Migration Script for AfroSuperStore
-# Runs all pending migrations in order
+# MySQL Migration Script for AfroSuperStore
+# Traditional DreamHost VPS Deployment
 
 set -e
 
 # Configuration
-DREAMHOST_USER="afrosuperstore"
-DREAMHOST_SERVER="vps68200.dreamhostps.com"
-POSTGRES_USER="postgres"
-POSTGRES_DB="afrosuperstore"
+DB_HOST="localhost"
+DB_PORT="3306"
+DB_NAME="afrosuperstore_prod"
+DB_USER="afrosuperstore_db"
+DB_PASS="SecureMySQLPassword2024!"
 
 # Colors
 GREEN='\033[0;32m'
@@ -30,22 +30,25 @@ warning() {
     echo -e "${YELLOW}[WARNING] $1${NC}"
 }
 
+# Check if MySQL client is available
+check_mysql_client() {
+    if ! command -v mysql &> /dev/null; then
+        error "MySQL client is not installed. Please install it with: sudo apt install mysql-client"
+    fi
+}
+
 # Check if database is accessible
 check_database() {
     log "Checking database connection..."
     
-    ssh "$DREAMHOST_USER@$DREAMHOST_SERVER" "
-        docker exec afrosuperstore_postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -c 'SELECT 1;' > /dev/null 2>&1
-    " || error "Cannot connect to database. Please check configuration."
+    mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" -e "SELECT 1;" "$DB_NAME" > /dev/null 2>&1 || error "Cannot connect to database. Please check configuration."
     
     log "Database connection successful ✓"
 }
 
 # Get executed migrations
 get_executed_migrations() {
-    ssh "$DREAMHOST_USER@$DREAMHOST_SERVER" "
-        docker exec afrosuperstore_postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -t -c 'SELECT version FROM migrations ORDER BY executed_at;' 2>/dev/null || echo ''
-    "
+    mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" -sN -e "SELECT filename FROM migrations ORDER BY executed_at;" 2>/dev/null || echo ''
 }
 
 # Run migration file
@@ -55,29 +58,40 @@ run_migration() {
     
     log "Running migration: $migration_name"
     
-    # Copy migration file to server
-    scp "$migration_file" "$DREAMHOST_USER@$DREAMHOST_SERVER:/tmp/$migration_name"
-    
     # Execute migration
-    ssh "$DREAMHOST_USER@$DREAMHOST_SERVER" "
-        docker exec afrosuperstore_postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -f /tmp/$migration_name
-        rm /tmp/$migration_name
-    "
+    mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" < "$migration_file"
     
-    log "Migration $migration_name completed ✓"
+    if [ $? -eq 0 ]; then
+        # Record migration as executed
+        mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" -e "INSERT INTO migrations (filename) VALUES ('$migration_name');"
+        log "Migration $migration_name completed ✓"
+    else
+        error "Migration $migration_name failed"
+    fi
 }
 
 # Main migration function
 main() {
     log "Starting database migration for AfroSuperStore..."
     
+    check_mysql_client
     check_database
+    
+    # Create migrations table if it doesn't exist
+    log "Creating migrations table..."
+    mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" << 'EOF'
+CREATE TABLE IF NOT EXISTS migrations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    filename VARCHAR(255) NOT NULL UNIQUE,
+    executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+EOF
     
     # Get list of executed migrations
     executed_migrations=$(get_executed_migrations)
     
     # Find and run pending migrations
-    for migration_file in database/migrations/*.sql; do
+    for migration_file in migrations/*.sql; do
         if [ -f "$migration_file" ]; then
             migration_name=$(basename "$migration_file" .sql)
             
@@ -130,12 +144,13 @@ backup() {
     
     local backup_file="backup_$(date +%Y%m%d_%H%M%S).sql"
     
-    ssh "$DREAMHOST_USER@$DREAMHOST_SERVER" "
-        docker exec afrosuperstore_postgres pg_dump -U $POSTGRES_USER -d $POSTGRES_DB > /tmp/$backup_file
-        mv /tmp/$backup_file /home/$DREAMHOST_USER/afrosuperstore/backups/
-    "
+    mysqldump -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" > "$backup_file"
     
-    log "Backup created: $backup_file ✓"
+    if [ $? -eq 0 ]; then
+        log "Backup created: $backup_file ✓"
+    else
+        error "Backup creation failed"
+    fi
 }
 
 # Handle script arguments

@@ -13,6 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CanadaPostController = void 0;
+const openapi = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const canada_post_service_1 = require("../providers/canada-post/canada-post.service");
@@ -97,6 +98,7 @@ __decorate([
         status: 500,
         description: 'Failed to get shipping rates',
     }),
+    openapi.ApiResponse({ status: 201, type: require("../dto/shipping-rate-response.dto").ShippingRatesResponseDto }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [shipping_rate_request_dto_1.ShippingRateRequestDto]),
@@ -118,6 +120,7 @@ __decorate([
         status: 401,
         description: 'Unauthorized',
     }),
+    openapi.ApiResponse({ status: 201 }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
@@ -138,6 +141,7 @@ __decorate([
         status: 401,
         description: 'Unauthorized',
     }),
+    openapi.ApiResponse({ status: 200, type: require("../dto/shipment-response.dto").TrackShipmentResponseDto }),
     __param(0, (0, common_1.Param)('trackingNumber')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

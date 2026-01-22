@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Shipment = exports.ShipmentStatus = void 0;
+const openapi = require("@nestjs/swagger");
 const typeorm_1 = require("typeorm");
 var ShipmentStatus;
 (function (ShipmentStatus) {
@@ -22,6 +23,10 @@ var ShipmentStatus;
     ShipmentStatus["FAILED"] = "FAILED";
     ShipmentStatus["RETURNED"] = "RETURNED";
     ShipmentStatus["CANCELLED"] = "CANCELLED";
+    ShipmentStatus["AVAILABLE_FOR_PICKUP"] = "AVAILABLE_FOR_PICKUP";
+    ShipmentStatus["EXCEPTION"] = "EXCEPTION";
+    ShipmentStatus["NOT_FOUND"] = "NOT_FOUND";
+    ShipmentStatus["UNKNOWN"] = "UNKNOWN";
 })(ShipmentStatus || (exports.ShipmentStatus = ShipmentStatus = {}));
 let Shipment = class Shipment {
     updateStatus(newStatus) {
@@ -37,6 +42,9 @@ let Shipment = class Shipment {
     }
     isDelivered() {
         return this.status === ShipmentStatus.DELIVERED;
+    }
+    static _OPENAPI_METADATA_FACTORY() {
+        return { id: { required: true, type: () => Number }, orderId: { required: true, type: () => Number }, carrier: { required: true, type: () => String }, serviceName: { required: true, type: () => String }, trackingNumber: { required: true, type: () => String }, labelUrl: { required: true, type: () => String }, cost: { required: true, type: () => Number }, status: { required: true, enum: require("./shipment.entity").ShipmentStatus }, createdAt: { required: true, type: () => Date }, updatedAt: { required: true, type: () => Date }, shipmentId: { required: false, type: () => String }, returnShipmentId: { required: false, type: () => String }, returnLabelUrl: { required: false, type: () => String }, metadata: { required: false, type: () => Object } };
     }
 };
 exports.Shipment = Shipment;

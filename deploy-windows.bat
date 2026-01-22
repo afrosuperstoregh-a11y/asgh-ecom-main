@@ -13,6 +13,7 @@ REM Configuration
 set DREAMHOST_USER=afrosuperstore
 set DREAMHOST_SERVER=vps68200.dreamhostps.com
 set DOMAIN=www.afrosuperstore.ca
+set REMOTE_PATH=/home/afrosuperstore/afrosuperstore.ca
 
 echo Checking prerequisites...
 where ssh >nul 2>&1
@@ -87,20 +88,27 @@ echo.
 set /p confirm="Continue? (y/n): "
 if /i not "%confirm%"=="y" goto menu
 
+echo Creating remote directory structure...
+echo Remote path: %REMOTE_PATH%
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "echo 'Creating base directory...' && mkdir -p %REMOTE_PATH% && echo 'Creating subdirectories...' && mkdir -p %REMOTE_PATH%/nginx && mkdir -p %REMOTE_PATH%/nginx/ssl && mkdir -p %REMOTE_PATH%/logs && mkdir -p %REMOTE_PATH%/database && mkdir -p %REMOTE_PATH%/ecommerce-platform && echo 'All directories created successfully'"
+
+echo Verifying directories exist...
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "ls -la %REMOTE_PATH%/ && echo 'Directory verification completed'"
+
 echo Copying deployment files...
-scp -r docker-compose.dreamhost.yml %DREAMHOST_USER%@%DREAMHOST_SERVER%:/home/%DREAMHOST_USER%/afrosuperstore.ca/docker-compose.yml
-scp -r nginx/ %DREAMHOST_USER%@%DREAMHOST_SERVER%:/home/%DREAMHOST_USER%/afrosuperstore.ca/
-scp -r ecommerce-platform/ %DREAMHOST_USER%@%DREAMHOST_SERVER%:/home/%DREAMHOST_USER%/afrosuperstore.ca/
-scp .env.dreamhost %DREAMHOST_USER%@%DREAMHOST_SERVER%:/home/%DREAMHOST_USER%/afrosuperstore.ca/.env
+scp docker-compose.dreamhost.yml %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/docker-compose.yml
+scp -r nginx/ %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/
+scp -r ecommerce-platform/ %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/ecommerce-platform/
+scp .env.dreamhost %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/.env
 
 echo Starting services...
-ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "cd /home/%DREAMHOST_USER%/afrosuperstore.ca && docker-compose down && docker-compose up -d --build"
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "cd %REMOTE_PATH% && docker-compose down && docker-compose up -d --build"
 
 echo Waiting for services to start...
 timeout /t 30 /nobreak >nul
 
 echo Checking service status...
-ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "cd /home/%DREAMHOST_USER%/afrosuperstore.ca && docker-compose ps"
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "cd %REMOTE_PATH% && docker-compose ps"
 
 echo.
 echo Application deployed!
@@ -142,10 +150,10 @@ if /i not "%confirm%"=="y" goto ssl
 set /p cert_file="Enter path to certificate file: "
 set /p key_file="Enter path to private key file: "
 
-scp "%cert_file%" %DREAMHOST_USER%@%DREAMHOST_SERVER%:/home/%DREAMHOST_USER%/afrosuperstore.ca/nginx/ssl/www.afrosuperstore.ca.crt
-scp "%key_file%" %DREAMHOST_USER%@%DREAMHOST_SERVER%:/home/%DREAMHOST_USER%/afrosuperstore.ca/nginx/ssl/www.afrosuperstore.ca.key
+scp "%cert_file%" %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/nginx/ssl/www.afrosuperstore.ca.crt
+scp "%key_file%" %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/nginx/ssl/www.afrosuperstore.ca.key
 
-ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "cd /home/%DREAMHOST_USER%/afrosuperstore.ca && docker-compose restart nginx"
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "cd %REMOTE_PATH% && docker-compose restart nginx"
 goto ssl_complete
 
 :self_signed_ssl
@@ -215,30 +223,207 @@ set /p confirm="This will take 10-15 minutes. Continue? (y/n): "
 if /i not "%confirm%"=="y" goto menu
 
 echo Step 1: Initial Server Setup
-scp scripts/setup-dreamhost.sh %DREAMHOST_USER%@%DREAMHOST_SERVER%:/tmp/
-ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "chmod +x /tmp/setup-dreamhost.sh && /tmp/setup-dreamhost.sh"
+echo Uploading setup script to user home directory...
+scp scripts/setup-dreamhost.sh %DREAMHOST_USER%@%DREAMHOST_SERVER%:~/
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "chmod +x ~/setup-dreamhost.sh && ~/setup-dreamhost.sh"
 
 echo.
 echo Step 2: Deploy Application
-scp -r docker-compose.dreamhost.yml %DREAMHOST_USER%@%DREAMHOST_SERVER%:/home/%DREAMHOST_USER%/afrosuperstore.ca/docker-compose.yml
-scp -r nginx/ %DREAMHOST_USER%@%DREAMHOST_SERVER%:/home/%DREAMHOST_USER%/afrosuperstore.ca/
-scp -r ecommerce-platform/ %DREAMHOST_USER%@%DREAMHOST_SERVER%:/home/%DREAMHOST_USER%/afrosuperstore.ca/
-scp .env.dreamhost %DREAMHOST_USER%@%DREAMHOST_SERVER%:/home/%DREAMHOST_USER%/afrosuperstore.ca/.env
-ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "cd /home/%DREAMHOST_USER%/afrosuperstore.ca && docker-compose down && docker-compose up -d --build"
+echo.
+echo === SSH COMMAND EXECUTION RESTRICTED ===
+echo DreamHost server allows SSH connection but blocks automated commands
+echo.
+echo MANUAL DEPLOYMENT INSTRUCTIONS:
+echo 1. Connect to server manually: ssh %DREAMHOST_USER%@%DREAMHOST_SERVER%
+echo 2. Run these commands manually on server:
+echo    mkdir -p ~/afrosuperstore.ca
+echo    mkdir -p ~/afrosuperstore.ca/nginx
+echo    mkdir -p ~/afrosuperstore.ca/nginx/ssl  
+echo    mkdir -p ~/afrosuperstore.ca/logs
+echo    mkdir -p ~/afrosuperstore.ca/database
+echo    mkdir -p ~/afrosuperstore.ca/ecommerce-platform
+echo    exit
+echo 3. Return here and press any key to continue file copying
+echo.
+set /p manual_setup="Have you completed the manual directory setup? (y/n): "
+if /i not "%manual_setup%"=="y" (
+    echo Please complete manual setup first
+    pause
+    goto menu
+)
+
+echo Verifying directories exist on server...
+echo Testing directory access...
+echo Uploading verification script...
+scp scripts/verify-dirs.sh %DREAMHOST_USER%@%DREAMHOST_SERVER%:/tmp/
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "chmod +x /tmp/verify-dirs.sh && /tmp/verify-dirs.sh"
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "ls ~/afrosuperstore.ca" >nul 2>&1
+if %errorlevel% neq 0 (
+    echo.
+    echo WARNING: Directories still not found on server!
+    echo Please run these commands manually:
+    echo ssh %DREAMHOST_USER%@%DREAMHOST_SERVER%
+    echo mkdir -p ~/afrosuperstore.ca
+    echo mkdir -p ~/afrosuperstore.ca/nginx
+    echo mkdir -p ~/afrosuperstore.ca/nginx/ssl
+    echo mkdir -p ~/afrosuperstore.ca/logs  
+    echo mkdir -p ~/afrosuperstore.ca/database
+    echo mkdir -p ~/afrosuperstore.ca/ecommerce-platform
+    echo ls ~/afrosuperstore.ca
+    echo exit
+    echo.
+    echo After running these, press any key to continue...
+    pause
+) else (
+    echo ✓ All directories verified successfully!
+)
+
+echo Copying deployment files...
+echo Copying docker-compose file...
+scp docker-compose.dreamhost.yml %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/docker-compose.yml
+if %errorlevel% neq 0 echo "Failed to copy docker-compose file"
+
+echo Copying nginx directory...
+echo Ensuring nginx directory exists...
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "mkdir -p %REMOTE_PATH%/nginx && chmod 755 %REMOTE_PATH%/nginx && echo Nginx directory ready"
+if %errorlevel% neq 0 (
+    echo "Failed to create nginx directory - checking permissions..."
+    ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "ls -la %REMOTE_PATH%/ || echo Base directory issue"
+    pause
+    goto menu
+)
+
+echo Testing directory access...
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "touch %REMOTE_PATH%/nginx/test.txt && rm %REMOTE_PATH%/nginx/test.txt && echo Directory write test passed"
+if %errorlevel% neq 0 (
+    echo "Directory write test failed - checking connection and permissions..."
+    ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "echo SSH connection test"
+    if %errorlevel% neq 0 (
+        echo "SSH connection failed - please check network and server status"
+        pause
+        goto menu
+    )
+    ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "ls -la %REMOTE_PATH%/nginx/"
+    pause
+    goto menu
+)
+
+scp -r nginx/ %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/
+if %errorlevel% neq 0 (
+    echo "Failed to copy nginx directory - trying alternative method..."
+    ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "mkdir -p %REMOTE_PATH%/nginx"
+    scp -r nginx/* %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/nginx/
+    if %errorlevel% neq 0 (
+        echo "Alternative nginx copy also failed - trying file by file..."
+        scp nginx/nginx.conf %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/nginx/
+        if %errorlevel% neq 0 echo "Individual file copy also failed"
+    )
+)
+
+echo Copying ecommerce platform...
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "mkdir -p %REMOTE_PATH%/ecommerce-platform"
+scp -r ecommerce-platform/ %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/ecommerce-platform/
+if %errorlevel% neq 0 echo "Failed to copy ecommerce platform"
+
+echo Copying environment file...
+scp .env.dreamhost %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/.env
+if %errorlevel% neq 0 echo "Failed to copy environment file"
+
+echo.
+echo File copying completed! Now start services manually:
+echo 1. SSH to server: ssh %DREAMHOST_USER%@%DREAMHOST_SERVER%
+echo 2. Run: cd ~/afrosuperstore.ca
+echo 3. Run: docker-compose up -d --build
+echo 4. Run: docker-compose ps
+echo.
+pause
+goto menu
+
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "mkdir -p ~/afrosuperstore.ca/nginx && echo 'Nginx directory created successfully'"
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "mkdir -p ~/afrosuperstore.ca/nginx/ssl && echo 'Nginx SSL directory created successfully'"
+if %errorlevel% neq 0 echo "Failed to create nginx ssl directory"
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "mkdir -p ~/afrosuperstore.ca/logs && echo 'Logs directory created successfully'"
+if %errorlevel% neq 0 echo "Failed to create logs directory"
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "mkdir -p ~/afrosuperstore.ca/database && echo 'Database directory created successfully'"
+if %errorlevel% neq 0 echo "Failed to create database directory"
+echo Verifying directories...
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "echo 'Final directory structure:' && ls -la ~/afrosuperstore.ca/ && echo 'Directory listing completed'"
+if %errorlevel% neq 0 (
+    echo "Failed to list directories - base directory may not exist"
+    pause
+    goto menu
+)
+
+echo Copying deployment files...
+echo Copying docker-compose file...
+scp docker-compose.dreamhost.yml %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/docker-compose.yml
+if %errorlevel% neq 0 echo "Failed to copy docker-compose file"
+
+echo Copying nginx directory...
+echo Ensuring nginx directory exists...
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "mkdir -p %REMOTE_PATH%/nginx && chmod 755 %REMOTE_PATH%/nginx && echo Nginx directory ready"
+if %errorlevel% neq 0 (
+    echo "Failed to create nginx directory - checking permissions..."
+    ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "ls -la %REMOTE_PATH%/ || echo Base directory issue"
+    pause
+    goto menu
+)
+
+echo Testing directory access...
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "touch %REMOTE_PATH%/nginx/test.txt && rm %REMOTE_PATH%/nginx/test.txt && echo Directory write test passed"
+if %errorlevel% neq 0 (
+    echo "Directory write test failed - checking connection and permissions..."
+    ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "echo SSH connection test"
+    if %errorlevel% neq 0 (
+        echo "SSH connection failed - please check network and server status"
+        pause
+        goto menu
+    )
+    ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "ls -la %REMOTE_PATH%/nginx/"
+    pause
+    goto menu
+)
+
+scp -r nginx/ %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/
+if %errorlevel% neq 0 (
+    echo "Failed to copy nginx directory - trying alternative method..."
+    ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "mkdir -p %REMOTE_PATH%/nginx"
+    scp -r nginx/* %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/nginx/
+    if %errorlevel% neq 0 (
+        echo "Alternative nginx copy also failed - trying file by file..."
+        scp nginx/nginx.conf %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/nginx/
+        if %errorlevel% neq 0 echo "Individual file copy also failed"
+    )
+)
+
+echo Copying ecommerce platform...
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "mkdir -p %REMOTE_PATH%/ecommerce-platform"
+scp -r ecommerce-platform/ %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/ecommerce-platform/
+if %errorlevel% neq 0 echo "Failed to copy ecommerce platform"
+
+echo Copying environment file...
+scp .env.dreamhost %DREAMHOST_USER%@%DREAMHOST_SERVER%:%REMOTE_PATH%/.env
+if %errorlevel% neq 0 echo "Failed to copy environment file"
+
+echo Starting services...
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "cd %REMOTE_PATH% && docker-compose down"
+if %errorlevel% neq 0 echo "Failed to stop services"
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "cd %REMOTE_PATH% && docker-compose up -d --build"
+if %errorlevel% neq 0 echo "Failed to start services"
 
 echo Waiting for services to start...
 timeout /t 30 /nobreak >nul
 
 echo.
 echo Step 3: Setup SSL Certificates (Let's Encrypt)
-scp scripts/setup-ssl.sh %DREAMHOST_USER%@%DREAMHOST_SERVER%:/tmp/
-ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "chmod +x /tmp/setup-ssl.sh && /tmp/setup-ssl.sh letsencrypt"
+scp scripts/setup-ssl.sh %DREAMHOST_USER%@%DREAMHOST_SERVER%:~/
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "chmod +x ~/setup-ssl.sh && ~/setup-ssl.sh letsencrypt"
 
 echo.
 echo Step 4: Run Database Migrations
-scp database/migrate.sh %DREAMHOST_USER%@%DREAMHOST_SERVER%:/tmp/
-scp -r database/migrations/ %DREAMHOST_USER%@%DREAMHOST_SERVER%:/tmp/
-ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "chmod +x /tmp/migrate.sh && /tmp/migrate.sh migrate"
+scp database/migrate.sh %DREAMHOST_USER%@%DREAMHOST_SERVER%:~/
+scp -r database/migrations/ %DREAMHOST_USER%@%DREAMHOST_SERVER%:~/
+ssh %DREAMHOST_USER%@%DREAMHOST_SERVER% "chmod +x ~/migrate.sh && ~/migrate.sh migrate"
 
 echo.
 echo ========================================

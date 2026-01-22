@@ -1,4 +1,5 @@
 import { ShipmentStatus } from '../../../common/entities/shipment.entity';
+export { ShipmentStatus } from '../../../common/entities/shipment.entity';
 export declare class PackageItemResponseDto {
     description: string;
     quantity: number;
@@ -40,6 +41,7 @@ export declare class ShipmentResponseDto {
     cost: number;
     status: ShipmentStatus;
     statusDescription?: string;
+    serviceCode?: string;
     estimatedDeliveryDate?: string;
     sender: AddressResponseDto;
     recipient: AddressResponseDto;

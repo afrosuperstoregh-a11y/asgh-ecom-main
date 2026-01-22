@@ -13,6 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ShippingController = void 0;
+const openapi = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
 const shipping_service_1 = require("../shipping.service");
 const create_shipment_dto_1 = require("../dto/create-shipment.dto");
@@ -46,6 +47,8 @@ let ShippingController = class ShippingController {
 exports.ShippingController = ShippingController;
 __decorate([
     (0, common_1.Post)('shipments'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
+    openapi.ApiResponse({ status: common_1.HttpStatus.CREATED, type: require("../dto/shipment-response.dto").ShipmentResponseDto }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_shipment_dto_1.CreateShipmentDto]),
@@ -53,12 +56,16 @@ __decorate([
 ], ShippingController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)('shipments'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    openapi.ApiResponse({ status: common_1.HttpStatus.OK, type: [require("../dto/shipment-response.dto").ShipmentResponseDto] }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], ShippingController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('shipments/:id'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    openapi.ApiResponse({ status: common_1.HttpStatus.OK, type: require("../dto/shipment-response.dto").ShipmentResponseDto }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -66,6 +73,8 @@ __decorate([
 ], ShippingController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Put)('shipments/:id'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    openapi.ApiResponse({ status: common_1.HttpStatus.OK, type: require("../dto/shipment-response.dto").ShipmentResponseDto }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -74,6 +83,8 @@ __decorate([
 ], ShippingController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)('shipments/:id'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
+    openapi.ApiResponse({ status: common_1.HttpStatus.NO_CONTENT }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -81,6 +92,8 @@ __decorate([
 ], ShippingController.prototype, "remove", null);
 __decorate([
     (0, common_1.Post)('shipments/:id/rates'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    openapi.ApiResponse({ status: common_1.HttpStatus.OK, type: require("../dto/shipping-rate-response.dto").ShippingRatesResponseDto }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -89,6 +102,8 @@ __decorate([
 ], ShippingController.prototype, "getRates", null);
 __decorate([
     (0, common_1.Post)('shipments/:id/buy'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    openapi.ApiResponse({ status: common_1.HttpStatus.OK }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),

@@ -6,7 +6,7 @@
 set -e
 
 # Configuration
-DREAMHOST_USER="afrosuperstore"
+DREAMHOST_USER="dh_t5hb7x"
 DREAMHOST_SERVER="vps68200.dreamhostps.com"
 DOMAIN="www.afrosuperstore.ca"
 
@@ -95,14 +95,14 @@ create_directories() {
     log "Creating directory structure..."
     
     ssh "$DREAMHOST_USER@$DREAMHOST_SERVER" "
-        mkdir -p ~/afrosuperstore
-        mkdir -p ~/afrosuperstore/logs/nginx
-        mkdir -p ~/afrosuperstore/logs/frontend
-        mkdir -p ~/afrosuperstore/logs/backend
-        mkdir -p ~/afrosuperstore/logs/api
-        mkdir -p ~/afrosuperstore/nginx/ssl
-        mkdir -p ~/afrosuperstore/backups
-        mkdir -p ~/afrosuperstore/database/init
+        mkdir -p ~/afrosuperstore.ca
+        mkdir -p ~/afrosuperstore.ca/logs/nginx
+        mkdir -p ~/afrosuperstore.ca/logs/frontend
+        mkdir -p ~/afrosuperstore.ca/logs/backend
+        mkdir -p ~/afrosuperstore.ca/logs/api
+        mkdir -p ~/afrosuperstore.ca/nginx/ssl
+        mkdir -p ~/afrosuperstore.ca/backups
+        mkdir -p ~/afrosuperstore.ca/database/init
     "
     
     log "Directory structure created ✓"
@@ -116,14 +116,14 @@ setup_backups() {
         # Create backup script
         cat > ~/backup-script.sh << 'EOF'
 #!/bin/bash
-BACKUP_DIR='/home/$DREAMHOST_USER/afrosuperstore/backups'
+BACKUP_DIR='/home/dh_t5hb7x/afrosuperstore.ca/backups'
 DATE=\$(date +%Y%m%d-%H%M%S)
 
 # Create database backup
 docker exec afrosuperstore_postgres pg_dump -U postgres afrosuperstore > \$BACKUP_DIR/database-\$DATE.sql
 
 # Create application backup
-cd /home/\$DREAMHOST_USER/afrosuperstore
+cd /home/dh_t5hb7x/afrosuperstore.ca
 tar -czf \$BACKUP_DIR/application-\$DATE.tar.gz --exclude='logs' --exclude='node_modules' --exclude='.git' .
 
 # Keep only last 7 days of backups
@@ -136,7 +136,7 @@ EOF
         chmod +x ~/backup-script.sh
         
         # Add to crontab (daily at 2 AM)
-        (crontab -l 2>/dev/null; echo '0 2 * * * /home/$DREAMHOST_USER/backup-script.sh >> /home/$DREAMHOST_USER/backup.log 2>&1') | crontab -
+        (crontab -l 2>/dev/null; echo '0 2 * * * /home/dh_t5hb7x/backup-script.sh >> /home/dh_t5hb7x/backup.log 2>&1') | crontab -
     "
     
     log "Automatic backups configured ✓"
@@ -170,7 +170,7 @@ EOF
         chmod +x ~/monitor-script.sh
         
         # Add to crontab (every 5 minutes)
-        (crontab -l 2>/dev/null; echo '*/5 * * * * /home/$DREAMHOST_USER/monitor-script.sh >> /home/$DREAMHOST_USER/monitor.log 2>&1') | crontab -
+        (crontab -l 2>/dev/null; echo '*/5 * * * * /home/dh_t5hb7x/monitor-script.sh >> /home/dh_t5hb7x/monitor.log 2>&1') | crontab -
     "
     
     log "Monitoring configured ✓"

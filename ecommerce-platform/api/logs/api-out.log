@@ -1,0 +1,7 @@
+2026-01-20T06:29:53: 🚀 API Server is running on port 3001
+2026-01-20T06:29:53: 📊 Health check: http://localhost:3001/health
+2026-01-20T06:29:53: 📦 Products API: http://localhost:3001/api/products
+2026-01-20T06:29:53: 🏷️  Categories API: http://localhost:3001/api/categories
+2026-01-20T06:29:53: 💬 Testimonials API: http://localhost:3001/api/testimonials
+2026-01-20T06:29:53: 🔐 Auth API: http://localhost:3001/api/auth
+2026-01-20T06:29:53: 👤 User API: http://localhost:3001/api/user
