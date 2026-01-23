@@ -25,11 +25,6 @@
     "NEXT_PUBLIC_SITE_URL": "https://asca-ecommerce.vercel.app",
     "NEXT_PUBLIC_API_URL": "https://asca-ecommerce.vercel.app/api"
   },
-  "functions": {
-    "ecommerce-platform/api/**/*.js": {
-      "maxDuration": 30
-    }
-  },
   "headers": [
     {
       "source": "/api/(.*)",
