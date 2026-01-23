@@ -11,14 +11,14 @@
       "use": "@vercel/node"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/ecommerce-platform/api/$1"
+      "source": "/api/(.*)",
+      "destination": "/ecommerce-platform/api/$1"
     },
     {
-      "src": "/(.*)",
-      "dest": "/ecommerce-platform/frontend/$1"
+      "source": "/(.*)",
+      "destination": "/ecommerce-platform/frontend/$1"
     }
   ],
   "env": {
