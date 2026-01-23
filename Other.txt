@@ -7,6 +7,7 @@ When connecting via SSH, the connection should look like this:
 # SSH to your server
 dh_t5hb7x@vps68200.dreamhostps.com 
 ssh dh_t5hb7x@vps68200.dreamhostps.com -p 22
+ssh afrosuperstore@vps68200.dreamhostps.com -p 22
 Password: Iamtech@100
  
 
@@ -31,6 +32,29 @@ find /home -name "ecommerce-platform" -type d 2>/dev/null
 The thing is that you do not have any configuration 
 to make the app load. And there are no index files 
 for apache to load from either.
+
+
+
+PROBLEM 1
+[vps68200]$ cd backend && npm run build && cd ..
+
+> ecommerce-backend@1.0.0 prebuild
+> rimraf dist
+
+
+> ecommerce-backend@1.0.0 build
+> nest build
+
+sh: line 1: /home/dh_t5hb7x/afrosuperstore.ca/ecommerce-platform/backend/node_modules/.bin/nest: Permission denied
+[vps68200]$ 
+
+
+PROBLEM 2
+
+
+
+
+
 
 
 Solutions
