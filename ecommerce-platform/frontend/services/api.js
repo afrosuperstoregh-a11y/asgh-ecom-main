@@ -83,3 +83,10 @@ class ApiService {
 
 const apiService = new ApiService();
 export default apiService;
+
+// Export product service methods for easier import
+export const productService = {
+  getProducts: (params) => apiService.getProducts(params),
+  getProduct: (id) => apiService.getProduct(id),
+  getProductById: (id) => apiService.getProduct(id),
+};
