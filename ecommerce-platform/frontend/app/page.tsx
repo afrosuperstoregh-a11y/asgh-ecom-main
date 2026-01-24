@@ -1,19 +1,29 @@
+'use client';
+
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, Star, Truck, Shield } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import api from '../services/api';
 
-async function getFeaturedProducts() {
-  try {
-    const response = await api.getProducts();
-    return response.data?.slice(0, 6) || [];
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    return [];
-  }
-}
+export default function HomePage() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function HomePage() {
-  const products = await getFeaturedProducts();
+  useEffect(() => {
+    async function getFeaturedProducts() {
+      try {
+        const response = await api.getProducts();
+        setProducts(response.data?.slice(0, 6) || []);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    getFeaturedProducts();
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -48,7 +58,7 @@ export default async function HomePage() {
       </section>
 
       {/* Featured Products */}
-      {products.length > 0 && (
+      {!loading && products.length > 0 && (
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
