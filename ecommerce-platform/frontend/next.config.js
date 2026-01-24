@@ -19,8 +19,8 @@ const nextConfig = {
     unoptimized: process.env.NODE_ENV === 'development',
   },
   
-  // Enable standalone output for Docker/Vercel
-  output: process.env.VERCEL ? 'export' : 'standalone',
+  // Enable standalone output for Docker only
+  output: 'standalone',
   
   // Configure environment variables
   env: {
