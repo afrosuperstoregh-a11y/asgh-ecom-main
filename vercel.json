@@ -1,8 +1,9 @@
 {
   "version": 2,
   "name": "asca-ecommerce-platform",
-  "buildCommand": "cd ecommerce-platform/frontend && npm run build",
-  "outputDirectory": "ecommerce-platform/frontend/.next",
-  "installCommand": "cd ecommerce-platform/frontend && npm install",
-  "framework": "nextjs"
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "rootDirectory": "ecommerce-platform/frontend"
 }
