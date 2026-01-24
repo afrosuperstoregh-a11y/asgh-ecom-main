@@ -48,10 +48,6 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   
-  // Configure Turbopack root directory to avoid lockfile conflicts
-  turbopack: {
-    root: __dirname,
-  },
   
   // Vercel-compatible trailing slash
   trailingSlash: false,
