@@ -1,9 +1,16 @@
 {
   "version": 2,
   "name": "asca-ecommerce-platform",
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm install",
-  "framework": "nextjs",
-  "rootDirectory": "ecommerce-platform/frontend"
+  "builds": [
+    {
+      "src": "ecommerce-platform/frontend/package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "ecommerce-platform/frontend/$1"
+    }
+  ]
 }
