@@ -4,33 +4,5 @@
   "buildCommand": "cd ecommerce-platform/frontend && npm run build",
   "outputDirectory": "ecommerce-platform/frontend/.next",
   "installCommand": "cd ecommerce-platform/frontend && npm install",
-  "framework": "nextjs",
-  "env": {
-    "NEXT_PUBLIC_SITE_URL": "@site_url",
-    "NEXT_PUBLIC_API_URL": "@api_url"
-  },
-  "build": {
-    "env": {
-      "NEXT_TELEMETRY_DISABLED": "1"
-    }
-  },
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
-        }
-      ]
-    }
-  ]
+  "framework": "nextjs"
 }
