@@ -16,6 +16,11 @@ export const metadata: Metadata = {
   description: "Discover amazing products at Afro Superstore. Quality items, great prices, and exceptional service.",
   keywords: ["ecommerce", "online shopping", "premium products", "afro superstore"],
   authors: [{ name: "Afro Superstore" }],
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
