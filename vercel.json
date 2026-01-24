@@ -7,12 +7,6 @@
       "use": "@vercel/next"
     }
   ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/ecommerce-platform/frontend/$1"
-    }
-  ],
   "env": {
     "NEXT_PUBLIC_SITE_URL": "https://afro-pied.vercel.app",
     "NEXT_PUBLIC_API_URL": "https://afro-pied.vercel.app/api"
