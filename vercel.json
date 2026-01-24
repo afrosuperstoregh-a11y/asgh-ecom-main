@@ -5,7 +5,6 @@
   "outputDirectory": "ecommerce-platform/frontend/.next",
   "installCommand": "cd ecommerce-platform/frontend && npm install",
   "framework": "nextjs",
-  "rootDirectory": "ecommerce-platform/frontend",
   "env": {
     "NEXT_PUBLIC_SITE_URL": "@site_url",
     "NEXT_PUBLIC_API_URL": "@api_url"
