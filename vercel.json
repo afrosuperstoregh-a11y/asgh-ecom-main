@@ -1,15 +1,13 @@
 {
   "version": 2,
   "name": "asca-ecommerce-platform",
-  "buildCommand": "cd ecommerce-platform/frontend && npm run build",
-  "outputDirectory": "ecommerce-platform/frontend/.next",
-  "installCommand": "cd ecommerce-platform/frontend && npm install",
-  "framework": "nextjs",
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/ecommerce-platform/api/$1"
-    },
+      "src": "ecommerce-platform/frontend/package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/ecommerce-platform/frontend/$1"
@@ -18,24 +16,5 @@
   "env": {
     "NEXT_PUBLIC_SITE_URL": "https://afro-pied.vercel.app",
     "NEXT_PUBLIC_API_URL": "https://afro-pied.vercel.app/api"
-  },
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
-        }
-      ]
-    }
-  ]
+  }
 }
