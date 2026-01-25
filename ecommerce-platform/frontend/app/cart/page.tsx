@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useCart } from '../../context/CartContext';
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
