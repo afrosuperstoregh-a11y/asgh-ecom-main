@@ -6,8 +6,9 @@ import { useCart } from '../../context/CartContext';
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-export default function CartPage() {
+function CartPageContent() {
   const { items, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
 
@@ -181,4 +182,8 @@ export default function CartPage() {
       </div>
     </div>
   );
+}
+
+export default function CartPage() {
+  return <CartPageContent />;
 }
