@@ -49,6 +49,9 @@ const nextConfig = {
   },
   
   
+  // Empty turbopack config to silence webpack/turbopack conflict
+  turbopack: {},
+  
   // Vercel-compatible trailing slash
   trailingSlash: false,
 };

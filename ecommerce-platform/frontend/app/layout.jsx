@@ -1,6 +1,7 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
-import { AuthProvider } from '../src/contexts/AuthContext'
+import { AuthProvider } from '../contexts/AuthContext'
+import { CartProvider } from '../contexts/CartContext'
 import Head from 'next/head';
 
 const inter = Inter({ 
@@ -125,7 +126,9 @@ export default function RootLayout({ children }) {
       </head>
       <body className={`${inter.className} antialiased`}>
         <AuthProvider>
-          {children}
+          <CartProvider>
+            {children}
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>
