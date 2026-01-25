@@ -19,14 +19,14 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: keyof typeof profile, value: string) => {
     setProfile(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
@@ -39,7 +39,7 @@ export default function ProfilePage() {
     }, 1000);
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Handle image upload logic here
     console.log('Image upload:', e.target.files);
   };

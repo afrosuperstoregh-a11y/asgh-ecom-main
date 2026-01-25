@@ -6,8 +6,18 @@ import Header from '../../../components/Header';
 import Footer from '../../../components/Footer';
 import { CreditCard, Plus, Trash2, Edit2, Shield } from 'lucide-react';
 
+interface PaymentMethod {
+  id: number;
+  type: string;
+  last4: string;
+  brand: string;
+  expiryMonth: number;
+  expiryYear: number;
+  isDefault: boolean;
+}
+
 export default function PaymentMethodsPage() {
-  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,7 +49,7 @@ export default function PaymentMethodsPage() {
     }, 1000);
   }, []);
 
-  const getCardIcon = (brand) => {
+  const getCardIcon = (brand: string) => {
     switch (brand.toLowerCase()) {
       case 'visa': return '💳';
       case 'mastercard': return '💳';
@@ -48,7 +58,7 @@ export default function PaymentMethodsPage() {
     }
   };
 
-  const setDefaultMethod = (id) => {
+  const setDefaultMethod = (id: number) => {
     setPaymentMethods(methods =>
       methods.map(method =>
         method.id === id ? { ...method, isDefault: true } : { ...method, isDefault: false }
@@ -56,7 +66,7 @@ export default function PaymentMethodsPage() {
     );
   };
 
-  const deleteMethod = (id) => {
+  const deleteMethod = (id: number) => {
     setPaymentMethods(methods => methods.filter(method => method.id !== id));
   };
 

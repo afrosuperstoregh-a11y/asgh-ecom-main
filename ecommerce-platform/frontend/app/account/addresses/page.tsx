@@ -6,8 +6,22 @@ import Header from '../../../components/Header';
 import Footer from '../../../components/Footer';
 import { MapPin, Plus, Edit2, Trash2, Home, Briefcase } from 'lucide-react';
 
+interface Address {
+  id: number;
+  type: string;
+  isDefault: boolean;
+  name: string;
+  street: string;
+  apartment: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  phone: string;
+}
+
 export default function AddressesPage() {
-  const [addresses, setAddresses] = useState([]);
+  const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,7 +61,7 @@ export default function AddressesPage() {
     }, 1000);
   }, []);
 
-  const setDefaultAddress = (id) => {
+  const setDefaultAddress = (id: number) => {
     setAddresses(addrs =>
       addrs.map(addr =>
         addr.id === id ? { ...addr, isDefault: true } : { ...addr, isDefault: false }
@@ -55,11 +69,11 @@ export default function AddressesPage() {
     );
   };
 
-  const deleteAddress = (id) => {
+  const deleteAddress = (id: number) => {
     setAddresses(addrs => addrs.filter(addr => addr.id !== id));
   };
 
-  const getAddressIcon = (type) => {
+  const getAddressIcon = (type: string) => {
     switch (type) {
       case 'home': return <Home className="h-5 w-5" />;
       case 'work': return <Briefcase className="h-5 w-5" />;

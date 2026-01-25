@@ -21,14 +21,14 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: keyof typeof settings, value: string | boolean) => {
     setSettings(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');

@@ -6,8 +6,22 @@ import Header from '../../../components/Header';
 import Footer from '../../../components/Footer';
 import { Package, Eye, Download, MessageCircle } from 'lucide-react';
 
+interface OrderItem {
+  name: string;
+  quantity: number;
+  price: number;
+}
+
+interface Order {
+  id: string;
+  date: string;
+  status: string;
+  total: number;
+  items: OrderItem[];
+}
+
 export default function OrdersPage() {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,7 +54,7 @@ export default function OrdersPage() {
     }, 1000);
   }, []);
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'delivered': return 'bg-green-100 text-green-800';
       case 'processing': return 'bg-blue-100 text-blue-800';
