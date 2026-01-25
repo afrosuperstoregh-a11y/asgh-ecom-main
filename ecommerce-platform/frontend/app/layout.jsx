@@ -1,7 +1,7 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
 import { AuthProvider } from '../contexts/AuthContext'
-import { CartProvider } from '../contexts/CartContext'
+import { CartProvider } from '../context/CartContext'
 import Head from 'next/head';
 
 const inter = Inter({ 
