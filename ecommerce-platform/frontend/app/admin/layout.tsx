@@ -49,13 +49,13 @@ export default function AdminLayout({
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('token');
       if (!token) {
         router.push('/admin/login');
         return;
       }
 
-      const response = await fetch('/api/admin/auth/me', {
+      const response = await fetch('/api/admin/auth/validate', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -65,12 +65,12 @@ export default function AdminLayout({
         const userData = await response.json();
         setUser(userData);
       } else {
-        localStorage.removeItem('adminToken');
+        localStorage.removeItem('token');
         router.push('/admin/login');
       }
     } catch (error) {
       console.error('Auth check failed:', error);
-      localStorage.removeItem('adminToken');
+      localStorage.removeItem('token');
       router.push('/admin/login');
     } finally {
       setLoading(false);
@@ -79,7 +79,7 @@ export default function AdminLayout({
 
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('token');
       await fetch('/api/admin/auth/logout', {
         method: 'POST',
         headers: {
@@ -89,7 +89,7 @@ export default function AdminLayout({
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('adminToken');
+      localStorage.removeItem('token');
       router.push('/admin/login');
     }
   };

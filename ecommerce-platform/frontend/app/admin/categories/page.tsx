@@ -42,7 +42,7 @@ export default function CategoriesPage() {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('token');
       
       const response = await fetch('/api/admin/categories', {
         headers: {
@@ -82,7 +82,7 @@ export default function CategoriesPage() {
     }
 
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/categories/${categoryId}`, {
         method: 'DELETE',
         headers: {

@@ -83,7 +83,7 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('token');
       
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
@@ -121,7 +121,7 @@ export default function OrdersPage() {
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {

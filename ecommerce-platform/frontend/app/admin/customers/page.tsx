@@ -65,7 +65,7 @@ export default function CustomersPage() {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('token');
       
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
@@ -111,7 +111,7 @@ export default function CustomersPage() {
     }
 
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/customers/${customerId}/status`, {
         method: 'PUT',
         headers: {

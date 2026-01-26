@@ -111,7 +111,7 @@ export default function CreateProductPage() {
     setError('');
 
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('token');
       
       // Prepare data for API
       const productData = {

@@ -69,7 +69,7 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('token');
       
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
@@ -109,7 +109,7 @@ export default function ProductsPage() {
     }
 
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'DELETE',
         headers: {
