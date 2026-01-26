@@ -1,16 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { products, Product } from '../../data/products';
 import { useCart } from '../../context/CartContext';
 import { Loader2, Search, Filter, Grid, List, Star, ShoppingCart, X } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const fetchCache = 'force-no-store';
-
-export default function ShopPage() {
+function ShopPageContent() {
   const searchParams = useSearchParams();
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -606,5 +602,22 @@ export default function ShopPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+            <p className="text-gray-600">Loading shop...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <ShopPageContent />
+    </Suspense>
   );
 }

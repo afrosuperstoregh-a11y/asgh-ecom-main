@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Search, ShoppingCart, Heart, Menu, X, User } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [cartCount] = useState(3); // Dummy cart count
+  const { getCartCount } = useCart();
   const [wishlistCount] = useState(7); // Dummy wishlist count
+  const cartCount = getCartCount();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

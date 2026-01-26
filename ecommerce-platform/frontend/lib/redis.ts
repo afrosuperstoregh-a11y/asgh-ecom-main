@@ -27,7 +27,7 @@ export const redisCache = {
     try {
       const redis = getRedis();
       const value = await redis.get(key);
-      return value ? JSON.parse(value) : null;
+      return value && typeof value === 'string' ? JSON.parse(value) : null;
     } catch (error) {
       console.error('Redis get error:', error);
       return null;

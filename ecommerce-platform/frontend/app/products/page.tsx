@@ -2,16 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { products } from '../../data/products';
+import { products, Product } from '../../data/products';
 import { useCart } from '../../context/CartContext';
 import { Loader2, Search, Filter, Grid, List, Star, ShoppingCart } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const fetchCache = 'force-no-store';
-
 export default function ProductsPage() {
-  const [productsList, setProductsList] = useState([]);
+  const [productsList, setProductsList] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
@@ -44,7 +40,7 @@ export default function ProductsPage() {
     product.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAddToCart = (product) => {
+  const handleAddToCart = (product: Product) => {
     addToCart({
       id: product.id,
       name: product.name,

@@ -5,9 +5,11 @@ import Link from 'next/link';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { Heart, ShoppingCart, Trash2, Star } from 'lucide-react';
+import { Product } from '../../data/products';
+import { useCart } from '../../context/CartContext';
 
 export default function WishlistPage() {
-  const [wishlistItems, setWishlistItems] = useState([]);
+  const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
 
   useEffect(() => {
     // Load wishlist from localStorage
@@ -17,15 +19,21 @@ export default function WishlistPage() {
     }
   }, []);
 
-  const removeFromWishlist = (productId) => {
+  const removeFromWishlist = (productId: string) => {
     const updatedWishlist = wishlistItems.filter(item => item.id !== productId);
     setWishlistItems(updatedWishlist);
     localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
   };
 
-  const addToCart = (product) => {
-    // Add to cart logic here
-    console.log('Adding to cart:', product);
+  const addToCart = (product: Product) => {
+    const { addToCart: addToCartAction } = useCart();
+    addToCartAction({
+      id: product.id,
+      name: product.name,
+      price: product.discountPrice || product.price,
+      image: product.images[0],
+      category: product.category
+    });
   };
 
   return (
@@ -45,7 +53,7 @@ export default function WishlistPage() {
                 <div className="relative">
                   <Link href={`/product/${item.id}`}>
                     <img
-                      src={item.image || '/placeholder-product.jpg'}
+                      src={item.images[0] || '/placeholder-product.jpg'}
                       alt={item.name}
                       className="w-full h-48 object-cover rounded-t-lg"
                     />
@@ -73,7 +81,7 @@ export default function WishlistPage() {
                         />
                       ))}
                     </div>
-                    <span className="text-sm text-gray-500 ml-2">({item.reviews || 0})</span>
+                    <span className="text-sm text-gray-500 ml-2">({item.reviewCount || 0})</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-bold text-gray-900">${item.price}</span>
