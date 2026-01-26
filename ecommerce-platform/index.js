@@ -1,5 +1,11 @@
 // Main entry point for Railway deployment
-// This ensures Railway can find the server
+// Start the backend Express server
 
-// Start the backend server
-require('./backend/src/server.js');
+console.log('🚀 Starting Afro Superstore Backend API...');
+
+try {
+  require('./backend/src/server.js');
+} catch (error) {
+  console.error('❌ Failed to start server:', error);
+  process.exit(1);
+}
