@@ -1,4 +1,4 @@
-const { testimonials } = require('../../../lib/data/testimonials');
+import { testimonials } from '../../../lib/data/testimonials';
 
 export async function GET() {
   try {

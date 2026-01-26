@@ -135,4 +135,46 @@ body {
   input, textarea, select {
     font-size: 16px; /* Prevents zoom on iOS */
   }
+
+  /* Mobile-specific improvements */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Better mobile images */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Mobile touch improvements */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Mobile text selection */
+  ::selection {
+    background-color: rgba(59, 130, 246, 0.3);
+  }
+
+  /* Mobile scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
 }

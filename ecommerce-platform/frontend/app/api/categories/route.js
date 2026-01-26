@@ -1,4 +1,4 @@
-const { categories } = require('../../../lib/data/categories');
+import { categories } from '../../../lib/data/categories';
 
 export async function GET() {
   try {

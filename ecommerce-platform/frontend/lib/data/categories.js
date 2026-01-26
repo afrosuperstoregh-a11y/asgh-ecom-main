@@ -29,5 +29,3 @@ export const categories = [
     productCount: 134
   }
 ];
-
-module.exports = { categories };

@@ -1,4 +1,4 @@
-const { products } = require('../../../lib/data/products');
+import { products } from '../../../lib/data/products';
 
 export async function GET(request) {
   try {

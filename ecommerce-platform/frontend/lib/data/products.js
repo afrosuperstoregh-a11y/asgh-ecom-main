@@ -1,5 +1,5 @@
 // Dummy product data for ecommerce platform
-const products = [
+export const products = [
   {
     id: 1,
     name: "Premium Wireless Headphones",
@@ -244,5 +244,3 @@ const products = [
     relatedProducts: [2, 4]
   }
 ];
-
-module.exports = { products };
