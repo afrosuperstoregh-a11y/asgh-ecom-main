@@ -26,7 +26,7 @@ const nextConfig = {
   },
   
   // Configure webpack for serverless compatibility
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -37,6 +37,17 @@ const nextConfig = {
         child_process: false,
       };
     }
+    
+    // Suppress deprecation warnings in development
+    if (dev) {
+      config.ignoreWarnings = [
+        {
+          module: /feature_collector/,
+          message: /using deprecated parameters/,
+        },
+      ];
+    }
+    
     return config;
   },
   
@@ -50,10 +61,19 @@ const nextConfig = {
   
   
   // Empty turbopack config to silence webpack/turbopack conflict
-  turbopack: {},
+  turbopack: {
+    root: process.cwd(),
+  },
   
   // Vercel-compatible trailing slash
   trailingSlash: false,
+  
+  // Logging configuration
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
+  },
 };
 
 module.exports = nextConfig;
