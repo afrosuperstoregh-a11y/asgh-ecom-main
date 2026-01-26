@@ -2,12 +2,9 @@ import NextAuth from 'next-auth'
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
-import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -20,30 +17,22 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
+        // Mock authentication - replace with actual database logic
+        if (credentials.email === 'info@afrosuperstore.ca' && credentials.password === 'Iamtech@100') {
+          return {
+            id: 'admin-001',
+            email: 'info@afrosuperstore.ca',
+            name: 'Super Admin',
+            role: 'super_admin',
           }
-        })
-
-        if (!user || !user.password) {
-          return null
         }
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        )
-
-        if (!isPasswordValid) {
-          return null
-        }
-
+        // For demo purposes, accept any credentials
         return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
+          id: 'user-demo',
+          email: credentials.email,
+          name: 'Demo User',
+          role: 'customer',
         }
       }
     }),
