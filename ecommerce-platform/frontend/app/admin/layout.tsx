@@ -63,14 +63,19 @@ export default function AdminLayout({
 
       if (response.ok) {
         const userData = await response.json();
-        setUser(userData);
+        setUser(userData.user || userData);
       } else {
         localStorage.removeItem('token');
         router.push('/admin/login');
       }
     } catch (error) {
       console.error('Auth check failed:', error);
-      localStorage.removeItem('token');
+      // Clear any invalid token and redirect to login
+      try {
+        localStorage.removeItem('token');
+      } catch (e) {
+        // Ignore localStorage errors
+      }
       router.push('/admin/login');
     } finally {
       setLoading(false);
@@ -160,6 +165,12 @@ export default function AdminLayout({
         </div>
       </div>
     );
+  }
+
+  if (!user) {
+    // This should not happen as checkAuth should redirect, but as a fallback
+    router.push('/admin/login');
+    return null;
   }
 
   return (
