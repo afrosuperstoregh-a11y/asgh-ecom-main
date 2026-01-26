@@ -85,9 +85,15 @@ const AccountPage = () => {
     }
   ];
 
-  const handleSignOut = () => {
-    logout();
-    router.push('/');
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      router.push('/');
+    } catch (error) {
+      console.error('Sign out error:', error);
+      // Still redirect even if API call fails
+      router.push('/');
+    }
   };
 
   const renderContent = () => {

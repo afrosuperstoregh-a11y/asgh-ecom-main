@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check for existing session
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('token');
     if (token) {
       // Validate token and set user
       validateToken(token);
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Token validation failed:', error);
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem('token');
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (userData && token) {
           setUser(userData);
-          localStorage.setItem('auth_token', token);
+          localStorage.setItem('token', token);
           return true;
         }
       }
@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (newUser && token) {
           setUser(newUser);
-          localStorage.setItem('auth_token', token);
+          localStorage.setItem('token', token);
           return true;
         }
       }
@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       // Call backend logout endpoint
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('token');
       if (token) {
         await fetch('/api/auth/logout', {
           method: 'POST',
@@ -134,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       // Always clear local state regardless of API call success
       setUser(null);
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem('token');
     }
   };
 
