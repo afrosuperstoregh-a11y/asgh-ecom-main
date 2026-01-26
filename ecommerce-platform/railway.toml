@@ -1,15 +1,11 @@
 # Railway configuration for production deployment
-# Using Docker for reliable builds
-
-[build]
-builder = "docker"
+# Simple configuration for automatic detection
 
 [deploy]
 healthcheckPath = "/api/health"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
-startCommand = "node backend/src/server.js"
 
 # Environment variables for production
 [variables]
