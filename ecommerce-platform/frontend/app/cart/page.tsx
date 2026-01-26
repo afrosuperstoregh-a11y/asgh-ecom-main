@@ -9,9 +9,9 @@ import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
-export const runtime = 'edge';
 
 export default function CartPage() {
+  const { items, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
   
   useEffect(() => {
@@ -23,12 +23,6 @@ export default function CartPage() {
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
     </div>;
   }
-
-  return <CartPageContent />;
-}
-
-function CartPageContent() {
-  const { items, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
 
   const subtotal = getCartTotal();
   const tax = subtotal * 0.08;
