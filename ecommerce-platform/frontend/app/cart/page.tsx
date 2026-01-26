@@ -5,8 +5,10 @@ import Link from 'next/link';
 import { useCart } from '../../context/CartContext';
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 
+// Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 function CartPageContent() {
   const { items, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
