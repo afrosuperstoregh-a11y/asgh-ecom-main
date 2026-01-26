@@ -9,6 +9,15 @@ import { Button } from './ui/Button';
 import { useCart } from "../contexts/CartContext";
 import { Loader2 } from 'lucide-react';
 
+// Define the cart item interface
+interface CartItem {
+  id: string | number;
+  name: string;
+  price: number;
+  quantity: number;
+  [key: string]: any; // Allow additional properties
+}
+
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface CheckoutButtonProps {
@@ -24,7 +33,7 @@ export function CheckoutButton({
   className,
   children = 'Proceed to Checkout',
 }: CheckoutButtonProps) {
-  const { items: cartItems, getCartTotal } = useCart();
+  const { items: cartItems, getCartTotal } = useCart() as { items: CartItem[], getCartTotal: () => number };
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -54,7 +63,7 @@ export function CheckoutButton({
           ...(token && { 'Authorization': `Bearer ${token}` }),
         },
         body: JSON.stringify({
-          items: cartItems.map(item => ({
+          items: cartItems.map((item: CartItem) => ({
             id: item.id,
             name: item.name,
             price: item.price,
