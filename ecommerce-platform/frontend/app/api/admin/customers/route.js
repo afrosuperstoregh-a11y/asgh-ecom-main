@@ -9,30 +9,33 @@ export async function GET(request) {
         name: 'John Doe',
         email: 'john@example.com',
         phone: '+1-555-0123',
-        totalOrders: 5,
+        createdAt: '2024-01-01',
         totalSpent: 445.75,
-        status: 'active',
-        joinedAt: '2024-01-01'
+        averageOrderValue: 89.15,
+        orderCount: 5,
+        lastOrderDate: '2024-01-25'
       },
       {
         id: 'CUST-002',
         name: 'Jane Smith',
         email: 'jane@example.com',
         phone: '+1-555-0124',
-        totalOrders: 3,
+        createdAt: '2024-01-05',
         totalSpent: 287.50,
-        status: 'active',
-        joinedAt: '2024-01-05'
+        averageOrderValue: 95.83,
+        orderCount: 3,
+        lastOrderDate: '2024-01-24'
       },
       {
         id: 'CUST-003',
         name: 'Mike Johnson',
         email: 'mike@example.com',
         phone: '+1-555-0125',
-        totalOrders: 8,
+        createdAt: '2023-12-15',
         totalSpent: 623.25,
-        status: 'active',
-        joinedAt: '2023-12-15'
+        averageOrderValue: 77.91,
+        orderCount: 8,
+        lastOrderDate: '2024-01-23'
       }
     ];
 
@@ -54,6 +57,40 @@ export async function GET(request) {
     return NextResponse.json({
       success: false,
       message: 'Failed to fetch customers'
+    }, { status: 500 });
+  }
+}
+
+export async function PUT(request) {
+  try {
+    const body = await request.json();
+    const { id, status } = body;
+    
+    if (!id) {
+      return NextResponse.json({
+        success: false,
+        message: 'Customer ID is required'
+      }, { status: 400 });
+    }
+
+    // Mock customer status update
+    const updatedCustomer = {
+      id,
+      status: status || 'active',
+      updatedAt: new Date().toISOString()
+    };
+
+    return NextResponse.json({
+      success: true,
+      data: updatedCustomer,
+      message: 'Customer updated successfully'
+    });
+
+  } catch (error) {
+    console.error('Customer update error:', error);
+    return NextResponse.json({
+      success: false,
+      message: 'Failed to update customer'
     }, { status: 500 });
   }
 }
