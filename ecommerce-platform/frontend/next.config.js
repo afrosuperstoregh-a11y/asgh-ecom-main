@@ -43,8 +43,25 @@ const nextConfig = {
       config.ignoreWarnings = [
         {
           module: /feature_collector/,
+        },
+        {
           message: /using deprecated parameters/,
         },
+        {
+          message: /feature_collector/,
+        },
+        function (warning) {
+          return (
+            warning.message.includes('feature_collector') &&
+            warning.message.includes('deprecated parameters')
+          );
+        },
+      ];
+      
+      // Inject warning suppression script
+      config.entry.main = [
+        './scripts/suppress-warnings.js',
+        ...config.entry.main
       ];
     }
     
