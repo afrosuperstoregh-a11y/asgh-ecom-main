@@ -9,5 +9,16 @@
     "env": {
       "NEXT_TELEMETRY_DISABLED": "1"
     }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
+  ],
+  "functions": {
+    "app/api/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
   }
 }

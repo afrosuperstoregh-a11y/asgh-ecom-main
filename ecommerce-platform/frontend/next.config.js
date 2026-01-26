@@ -21,7 +21,7 @@ const nextConfig = {
   
   // Configure environment variables
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
   },
   
