@@ -29,16 +29,24 @@ const withWarningSuppression = (nextConfig = {}) => {
             
             // Suppress console warnings
             compiler.hooks.beforeCompile.tap('SuppressWarnings', () => {
-              if (typeof window !== 'undefined') {
-                const originalWarn = console.warn;
-                console.warn = (...args) => {
-                  const message = args.join(' ').toLowerCase();
-                  if (message.includes('feature_collector') && message.includes('deprecated')) {
-                    return;
-                  }
-                  originalWarn.apply(console, args);
-                };
-              }
+              const originalWarn = console.warn;
+              const originalError = console.error;
+              
+              const shouldSuppress = (...args) => {
+                const message = args.join(' ').toLowerCase();
+                return message.includes('feature_collector') && 
+                       (message.includes('deprecated') || message.includes('initialization'));
+              };
+              
+              console.warn = (...args) => {
+                if (shouldSuppress(...args)) return;
+                originalWarn.apply(console, args);
+              };
+              
+              console.error = (...args) => {
+                if (shouldSuppress(...args)) return;
+                originalError.apply(console, args);
+              };
             });
           }
         });

@@ -29,6 +29,12 @@ const nextConfig = {
   
   // Configure webpack for serverless compatibility
   webpack: (config, { isServer, dev }) => {
+    // Suppress all webpack warnings in development
+    if (dev) {
+      config.infrastructureLogging = {
+        level: 'error',
+      };
+    }
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -52,16 +58,43 @@ const nextConfig = {
         {
           message: /feature_collector/,
         },
+        {
+          message: /deprecated parameters for the initialization function/,
+        },
         function (warning) {
           return (
-            warning.message.includes('feature_collector') &&
-            warning.message.includes('deprecated parameters')
+            warning.message && (
+              warning.message.includes('feature_collector') ||
+              (warning.message.includes('deprecated parameters') && warning.message.includes('initialization function'))
+            )
           );
         },
-        function (warning) {
-          return warning.message && warning.message.includes('feature_collector');
-        },
       ];
+      
+      // Additional suppression for webpack 5 deprecation warnings
+      config.stats = {
+        warnings: false,
+        warningsFilter: [
+          'feature_collector',
+          /deprecated parameters/,
+          /initialization function/,
+        ],
+      };
+      
+      // Add compiler plugin for comprehensive warning suppression
+      config.plugins.push({
+        apply: (compiler) => {
+          compiler.hooks.done.tap('SuppressFeatureCollectorWarnings', (stats) => {
+            stats.compilation.warnings = stats.compilation.warnings.filter(warning => {
+              const message = warning.message || warning.toString();
+              return !(
+                message.includes('feature_collector') &&
+                message.includes('deprecated parameters')
+              );
+            });
+          });
+        }
+      });
     }
     
     return config;

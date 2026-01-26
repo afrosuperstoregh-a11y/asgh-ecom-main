@@ -1,124 +1,100 @@
 import { NextResponse } from 'next/server';
+import Stripe from 'stripe';
+
+// Initialize Stripe with secret key
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-10-16',
+});
+
+// Database connection (using Supabase)
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 export async function GET(request) {
   try {
-    // Mock payments data
-    const payments = [
-      {
-        id: 'PAY-001',
-        amount: 89.99,
-        currency: 'USD',
+    // Parse query parameters
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page')) || 1;
+    const limit = parseInt(searchParams.get('limit')) || 20;
+    const status = searchParams.get('status');
+    
+    // Build query
+    let query = supabase
+      .from('payments')
+      .select(`
+        *,
+        orders(id, orderNumber, total, userId),
+        users(id, name, email)
+      `)
+      .order('createdAt', { ascending: false });
+    
+    // Apply filters
+    if (status) {
+      query = query.eq('status', status);
+    }
+    
+    // Apply pagination
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    query = query.range(from, to);
+    
+    const { data: payments, error, count } = await query;
+    
+    if (error) {
+      console.error('Database error:', error);
+      return NextResponse.json({
+        success: false,
+        message: 'Failed to fetch payments'
+      }, { status: 500 });
+    }
+    
+    // Format payments to match expected structure
+    const formattedPayments = payments.map(payment => ({
+      id: payment.id,
+      amount: parseFloat(payment.amount),
+      currency: payment.currency,
+      status: payment.status.toUpperCase(),
+      provider: 'stripe',
+      providerId: payment.stripePaymentIntentId,
+      createdAt: payment.createdAt,
+      order: {
+        id: payment.orderId,
+        orderNumber: payment.orders?.orderNumber || `ORD-${payment.orderId.slice(-8)}`,
+        total: parseFloat(payment.orders?.total || payment.amount),
+        user: payment.users ? {
+          name: payment.users.name,
+          email: payment.users.email
+        } : null
+      },
+      paymentMethod: {
+        type: payment.paymentMethodType,
+        last4: payment.paymentMethodDetails?.card?.last4,
+        brand: payment.paymentMethodDetails?.card?.brand
+      },
+      refunds: payment.refundAmount ? [{
+        id: `REF-${payment.id}`,
+        amount: payment.refundAmount,
         status: 'COMPLETED',
-        provider: 'stripe',
-        providerId: 'pi_1234567890',
-        createdAt: '2024-01-25T10:30:00Z',
-        order: {
-          id: 'ORD-001',
-          orderNumber: 'ORD-2024-001',
-          total: 89.99,
-          user: {
-            name: 'John Doe',
-            email: 'john@example.com'
-          }
-        },
-        paymentMethod: {
-          type: 'card',
-          last4: '4242',
-          brand: 'visa'
-        },
-        refunds: []
-      },
-      {
-        id: 'PAY-002',
-        amount: 124.50,
-        currency: 'USD',
-        status: 'COMPLETED',
-        provider: 'paypal',
-        providerId: 'PAYID_1234567890',
-        createdAt: '2024-01-25T14:15:00Z',
-        order: {
-          id: 'ORD-002',
-          orderNumber: 'ORD-2024-002',
-          total: 124.50,
-          user: {
-            name: 'Jane Smith',
-            email: 'jane@example.com'
-          }
-        },
-        paymentMethod: {
-          type: 'paypal',
-          email: 'jane@example.com'
-        },
-        refunds: []
-      },
-      {
-        id: 'PAY-003',
-        amount: 67.25,
-        currency: 'USD',
-        status: 'FAILED',
-        provider: 'stripe',
-        providerId: 'pi_0987654321',
-        createdAt: '2024-01-24T16:45:00Z',
-        order: {
-          id: 'ORD-003',
-          orderNumber: 'ORD-2024-003',
-          total: 67.25,
-          guestEmail: 'guest@example.com'
-        },
-        paymentMethod: {
-          type: 'card',
-          last4: '5555',
-          brand: 'mastercard'
-        },
-        refunds: []
-      },
-      {
-        id: 'PAY-004',
-        amount: 45.00,
-        currency: 'USD',
-        status: 'REFUNDED',
-        provider: 'stripe',
-        providerId: 'pi_1122334455',
-        createdAt: '2024-01-23T11:20:00Z',
-        order: {
-          id: 'ORD-004',
-          orderNumber: 'ORD-2024-004',
-          total: 45.00,
-          user: {
-            name: 'Mike Johnson',
-            email: 'mike@example.com'
-          }
-        },
-        paymentMethod: {
-          type: 'card',
-          last4: '1234',
-          brand: 'visa'
-        },
-        refunds: [
-          {
-            id: 'REF-001',
-            amount: 45.00,
-            status: 'COMPLETED',
-            createdAt: '2024-01-24T09:00:00Z',
-            reason: 'Customer requested refund'
-          }
-        ]
-      }
-    ];
-
+        createdAt: payment.refundedAt
+      }] : []
+    }));
+    
     return NextResponse.json({
       success: true,
       data: {
-        payments,
+        payments: formattedPayments,
         pagination: {
-          page: 1,
-          limit: 20,
-          total: 4,
-          totalPages: 1
+          page,
+          limit,
+          total: count || formattedPayments.length,
+          totalPages: Math.ceil((count || formattedPayments.length) / limit)
         }
       }
     });
-
+    
   } catch (error) {
     console.error('Payments fetch error:', error);
     return NextResponse.json({
@@ -131,27 +107,77 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
+    const { amount, currency = 'cad', orderId, userId, paymentMethodId } = body;
     
-    // Mock payment processing
-    const newPayment = {
-      id: `PAY-${Date.now()}`,
-      ...body,
-      status: 'PENDING',
-      createdAt: new Date().toISOString(),
-      refunds: []
-    };
-
+    // Validate required fields
+    if (!amount || !orderId) {
+      return NextResponse.json({
+        success: false,
+        message: 'Amount and Order ID are required'
+      }, { status: 400 });
+    }
+    
+    // Create payment intent with Stripe
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100), // Convert to cents
+      currency: currency.toLowerCase(),
+      metadata: {
+        orderId,
+        userId: userId || 'guest'
+      },
+      automatic_payment_methods: {
+        enabled: true,
+      },
+      ...(paymentMethodId && { payment_method: paymentMethodId }),
+    });
+    
+    // Create payment record in database
+    const { data: payment, error: dbError } = await supabase
+      .from('payments')
+      .insert({
+        orderId,
+        userId: userId || null,
+        amount: amount,
+        currency: currency.toUpperCase(),
+        status: 'pending',
+        paymentMethodType: 'card',
+        stripePaymentIntentId: paymentIntent.id,
+        metadata: {
+          stripeClientSecret: paymentIntent.client_secret
+        }
+      })
+      .select()
+      .single();
+    
+    if (dbError) {
+      console.error('Database error:', dbError);
+      // Try to rollback Stripe payment intent
+      await stripe.paymentIntents.cancel(paymentIntent.id);
+      
+      return NextResponse.json({
+        success: false,
+        message: 'Failed to create payment record'
+      }, { status: 500 });
+    }
+    
     return NextResponse.json({
       success: true,
-      data: newPayment,
-      message: 'Payment processed successfully'
+      data: {
+        id: payment.id,
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+        amount: amount,
+        currency: currency.toUpperCase(),
+        status: 'pending'
+      },
+      message: 'Payment intent created successfully'
     });
-
+    
   } catch (error) {
     console.error('Payment processing error:', error);
     return NextResponse.json({
       success: false,
-      message: 'Failed to process payment'
+      message: error.message || 'Failed to process payment'
     }, { status: 500 });
   }
 }
@@ -159,7 +185,7 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     const body = await request.json();
-    const { id, status } = body;
+    const { id, status, refundAmount } = body;
     
     if (!id) {
       return NextResponse.json({
@@ -167,25 +193,111 @@ export async function PUT(request) {
         message: 'Payment ID is required'
       }, { status: 400 });
     }
-
-    // Mock payment status update
-    const updatedPayment = {
-      id,
-      status: status || 'PENDING',
-      updatedAt: new Date().toISOString()
-    };
-
+    
+    // Get payment record
+    const { data: payment, error: fetchError } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (fetchError || !payment) {
+      return NextResponse.json({
+        success: false,
+        message: 'Payment not found'
+      }, { status: 404 });
+    }
+    
+    let updatedPayment = { ...payment };
+    
+    // Handle different status updates
+    switch (status) {
+      case 'succeeded':
+        updatedPayment.status = 'succeeded';
+        updatedPayment.paidAt = new Date();
+        break;
+        
+      case 'failed':
+        updatedPayment.status = 'failed';
+        updatedPayment.failedAt = new Date();
+        // Cancel the Stripe payment intent
+        if (payment.stripePaymentIntentId) {
+          await stripe.paymentIntents.cancel(payment.stripePaymentIntentId);
+        }
+        break;
+        
+      case 'refunded':
+        if (payment.stripeChargeId) {
+          // Create refund in Stripe
+          const refund = await stripe.refunds.create({
+            charge: payment.stripeChargeId,
+            amount: refundAmount ? Math.round(refundAmount * 100) : undefined,
+          });
+          
+          updatedPayment.status = 'refunded';
+          updatedPayment.refundedAt = new Date();
+          updatedPayment.refundAmount = refundAmount || payment.amount;
+          updatedPayment.metadata = {
+            ...payment.metadata,
+            refundId: refund.id
+          };
+        } else {
+          return NextResponse.json({
+            success: false,
+            message: 'No charge ID available for refund'
+          }, { status: 400 });
+        }
+        break;
+        
+      case 'canceled':
+        updatedPayment.status = 'canceled';
+        updatedPayment.canceledAt = new Date();
+        // Cancel the Stripe payment intent
+        if (payment.stripePaymentIntentId) {
+          await stripe.paymentIntents.cancel(payment.stripePaymentIntentId);
+        }
+        break;
+        
+      default:
+        updatedPayment.status = status;
+    }
+    
+    // Update payment in database
+    const { data: updated, error: updateError } = await supabase
+      .from('payments')
+      .update({
+        status: updatedPayment.status,
+        paidAt: updatedPayment.paidAt,
+        failedAt: updatedPayment.failedAt,
+        refundedAt: updatedPayment.refundedAt,
+        refundAmount: updatedPayment.refundAmount,
+        canceledAt: updatedPayment.canceledAt,
+        metadata: updatedPayment.metadata,
+        updatedAt: new Date()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (updateError) {
+      console.error('Database update error:', updateError);
+      return NextResponse.json({
+        success: false,
+        message: 'Failed to update payment'
+      }, { status: 500 });
+    }
+    
     return NextResponse.json({
       success: true,
-      data: updatedPayment,
-      message: 'Payment updated successfully'
+      data: updated,
+      message: `Payment ${status} successfully`
     });
-
+    
   } catch (error) {
     console.error('Payment update error:', error);
     return NextResponse.json({
       success: false,
-      message: 'Failed to update payment'
+      message: error.message || 'Failed to update payment'
     }, { status: 500 });
   }
 }
