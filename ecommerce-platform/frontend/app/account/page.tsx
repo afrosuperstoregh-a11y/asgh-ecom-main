@@ -88,11 +88,11 @@ const AccountPage = () => {
   const handleSignOut = async () => {
     try {
       await logout();
-      router.push('/login');
+      router.replace('/login');
     } catch (error) {
       console.error('Sign out error:', error);
       // Still redirect even if API call fails
-      router.push('/login');
+      router.replace('/login');
     }
   };
 

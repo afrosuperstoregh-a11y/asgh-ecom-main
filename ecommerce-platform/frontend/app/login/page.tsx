@@ -40,7 +40,7 @@ export default function LoginPage() {
         setSuccess('Login successful! Redirecting...');
         
         setTimeout(() => {
-          router.push('/account');
+          router.replace('/account');
         }, 1500);
       } else {
         setError('Invalid email or password');

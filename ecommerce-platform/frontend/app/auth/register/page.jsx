@@ -103,7 +103,7 @@ export default function RegisterPage() {
       setSuccess('Registration successful! Redirecting to login...');
       
       setTimeout(() => {
-        router.push('/auth/login');
+        router.replace('/auth/login');
       }, 2000);
     } catch (err) {
       setError(err.message || 'Registration failed');

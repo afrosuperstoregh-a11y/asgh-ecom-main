@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
       apiService.getProfile(savedToken)
         .then(data => {
           if (data.success) {
-            setUser(data.data.user);
+            setUser(data.user);
           }
         })
         .catch((error) => {
@@ -45,10 +45,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await apiService.register(userData);
       if (data.success) {
-        setToken(data.data.tokens.accessToken);
-        setUser(data.data.user);
-        localStorage.setItem('accessToken', data.data.tokens.accessToken);
-        localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
+        setToken(data.token);
+        setUser(data.user);
+        localStorage.setItem('accessToken', data.token);
       }
       return data;
     } catch (err) {
@@ -67,10 +66,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await apiService.login(credentials);
       if (data.success) {
-        setToken(data.data.tokens.accessToken);
-        setUser(data.data.user);
-        localStorage.setItem('accessToken', data.data.tokens.accessToken);
-        localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
+        setToken(data.token);
+        setUser(data.user);
+        localStorage.setItem('accessToken', data.token);
       }
       return data;
     } catch (err) {

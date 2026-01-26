@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 class ApiService {
   constructor() {
@@ -35,21 +35,21 @@ class ApiService {
 
   // Authentication endpoints
   async register(userData) {
-    return this.request('/auth-simple/register', {
+    return this.request('/auth/register', {
       method: 'POST',
       body: userData,
     });
   }
 
   async login(credentials) {
-    return this.request('/auth-simple/login', {
+    return this.request('/auth/login', {
       method: 'POST',
       body: credentials,
     });
   }
 
   async getProfile(token) {
-    return this.request('/auth-simple/me', {
+    return this.request('/auth/me', {
       headers: {
         'Authorization': `Bearer ${token}`,
       },

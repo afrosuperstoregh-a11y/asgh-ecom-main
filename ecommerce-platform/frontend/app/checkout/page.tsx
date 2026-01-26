@@ -105,7 +105,7 @@ export default function CheckoutPage() {
     
     setProcessingOrder(false);
     alert('Order placed successfully!');
-    router.push('/');
+    router.replace('/');
   };
 
   const handleInputChange = (section: 'shipping' | 'payment', field: string, value: string) => {

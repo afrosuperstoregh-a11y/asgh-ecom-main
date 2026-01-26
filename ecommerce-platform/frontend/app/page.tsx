@@ -13,7 +13,7 @@ export default function HomePage() {
     async function getFeaturedProducts() {
       try {
         const response = await api.getProducts();
-        setProducts(response.data?.slice(0, 6) || []);
+        setProducts(response.data?.data?.slice(0, 6) || []);
       } catch (error) {
         console.error('Error fetching products:', error);
         setProducts([]);

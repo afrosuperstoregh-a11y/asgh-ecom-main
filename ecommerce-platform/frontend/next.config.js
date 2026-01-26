@@ -2,6 +2,9 @@ const withWarningSuppression = require('./plugins/suppress-warnings');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Turbopack configuration
+  turbopack: {},
+  
   // Enable React Strict Mode for better development practices
   reactStrictMode: true,
   
@@ -106,12 +109,6 @@ const nextConfig = {
   // Enable strict TypeScript checking
   typescript: {
     ignoreBuildErrors: true,
-  },
-  
-  
-  // Empty turbopack config to silence webpack/turbopack conflict
-  turbopack: {
-    root: process.cwd(),
   },
   
   // Vercel-compatible trailing slash
