@@ -55,72 +55,86 @@ function CartPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Page Title */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
-          <p className="mt-2 text-gray-600">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Shopping Cart</h1>
+          <p className="mt-2 text-gray-600 text-sm sm:text-base">
             {items.length} {items.length === 1 ? 'item' : 'items'} in your cart
           </p>
         </div>
 
-        <div className="lg:grid lg:grid-cols-12 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-8">
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-              <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6">
+              <div className="space-y-4 sm:space-y-6">
                 {items.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-4 pb-6 border-b last:border-b-0 last:pb-0">
-                    <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                  <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 pb-4 sm:pb-6 border-b last:border-b-0 last:pb-0">
+                    {/* Product Image */}
+                    <div className="w-full sm:w-20 h-48 sm:h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                       <img
                         src={item.image || '/placeholder-product.svg'}
                         alt={item.name}
                         className="w-full h-full object-cover"
                       />
                     </div>
+                    
+                    {/* Product Details */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-medium text-gray-900 truncate">{item.name}</h3>
+                      <h3 className="text-base sm:text-lg font-medium text-gray-900 line-clamp-2">{item.name}</h3>
                       <p className="text-sm text-gray-500">${item.price}</p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="p-1 text-gray-400 hover:text-gray-600"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </button>
-                      <span className="w-8 text-center">{item.quantity}</span>
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="p-1 text-gray-400 hover:text-gray-600"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
+                    
+                    {/* Quantity Controls */}
+                    <div className="flex items-center justify-between w-full sm:w-auto sm:flex-col sm:space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="p-2 text-gray-400 hover:text-gray-600 transition-colors touch-target"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <span className="w-8 text-center font-medium">{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="p-2 text-gray-400 hover:text-gray-600 transition-colors touch-target"
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
+                      
+                      {/* Price and Remove Button */}
+                      <div className="flex items-center justify-between w-full sm:flex-col sm:items-end sm:space-y-2">
+                        <div className="text-lg font-semibold text-gray-900">
+                          ${(item.price * item.quantity).toFixed(2)}
+                        </div>
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="p-2 text-red-400 hover:text-red-600 transition-colors touch-target"
+                          aria-label="Remove item"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="text-lg font-semibold text-gray-900 w-20 text-right">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </div>
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      className="p-2 text-red-400 hover:text-red-600"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Promo Code */}
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Promo Code</h3>
-              <div className="flex space-x-4">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                 <input
                   type="text"
                   placeholder="Enter promo code"
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-base"
                 />
-                <button className="px-6 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors">
+                <button className="mobile-button bg-primary-600 text-white hover:bg-primary-700">
                   Apply
                 </button>
               </div>
@@ -129,18 +143,18 @@ function CartPageContent() {
 
           {/* Order Summary */}
           <div className="lg:col-span-4">
-            <div className="bg-white rounded-lg shadow-sm p-6 lg:sticky lg:top-8">
+            <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 lg:sticky lg:top-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
               <div className="space-y-3">
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-gray-600 text-sm sm:text-base">
                   <span>Subtotal</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-gray-600 text-sm sm:text-base">
                   <span>Shipping</span>
                   <span>{shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}</span>
                 </div>
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-gray-600 text-sm sm:text-base">
                   <span>Tax</span>
                   <span>${tax.toFixed(2)}</span>
                 </div>
@@ -155,13 +169,13 @@ function CartPageContent() {
               <div className="mt-6 space-y-3">
                 <Link
                   href="/checkout"
-                  className="block w-full px-6 py-3 bg-primary-600 text-white font-medium text-center rounded-lg hover:bg-primary-700 transition-colors"
+                  className="mobile-button bg-primary-600 text-white hover:bg-primary-700"
                 >
                   Proceed to Checkout
                 </Link>
                 <button
                   onClick={clearCart}
-                  className="block w-full px-6 py-3 border border-gray-300 text-gray-700 font-medium text-center rounded-lg hover:bg-gray-50 transition-colors"
+                  className="mobile-button border border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
                   Clear Cart
                 </button>
@@ -179,10 +193,10 @@ function CartPageContent() {
         </div>
 
         {/* Continue Shopping */}
-        <div className="mt-8 text-center">
+        <div className="mt-6 sm:mt-8 text-center">
           <Link
             href="/products"
-            className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium"
+            className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium text-sm sm:text-base"
           >
             ← Continue Shopping
           </Link>
