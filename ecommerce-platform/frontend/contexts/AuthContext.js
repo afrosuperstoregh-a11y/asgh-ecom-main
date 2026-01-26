@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '../lib/api';
+import apiService from '../services/api';
 
 const AuthContext = createContext();
 
@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     if (savedToken) {
       setToken(savedToken);
       // Verify token and get user
-      api.getMe(savedToken)
+      apiService.getProfile(savedToken)
         .then(data => {
           if (data.success) {
             setUser(data.data.user);
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     
     try {
-      const data = await api.register(userData);
+      const data = await apiService.register(userData);
       if (data.success) {
         setToken(data.data.tokens.accessToken);
         setUser(data.data.user);
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     
     try {
-      const data = await api.login(credentials);
+      const data = await apiService.login(credentials);
       if (data.success) {
         setToken(data.data.tokens.accessToken);
         setUser(data.data.user);
