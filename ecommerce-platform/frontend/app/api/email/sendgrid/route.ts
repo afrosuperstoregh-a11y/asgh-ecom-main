@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import nodemailer from 'nodemailer'
+import * as nodemailer from 'nodemailer'
 
 interface EmailRequest {
   to: string | string[]

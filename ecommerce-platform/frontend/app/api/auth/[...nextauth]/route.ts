@@ -2,7 +2,27 @@ import NextAuth from 'next-auth'
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
-import bcrypt from 'bcryptjs'
+
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id: string
+      email: string
+      name: string
+      role: string
+    }
+  }
+  
+  interface User {
+    role: string
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    role: string
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -61,7 +81,6 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/auth/signin',
-    signUp: '/auth/signup',
   },
 }
 
