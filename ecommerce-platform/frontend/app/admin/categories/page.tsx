@@ -52,7 +52,7 @@ export default function CategoriesPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setCategories(data.categories);
+        setCategories(data.data || data.categories || []);
       } else {
         setError('Failed to fetch categories');
       }

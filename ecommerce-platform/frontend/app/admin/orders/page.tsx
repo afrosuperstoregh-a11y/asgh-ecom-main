@@ -101,8 +101,8 @@ export default function OrdersPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setOrders(data.orders);
-        setPagination(data.pagination);
+        setOrders(data.data?.orders || data.orders || []);
+        setPagination(data.data?.pagination || data.pagination || pagination);
       } else {
         setError('Failed to fetch orders');
       }

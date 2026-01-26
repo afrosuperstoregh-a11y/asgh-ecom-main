@@ -116,8 +116,8 @@ export default function PaymentsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setPayments(data.payments);
-        setPagination(data.pagination);
+        setPayments(data.data?.payments || data.payments || []);
+        setPagination(data.data?.pagination || data.pagination || pagination);
       } else {
         setError('Failed to fetch payments');
       }

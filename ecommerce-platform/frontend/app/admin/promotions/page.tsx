@@ -94,8 +94,8 @@ export default function PromotionsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setPromotions(data.promotions);
-        setPagination(data.pagination);
+        setPromotions(data.data?.promotions || data.promotions || []);
+        setPagination(data.data?.pagination || data.pagination || pagination);
       } else {
         setError('Failed to fetch promotions');
       }

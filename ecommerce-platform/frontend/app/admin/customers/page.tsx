@@ -83,8 +83,8 @@ export default function CustomersPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setCustomers(data.customers);
-        setPagination(data.pagination);
+        setCustomers(data.data?.customers || data.customers || []);
+        setPagination(data.data?.pagination || data.pagination || pagination);
       } else {
         setError('Failed to fetch customers');
       }
