@@ -58,11 +58,21 @@ const nextConfig = {
         },
       ];
       
-      // Inject warning suppression script
-      config.entry.main = [
-        './scripts/suppress-warnings.js',
-        ...config.entry.main
-      ];
+      // Inject warning suppression script at the very beginning
+      if (config.entry.main) {
+        if (Array.isArray(config.entry.main)) {
+          config.entry.main.unshift('./scripts/suppress-warnings.js');
+        } else {
+          config.entry.main = ['./scripts/suppress-warnings.js', config.entry.main];
+        }
+      }
+      
+      // Also add to all entry points
+      Object.keys(config.entry).forEach(key => {
+        if (key !== 'main' && Array.isArray(config.entry[key])) {
+          config.entry[key].unshift('./scripts/suppress-warnings.js');
+        }
+      });
     }
     
     return config;

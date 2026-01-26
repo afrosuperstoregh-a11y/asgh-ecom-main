@@ -5,6 +5,7 @@ import { CartProvider } from "../contexts/CartContext";
 import { AuthProvider } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import Script from "next/script";
 
 export const dynamic = 'force-dynamic';
 
@@ -84,6 +85,53 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} min-h-screen bg-gray-50 antialiased overflow-x-hidden`}>
+        {/* Suppress development warnings */}
+        {process.env.NODE_ENV === 'development' && (
+          <Script
+            id="suppress-warnings"
+            strategy="beforeInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                (function() {
+                  const originalWarn = console.warn;
+                  const originalError = console.error;
+                  const originalLog = console.log;
+                  
+                  const shouldSuppress = (...args) => {
+                    const message = args.join(' ').toLowerCase();
+                    return message.includes('feature_collector') && message.includes('deprecated');
+                  };
+                  
+                  console.warn = (...args) => {
+                    if (shouldSuppress(...args)) return;
+                    originalWarn.apply(console, args);
+                  };
+                  
+                  console.error = (...args) => {
+                    if (shouldSuppress(...args)) return;
+                    originalError.apply(console, args);
+                  };
+                  
+                  console.log = (...args) => {
+                    if (shouldSuppress(...args)) return;
+                    originalLog.apply(console, args);
+                  };
+                  
+                  const originalError = window.onerror;
+                  window.onerror = (message, source, lineno, colno, error) => {
+                    if (typeof message === 'string' && shouldSuppress(message)) {
+                      return true;
+                    }
+                    if (originalError) {
+                      return originalError.call(window, message, source, lineno, colno, error);
+                    }
+                    return false;
+                  };
+                })();
+              `,
+            }}
+          />
+        )}
         <AuthProvider>
           <CartProvider>
             <div className="flex flex-col min-h-screen">
