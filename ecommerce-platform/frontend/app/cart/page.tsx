@@ -5,6 +5,15 @@ import Link from 'next/link';
 import { useCart } from "../../contexts/CartContext";
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 
+// Define the cart item type
+interface CartItem {
+  id: string | number;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+}
+
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
@@ -58,7 +67,7 @@ export default function CartPage() {
           <div className="lg:col-span-8">
             <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6">
               <div className="space-y-4 sm:space-y-6">
-                {items.map((item) => (
+                {items.map((item: CartItem) => (
                   <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 pb-4 sm:pb-6 border-b last:border-b-0 last:pb-0">
                     {/* Product Image */}
                     <div className="w-full sm:w-20 h-48 sm:h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
