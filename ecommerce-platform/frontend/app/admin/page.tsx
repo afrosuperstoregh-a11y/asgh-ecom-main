@@ -55,7 +55,7 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         const data = await response.json();
-        setStats(data);
+        setStats(data.data || data);
       } else {
         setError('Failed to fetch dashboard data');
       }

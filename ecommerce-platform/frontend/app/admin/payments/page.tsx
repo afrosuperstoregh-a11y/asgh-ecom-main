@@ -140,7 +140,7 @@ export default function PaymentsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setStats(data.overview);
+        setStats(data.data?.overview || data.overview || data);
       }
     } catch (error) {
       console.error('Stats fetch error:', error);
