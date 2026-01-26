@@ -22,58 +22,97 @@ export async function GET(request) {
       recentOrders: [
         {
           id: 'ORD-001',
-          customer: 'John Doe',
-          amount: 89.99,
-          status: 'completed',
-          date: '2024-01-25'
+          orderNumber: 'ORD-001',
+          total: 89.99,
+          status: 'PROCESSING',
+          user: {
+            name: 'John Doe',
+            email: 'john@example.com'
+          }
         },
         {
           id: 'ORD-002',
-          customer: 'Jane Smith',
-          amount: 124.50,
-          status: 'processing',
-          date: '2024-01-25'
+          orderNumber: 'ORD-002',
+          total: 124.50,
+          status: 'PROCESSING',
+          user: {
+            name: 'Jane Smith',
+            email: 'jane@example.com'
+          }
         },
         {
           id: 'ORD-003',
-          customer: 'Mike Johnson',
-          amount: 67.25,
-          status: 'pending',
-          date: '2024-01-24'
+          orderNumber: 'ORD-003',
+          total: 67.25,
+          status: 'PENDING',
+          user: {
+            name: 'Mike Johnson',
+            email: 'mike@example.com'
+          }
         }
       ],
       topProducts: [
         {
-          id: 'PROD-001',
-          name: 'Afro Print Dress',
-          sales: 234,
-          revenue: 11700.00
+          productId: 'PROD-001',
+          product: {
+            id: 'PROD-001',
+            name: 'Afro Print Dress',
+            sku: 'APD-001'
+          },
+          _sum: {
+            total: 11700.00
+          },
+          _count: {
+            total: 234
+          }
         },
         {
-          id: 'PROD-002',
-          name: 'Kente Cloth Scarf',
-          sales: 189,
-          revenue: 9450.00
+          productId: 'PROD-002',
+          product: {
+            id: 'PROD-002',
+            name: 'Kente Cloth Scarf',
+            sku: 'KCS-002'
+          },
+          _sum: {
+            total: 9450.00
+          },
+          _count: {
+            total: 189
+          }
         },
         {
-          id: 'PROD-003',
-          name: 'Ankara Headwrap',
-          sales: 156,
-          revenue: 4680.00
+          productId: 'PROD-003',
+          product: {
+            id: 'PROD-003',
+            name: 'Ankara Headwrap',
+            sku: 'AHW-003'
+          },
+          _sum: {
+            total: 4680.00
+          },
+          _count: {
+            total: 156
+          }
         }
       ],
       lowStockProducts: [
         {
           id: 'PROD-004',
-          name: 'Dashiki Shirt',
-          stock: 3,
-          threshold: 10
+          product: {
+            id: 'PROD-004',
+            name: 'Dashiki Shirt'
+          },
+          sku: 'DAS-004',
+          stock: 3
         },
         {
           id: 'PROD-005',
-          name: 'African Beads',
-          stock: 5,
-          threshold: 15
+          product: {
+            id: 'PROD-005',
+            name: 'African Beads'
+          },
+          sku: 'ABE-005',
+          stock: 5
         }
       ]
     };
