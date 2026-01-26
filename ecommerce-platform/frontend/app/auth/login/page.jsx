@@ -34,12 +34,17 @@ export default function LoginPage() {
     setSuccess('');
 
     try {
-      const data = await login(formData);
-      setSuccess('Login successful! Redirecting...');
+      const success = await login(formData.email, formData.password);
       
-      setTimeout(() => {
-        router.push('/account');
-      }, 1500);
+      if (success) {
+        setSuccess('Login successful! Redirecting...');
+        
+        setTimeout(() => {
+          router.push('/account');
+        }, 1500);
+      } else {
+        setError('Invalid email or password');
+      }
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {

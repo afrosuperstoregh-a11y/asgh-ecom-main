@@ -1,9 +1,11 @@
+import { NextResponse } from 'next/server';
+
 export async function POST(request) {
   try {
     const { email, password, name } = await request.json();
 
     if (!email || !password) {
-      return Response.json({
+      return NextResponse.json({
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
@@ -13,7 +15,7 @@ export async function POST(request) {
     }
 
     if (password.length < 8) {
-      return Response.json({
+      return NextResponse.json({
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
@@ -23,20 +25,23 @@ export async function POST(request) {
     }
 
     // Mock registration - replace with real registration logic
-    return Response.json({
+    return NextResponse.json({
       success: true,
       message: 'Registration successful',
       data: {
         user: {
           id: Date.now(),
           email,
-          name: name || 'New User'
-        }
+          name: name || 'New User',
+          role: 'customer'
+        },
+        token: 'mock-jwt-token-for-new-user',
+        refreshToken: 'mock-refresh-token'
       }
     });
 
   } catch (error) {
-    return Response.json({
+    return NextResponse.json({
       success: false,
       error: {
         code: 'INTERNAL_ERROR',

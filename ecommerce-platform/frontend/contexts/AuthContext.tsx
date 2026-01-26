@@ -13,7 +13,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   register: (userData: RegisterData) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
   isAuthenticated: boolean;
 }
@@ -69,10 +69,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (response.ok) {
-        const { user: userData, token } = await response.json();
-        setUser(userData);
-        localStorage.setItem('auth_token', token);
-        return true;
+        const responseData = await response.json();
+        
+        // Handle both response formats - direct user data or nested data
+        const userData = responseData.data?.user || responseData.user || responseData;
+        const token = responseData.data?.token || responseData.token;
+        
+        if (userData && token) {
+          setUser(userData);
+          localStorage.setItem('auth_token', token);
+          return true;
+        }
       }
       return false;
     } catch (error) {
@@ -90,10 +97,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (response.ok) {
-        const { user: newUser, token } = await response.json();
-        setUser(newUser);
-        localStorage.setItem('auth_token', token);
-        return true;
+        const responseData = await response.json();
+        
+        // Handle both response formats - direct user data or nested data
+        const newUser = responseData.data?.user || responseData.user || responseData;
+        const token = responseData.data?.token || responseData.token;
+        
+        if (newUser && token) {
+          setUser(newUser);
+          localStorage.setItem('auth_token', token);
+          return true;
+        }
       }
       return false;
     } catch (error) {
@@ -102,9 +116,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('auth_token');
+  const logout = async () => {
+    try {
+      // Call backend logout endpoint
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+    } finally {
+      // Always clear local state regardless of API call success
+      setUser(null);
+      localStorage.removeItem('auth_token');
+    }
   };
 
   const value: AuthContextType = {

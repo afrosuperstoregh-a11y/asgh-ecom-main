@@ -2,9 +2,13 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '../../contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 const AccountPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const { user, logout } = useAuth();
+  const router = useRouter();
 
   const menuItems = [
     {
@@ -81,6 +85,11 @@ const AccountPage = () => {
     }
   ];
 
+  const handleSignOut = () => {
+    logout();
+    router.push('/');
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
@@ -88,7 +97,7 @@ const AccountPage = () => {
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Account Overview</h2>
-              <p className="text-gray-600 mt-2">Welcome back, John Doe!</p>
+              <p className="text-gray-600 mt-2">Welcome back, {user?.name || 'User'}!</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -204,11 +213,13 @@ const AccountPage = () => {
             <div className="bg-white shadow-lg rounded-lg p-6">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <span className="text-indigo-600 font-bold text-lg">JD</span>
+                  <span className="text-indigo-600 font-bold text-lg">
+                    {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
+                  </span>
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-900">John Doe</h3>
-                  <p className="text-sm text-gray-600">john@example.com</p>
+                  <h3 className="font-medium text-gray-900">{user?.name || 'User'}</h3>
+                  <p className="text-sm text-gray-600">{user?.email || 'user@example.com'}</p>
                 </div>
               </div>
 
@@ -230,7 +241,10 @@ const AccountPage = () => {
               </nav>
 
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <button className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
+                <button 
+                  onClick={handleSignOut}
+                  className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
