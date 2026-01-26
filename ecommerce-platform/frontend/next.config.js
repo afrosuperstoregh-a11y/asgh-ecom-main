@@ -1,3 +1,5 @@
+const withWarningSuppression = require('./plugins/suppress-warnings');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Enable React Strict Mode for better development practices
@@ -56,23 +58,10 @@ const nextConfig = {
             warning.message.includes('deprecated parameters')
           );
         },
+        function (warning) {
+          return warning.message && warning.message.includes('feature_collector');
+        },
       ];
-      
-      // Inject warning suppression script at the very beginning
-      if (config.entry.main) {
-        if (Array.isArray(config.entry.main)) {
-          config.entry.main.unshift('./scripts/suppress-warnings.js');
-        } else {
-          config.entry.main = ['./scripts/suppress-warnings.js', config.entry.main];
-        }
-      }
-      
-      // Also add to all entry points
-      Object.keys(config.entry).forEach(key => {
-        if (key !== 'main' && Array.isArray(config.entry[key])) {
-          config.entry[key].unshift('./scripts/suppress-warnings.js');
-        }
-      });
     }
     
     return config;
@@ -103,4 +92,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withWarningSuppression(nextConfig);
