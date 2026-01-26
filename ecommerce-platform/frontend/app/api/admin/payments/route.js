@@ -7,17 +7,23 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
 });
 
-// Database connection (using Supabase)
-const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY 
-  ? createClient(
+// Database connection (using Supabase) - lazy initialization
+let supabase = null;
+
+function getSupabaseClient() {
+  if (!supabase && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
-    )
-  : null;
+    );
+  }
+  return supabase;
+}
 
 export async function GET(request) {
   try {
-    // Check if Supabase is available
+    // Get Supabase client
+    const supabase = getSupabaseClient();
     if (!supabase) {
       return NextResponse.json({
         success: false,
@@ -116,7 +122,8 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    // Check if Supabase is available
+    // Get Supabase client
+    const supabase = getSupabaseClient();
     if (!supabase) {
       return NextResponse.json({
         success: false,
@@ -202,7 +209,8 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    // Check if Supabase is available
+    // Get Supabase client
+    const supabase = getSupabaseClient();
     if (!supabase) {
       return NextResponse.json({
         success: false,

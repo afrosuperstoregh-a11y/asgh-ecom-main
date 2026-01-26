@@ -8,13 +8,18 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
 });
 
-// Database connection (using Supabase)
-const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY 
-  ? createClient(
+// Database connection (using Supabase) - lazy initialization
+let supabase = null;
+
+function getSupabaseClient() {
+  if (!supabase && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
-    )
-  : null;
+    );
+  }
+  return supabase;
+}
 
 export async function POST(request) {
   const body = await request.text();
@@ -88,6 +93,11 @@ export async function POST(request) {
 }
 
 async function handlePaymentIntentSucceeded(paymentIntent) {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('Supabase client not available');
+    return;
+  }
   const orderId = paymentIntent.metadata.orderId;
   const userId = paymentIntent.metadata.userId;
 
@@ -131,6 +141,11 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
 }
 
 async function handlePaymentIntentFailed(paymentIntent) {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('Supabase client not available');
+    return;
+  }
   const orderId = paymentIntent.metadata.orderId;
 
   if (!orderId) {
@@ -156,6 +171,11 @@ async function handlePaymentIntentFailed(paymentIntent) {
 }
 
 async function handlePaymentIntentCanceled(paymentIntent) {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('Supabase client not available');
+    return;
+  }
   const orderId = paymentIntent.metadata.orderId;
 
   if (!orderId) {
@@ -181,6 +201,11 @@ async function handlePaymentIntentCanceled(paymentIntent) {
 }
 
 async function handleChargeSucceeded(charge) {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('Supabase client not available');
+    return;
+  }
   const paymentIntentId = charge.payment_intent;
 
   if (!paymentIntentId) {
@@ -214,6 +239,11 @@ async function handleChargeSucceeded(charge) {
 }
 
 async function handleChargeRefunded(charge) {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('Supabase client not available');
+    return;
+  }
   const paymentIntentId = charge.payment_intent;
 
   if (!paymentIntentId) {
@@ -262,6 +292,11 @@ async function handleChargeRefunded(charge) {
 }
 
 async function handleChargeFailed(charge) {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('Supabase client not available');
+    return;
+  }
   const paymentIntentId = charge.payment_intent;
 
   if (!paymentIntentId) {
@@ -287,6 +322,11 @@ async function handleChargeFailed(charge) {
 }
 
 async function handleCheckoutSessionCompleted(session) {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('Supabase client not available');
+    return;
+  }
   const orderId = session.metadata?.orderId;
 
   if (!orderId) {
