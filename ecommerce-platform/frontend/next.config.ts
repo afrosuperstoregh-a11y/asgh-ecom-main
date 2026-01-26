@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   output: 'standalone',
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client'],
+  },
+  staticPageGenerationTimeout: 0,
 };
 
 export default nextConfig;
