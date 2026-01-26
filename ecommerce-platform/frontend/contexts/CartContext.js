@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 
 // Cart context
 const CartContext = createContext();
@@ -78,6 +78,7 @@ function calculateTotals(state) {
 // Provider component
 export function CartProvider({ children }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+  const prevItemsRef = useRef();
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -92,9 +93,20 @@ export function CartProvider({ children }) {
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Save cart to localStorage whenever it changes, but prevent infinite loops
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(state.items));
+    // Only save if items have actually changed from previous render
+    const prevItems = prevItemsRef.current;
+    const itemsChanged = JSON.stringify(prevItems) !== JSON.stringify(state.items);
+    
+    if (itemsChanged) {
+      try {
+        localStorage.setItem('cart', JSON.stringify(state.items));
+        prevItemsRef.current = state.items;
+      } catch (error) {
+        console.error('Error saving cart to localStorage:', error);
+      }
+    }
   }, [state.items]);
 
   // Actions
