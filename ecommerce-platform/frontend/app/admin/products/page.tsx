@@ -85,8 +85,8 @@ export default function ProductsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setProducts(data.products);
-        setPagination(data.pagination);
+        setProducts(data.data?.products || data.products || []);
+        setPagination(data.data?.pagination || data.pagination || pagination);
       } else {
         setError('Failed to fetch products');
       }
@@ -103,6 +103,20 @@ export default function ProductsPage() {
     setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page
   };
 
+  const handleAddProduct = () => {
+    // TODO: Navigate to add product page or open modal
+    alert('Add Product functionality will be implemented');
+  };
+
+  const handleEditProduct = (productId: string) => {
+    // TODO: Navigate to edit product page or open modal
+    alert(`Edit product ${productId} functionality will be implemented`);
+  };
+
+  const handleViewProduct = (productId: string) => {
+    // TODO: Navigate to product details page or open modal
+    alert(`View product ${productId} functionality will be implemented`);
+  };
   const handleDelete = async (productId: string) => {
     if (!confirm('Are you sure you want to delete this product?')) {
       return;
@@ -136,7 +150,11 @@ export default function ProductsPage() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'draft': return 'bg-yellow-100 text-yellow-800';
+      case 'inactive': return 'bg-gray-100 text-gray-800';
+      case 'archived': return 'bg-red-100 text-red-800';
       case 'ACTIVE': return 'bg-green-100 text-green-800';
       case 'DRAFT': return 'bg-yellow-100 text-yellow-800';
       case 'INACTIVE': return 'bg-gray-100 text-gray-800';
@@ -186,7 +204,7 @@ export default function ProductsPage() {
               <Download className="h-4 w-4 mr-2" />
               Export
             </button>
-            <button className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+            <button onClick={handleAddProduct} className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
               <Plus className="h-4 w-4 mr-2" />
               Add Product
             </button>
@@ -228,9 +246,9 @@ export default function ProductsPage() {
                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">All Categories</option>
-                <option value="electronics">Electronics</option>
-                <option value="clothing">Clothing</option>
-                <option value="books">Books</option>
+                <option value="Clothing">Clothing</option>
+                <option value="Accessories">Accessories</option>
+                <option value="Home & Living">Home & Living</option>
               </select>
 
               <select
@@ -239,10 +257,10 @@ export default function ProductsPage() {
                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">All Status</option>
-                <option value="ACTIVE">Active</option>
-                <option value="DRAFT">Draft</option>
-                <option value="INACTIVE">Inactive</option>
-                <option value="ARCHIVED">Archived</option>
+                <option value="active">Active</option>
+                <option value="draft">Draft</option>
+                <option value="inactive">Inactive</option>
+                <option value="archived">Archived</option>
               </select>
 
               <select
@@ -292,7 +310,7 @@ export default function ProductsPage() {
               Get started by creating a new product.
             </p>
             <div className="mt-6">
-              <button className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+              <button onClick={handleAddProduct} className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Product
               </button>
@@ -380,10 +398,10 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
-                        <button className="text-blue-600 hover:text-blue-900">
+                        <button onClick={() => handleViewProduct(product.id)} className="text-blue-600 hover:text-blue-900">
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button className="text-gray-600 hover:text-gray-900">
+                        <button onClick={() => handleEditProduct(product.id)} className="text-gray-600 hover:text-gray-900">
                           <Edit className="h-4 w-4" />
                         </button>
                         <button 
