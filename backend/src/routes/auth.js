@@ -1,6 +1,5 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
-const { findUserByEmail } = require('../config/database');
+const { authenticateUser } = require('../config/supabase');
 const router = express.Router();
 
 // Authentication routes
@@ -18,25 +17,11 @@ router.post('/login', async (req, res) => {
 
     console.log('Login attempt:', { email, passwordLength: password?.length });
 
-    // Find user in database
-    const user = await findUserByEmail(email);
+    // Authenticate user with Supabase
+    const user = await authenticateUser(email, password);
     
     if (!user) {
-      console.log('User not found:', email);
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password'
-      });
-    }
-
-    console.log('User found:', { id: user.id, email: user.email, role: user.role });
-
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
-    console.log('Password verification result:', isValidPassword);
-
-    if (!isValidPassword) {
-      console.log('Password verification failed for user:', email);
+      console.log('Authentication failed for user:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
@@ -50,7 +35,7 @@ router.post('/login', async (req, res) => {
       success: true,
       message: 'Login successful',
       user: {
-        id: user.id.toString(),
+        id: user.id,
         email: user.email,
         name: `${user.first_name} ${user.last_name}`,
         role: user.role,

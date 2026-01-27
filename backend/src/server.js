@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const { testConnection } = require('./config/database');
+const { testConnection } = require('./config/supabase');
 require('dotenv').config();
 
 const app = express();
@@ -72,12 +72,12 @@ app.listen(PORT, '0.0.0.0', async () => {
   console.log(`📊 Health check available at /api/health`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   
-  // Test database connection
+  // Test Supabase connection
   const dbConnected = await testConnection();
   if (dbConnected) {
-    console.log('🗄️ Database connection established');
+    console.log('🔐 Supabase connection established');
   } else {
-    console.log('❌ Database connection failed');
+    console.log('❌ Supabase connection failed');
   }
 });
 
