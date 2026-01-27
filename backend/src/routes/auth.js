@@ -58,13 +58,6 @@ router.post('/login', async (req, res) => {
 
     // For demo purposes, accept any credentials that aren't super admin
     // In production, this should validate against database
-    if (email === 'info@afrosuperstore.ca') {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password'
-      });
-    }
-    
     return res.json({
       success: true,
       message: 'Login successful',
