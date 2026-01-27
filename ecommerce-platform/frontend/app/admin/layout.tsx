@@ -54,15 +54,21 @@ export default function AdminLayout({
 
   const checkAuth = async () => {
     try {
+      console.log('Checking admin authentication...');
+      
       // Token is stored in HTTP-only cookies, no need to check localStorage
       const response = await fetch('/api/admin/auth/validate', {
         credentials: 'include' // Important for sending cookies
       });
 
+      console.log('Auth validation response status:', response.status);
+
       if (response.ok) {
         const userData = await response.json();
+        console.log('Auth validation successful:', userData);
         setUser(userData.user || userData);
       } else {
+        console.log('Auth validation failed, redirecting to login');
         router.replace('/admin/login');
       }
     } catch (error) {

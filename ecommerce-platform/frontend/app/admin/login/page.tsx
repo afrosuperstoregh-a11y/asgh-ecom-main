@@ -21,32 +21,31 @@ export default function AdminLogin() {
     setError('');
 
     try {
-      // Get CSRF token from cookie
-      const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrf-token='))
-        ?.split('=')[1];
-
+      console.log('Admin login form submitted:', { email, passwordLength: password?.length });
+      
       const response = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfToken || '',
         },
         credentials: 'include', // Important for cookies
         body: JSON.stringify({ email, password }),
       });
 
+      console.log('Admin login response status:', response.status);
+
       const data = await response.json();
+      console.log('Admin login response data:', data);
 
       if (response.ok && data.success) {
+        console.log('Admin login successful, redirecting to:', redirectTo);
         // Redirect to intended page or dashboard
         router.replace(redirectTo);
       } else {
         setError(data.message || 'Login failed');
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Admin login error:', error);
       setError('An error occurred during login');
     } finally {
       setLoading(false);
