@@ -32,12 +32,12 @@ export async function POST(request) {
 
     // TEMPORARY: Mock authentication for testing
     // In production, this should validate against your database
-    if (email === 'admin@afrosuperstore.ca' && password === 'Admin123!') {
+    if (email === 'info@afrosuperstore.ca' && password === 'Iamtech@10') {
       // Create a mock JWT token (in production, use real JWT)
       const mockPayload = {
         id: 'admin-001',
-        email: 'admin@afrosuperstore.ca',
-        name: 'Admin User',
+        email: 'info@afrosuperstore.ca',
+        name: 'Super Admin',
         role: 'SUPER_ADMIN',
         emailVerified: true,
         exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
