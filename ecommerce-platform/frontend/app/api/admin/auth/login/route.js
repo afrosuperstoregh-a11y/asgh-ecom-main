@@ -5,8 +5,15 @@ export async function POST(request) {
   try {
     const { email, password } = await request.json();
     
+    // Debug logging (remove in production)
+    console.log('Login attempt:', { email, passwordLength: password?.length });
+    
+    // Trim whitespace from inputs
+    const trimmedEmail = email?.trim();
+    const trimmedPassword = password?.trim();
+    
     // Input validation
-    if (!email || !password) {
+    if (!trimmedEmail || !trimmedPassword) {
       return NextResponse.json({
         success: false,
         message: 'Email and password are required'
@@ -15,7 +22,7 @@ export async function POST(request) {
 
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(trimmedEmail)) {
       return NextResponse.json({
         success: false,
         message: 'Invalid email format'
@@ -23,7 +30,7 @@ export async function POST(request) {
     }
 
     // Password strength validation
-    if (password.length < 8) {
+    if (trimmedPassword.length < 8) {
       return NextResponse.json({
         success: false,
         message: 'Password must be at least 8 characters long'
@@ -32,7 +39,13 @@ export async function POST(request) {
 
     // TEMPORARY: Mock authentication for testing
     // In production, this should validate against your database
-    if (email === 'info@afrosuperstore.ca' && password === 'Iamtech@10') {
+    console.log('Checking credentials:', { 
+      email: trimmedEmail, 
+      expectedEmail: 'info@afrosuperstore.ca',
+      passwordMatch: trimmedPassword === 'Iamtech@10'
+    });
+    
+    if (trimmedEmail === 'info@afrosuperstore.ca' && trimmedPassword === 'Iamtech@10') {
       // Create a mock JWT token (in production, use real JWT)
       const mockPayload = {
         id: 'admin-001',
