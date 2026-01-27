@@ -15,19 +15,7 @@ const withWarningSuppression = (nextConfig = {}) => {
         // Add a custom plugin to suppress warnings
         config.plugins.push({
           apply: (compiler) => {
-            compiler.hooks.compilation.tap('SuppressWarnings', (compilation) => {
-              compilation.hooks.processAssets.tap(
-                {
-                  name: 'SuppressWarnings',
-                  stage: compilation.PROCESS_ASSETS_STAGE_OPTIMIZE
-                },
-                () => {
-                  // Suppress warnings during asset processing
-                }
-              );
-            });
-            
-            // Suppress console warnings
+            // Suppress console warnings at the compiler level
             compiler.hooks.beforeCompile.tap('SuppressWarnings', () => {
               const originalWarn = console.warn;
               const originalError = console.error;
@@ -35,7 +23,9 @@ const withWarningSuppression = (nextConfig = {}) => {
               const shouldSuppress = (...args) => {
                 const message = args.join(' ').toLowerCase();
                 return message.includes('feature_collector') && 
-                       (message.includes('deprecated') || message.includes('initialization'));
+                       (message.includes('deprecated') || 
+                        message.includes('initialization') ||
+                        message.includes('single object'));
               };
               
               console.warn = (...args) => {
@@ -47,6 +37,20 @@ const withWarningSuppression = (nextConfig = {}) => {
                 if (shouldSuppress(...args)) return;
                 originalError.apply(console, args);
               };
+            });
+            
+            // Filter warnings after compilation
+            compiler.hooks.done.tap('SuppressWarnings', (stats) => {
+              if (stats.compilation && stats.compilation.warnings) {
+                stats.compilation.warnings = stats.compilation.warnings.filter(warning => {
+                  const message = warning.message || warning.toString();
+                  return !(
+                    message.includes('feature_collector') ||
+                    message.includes('deprecated parameters') ||
+                    message.includes('pass a single object')
+                  );
+                });
+              }
             });
           }
         });

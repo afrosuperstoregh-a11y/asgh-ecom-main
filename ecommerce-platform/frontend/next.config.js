@@ -31,13 +31,77 @@ const nextConfig = {
   },
   
   // Configure webpack for serverless compatibility
-  webpack: (config, { isServer, dev }) => {
+  webpack: (config, { isServer, dev, webpack }) => {
     // Suppress all webpack warnings in development
     if (dev) {
       config.infrastructureLogging = {
         level: 'error',
       };
+      
+      // Suppress webpack 5 deprecation warnings for feature_collector
+      config.stats = {
+        ...config.stats,
+        warnings: false,
+        warningsFilter: [
+          'feature_collector',
+          /using deprecated parameters for the initialization function/,
+          /pass a single object instead/,
+          /feature_collector\.js/,
+        ],
+      };
+      
+      // Suppress specific deprecation warnings
+      config.ignoreWarnings = [
+        {
+          module: /feature_collector/,
+        },
+        {
+          message: /using deprecated parameters for the initialization function/,
+        },
+        {
+          message: /feature_collector\.js/,
+        },
+        {
+          message: /pass a single object instead/,
+        },
+        {
+          message: /feature_collector\.js:\d+ using deprecated parameters/,
+        },
+        (warning) => {
+          const message = warning.message || warning.toString();
+          return message && (
+            message.includes('feature_collector') ||
+            message.includes('deprecated parameters') ||
+            message.includes('pass a single object') ||
+            message.includes('initialization function')
+          );
+        },
+      ];
+      
+      // Add DefinePlugin to suppress feature_collector warnings at compile time
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          'process.env.SUPPRESS_FEATURE_COLLECTOR_WARNINGS': JSON.stringify(true),
+        })
+      );
+      
+      // Custom plugin to filter warnings after compilation
+      config.plugins.push({
+        apply: (compiler) => {
+          compiler.hooks.done.tap('SuppressFeatureCollectorWarnings', (stats) => {
+            stats.compilation.warnings = stats.compilation.warnings.filter(warning => {
+              const message = warning.message || warning.toString();
+              return !(
+                message.includes('feature_collector') ||
+                message.includes('deprecated parameters') ||
+                message.includes('pass a single object')
+              );
+            });
+          });
+        }
+      });
     }
+    
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -47,57 +111,6 @@ const nextConfig = {
         dns: false,
         child_process: false,
       };
-    }
-    
-    // Suppress deprecation warnings in development
-    if (dev) {
-      config.ignoreWarnings = [
-        {
-          module: /feature_collector/,
-        },
-        {
-          message: /using deprecated parameters/,
-        },
-        {
-          message: /feature_collector/,
-        },
-        {
-          message: /deprecated parameters for the initialization function/,
-        },
-        function (warning) {
-          return (
-            warning.message && (
-              warning.message.includes('feature_collector') ||
-              (warning.message.includes('deprecated parameters') && warning.message.includes('initialization function'))
-            )
-          );
-        },
-      ];
-      
-      // Additional suppression for webpack 5 deprecation warnings
-      config.stats = {
-        warnings: false,
-        warningsFilter: [
-          'feature_collector',
-          /deprecated parameters/,
-          /initialization function/,
-        ],
-      };
-      
-      // Add compiler plugin for comprehensive warning suppression
-      config.plugins.push({
-        apply: (compiler) => {
-          compiler.hooks.done.tap('SuppressFeatureCollectorWarnings', (stats) => {
-            stats.compilation.warnings = stats.compilation.warnings.filter(warning => {
-              const message = warning.message || warning.toString();
-              return !(
-                message.includes('feature_collector') &&
-                message.includes('deprecated parameters')
-              );
-            });
-          });
-        }
-      });
     }
     
     return config;
@@ -120,6 +133,14 @@ const nextConfig = {
       fullUrl: false,
     },
   },
+  
+  // Experimental features to handle modern Next.js behavior
+  experimental: {
+    // Suppress feature_collector warnings at the framework level
+  },
+  
+  // Server external packages (moved from experimental)
+  serverExternalPackages: [],
 };
 
 module.exports = withWarningSuppression(nextConfig);
