@@ -2,11 +2,24 @@
 const getApiUrl = () => {
   if (typeof window !== 'undefined') {
     // Client-side
-    return process.env.NEXT_PUBLIC_API_URL || 
-           (process.env.NODE_ENV === 'development' ? 'http://localhost:3000/api' : '/api');
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      return process.env.NEXT_PUBLIC_API_URL;
+    }
+    
+    // Fallback URLs for different environments
+    if (process.env.NODE_ENV === 'development') {
+      return 'http://localhost:3001/api'; // Local backend
+    } else if (window.location.hostname.includes('afrosuperstore.ca')) {
+      return 'https://asca-ecom-production.up.railway.app/api'; // Railway production
+    } else if (window.location.hostname.includes('vercel.app')) {
+      return 'https://asca-ecom-production.up.railway.app/api'; // Vercel frontend with Railway backend
+    } else {
+      return '/api'; // Relative path for same deployment
+    }
   } else {
     // Server-side
-    return process.env.NEXT_PUBLIC_API_URL || '/api';
+    return process.env.NEXT_PUBLIC_API_URL || 
+           (process.env.NODE_ENV === 'development' ? 'http://localhost:3001/api' : 'https://asca-ecom-production.up.railway.app/api');
   }
 };
 

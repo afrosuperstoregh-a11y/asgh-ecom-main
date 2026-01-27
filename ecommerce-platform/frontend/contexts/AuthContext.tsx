@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { API_BASE_URL } from '../lib/api';
 
 interface User {
   id: string;
@@ -44,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const validateToken = async (token: string) => {
     try {
       // API call to validate token - using backend API endpoint
-      const response = await fetch('http://localhost:3001/api/auth/validate', {
+      const response = await fetch(`${API_BASE_URL}/auth/validate`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -65,39 +66,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      console.log('Frontend login attempt:', { email, apiBaseUrl: API_BASE_URL });
+      
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
 
+      console.log('Frontend login response status:', response.status);
+      
       if (response.ok) {
         const responseData = await response.json();
+        console.log('Frontend login response data:', responseData);
         
         // Handle both response formats - direct user data or nested data
         const userData = responseData.data?.user || responseData.user || responseData;
         const token = responseData.data?.token || responseData.token;
         
+        console.log('Frontend parsed user data:', userData);
+        console.log('Frontend parsed token:', token ? 'exists' : 'missing');
+        
         if (userData && token) {
           setUser(userData);
           localStorage.setItem('token', token);
+          console.log('Frontend login successful');
           return true;
+        } else {
+          console.log('Frontend login failed: missing user data or token');
         }
       } else {
         // Handle login errors
         const errorData = await response.json().catch(() => ({}));
-        console.error('Login error:', errorData.message || 'Invalid credentials');
+        console.error('Frontend login error:', errorData.message || 'Invalid credentials');
       }
       return false;
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('Frontend login failed:', error);
       return false;
     }
   };
 
   const register = async (userData: RegisterData): Promise<boolean> => {
     try {
-      const response = await fetch('http://localhost:3001/api/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
@@ -132,7 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Call backend logout endpoint
       const token = localStorage.getItem('token');
       if (token) {
-        await fetch('http://localhost:3001/api/auth/logout', {
+        await fetch(`${API_BASE_URL}/auth/logout`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',

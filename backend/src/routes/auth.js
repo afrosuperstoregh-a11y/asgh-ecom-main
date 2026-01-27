@@ -127,4 +127,36 @@ router.get('/me', (req, res) => {
   });
 });
 
+router.get('/validate', (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'No token provided'
+    });
+  }
+  
+  // For mock tokens, return a simple validation
+  if (token.startsWith('mock-jwt-token-')) {
+    return res.json({
+      success: true,
+      message: 'Token is valid',
+      user: {
+        id: token.replace('mock-jwt-token-', ''),
+        email: 'info@afrosuperstore.ca',
+        name: 'Super Admin',
+        role: 'super_admin',
+        emailVerified: true
+      }
+    });
+  }
+  
+  // For other tokens, you'd validate against a database or JWT service
+  return res.status(401).json({
+    success: false,
+    message: 'Invalid token'
+  });
+});
+
 module.exports = router;
