@@ -27,6 +27,8 @@
     "NEXTAUTH_SECRET": "@nextauth_secret",
     "STRIPE_SECRET_KEY": "@stripe_secret_key",
     "STRIPE_PUBLISHABLE_KEY": "@stripe_publishable_key",
+    "STRIPE_WEBHOOK_SECRET": "@stripe_webhook_secret",
+    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "@stripe_publishable_key",
     "SENDGRID_API_KEY": "@sendgrid_api_key",
     "FROM_EMAIL": "@from_email",
     "CANADA_POST_USERNAME": "@canada_post_username",
