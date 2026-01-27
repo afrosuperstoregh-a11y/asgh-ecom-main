@@ -2,13 +2,18 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Stripe with secret key
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
-});
-
-// Database connection (using Supabase) - lazy initialization
+// Lazy initialization for Stripe and Supabase
+let stripe = null;
 let supabase = null;
+
+function getStripeClient() {
+  if (!stripe && process.env.STRIPE_SECRET_KEY) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2023-10-16',
+    });
+  }
+  return stripe;
+}
 
 function getSupabaseClient() {
   if (!supabase && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -22,12 +27,19 @@ function getSupabaseClient() {
 
 export async function POST(request) {
   try {
-    // Get Supabase client
+    // Get clients
+    const stripe = getStripeClient();
     const supabase = getSupabaseClient();
     if (!supabase) {
       return NextResponse.json({
         success: false,
         message: 'Database connection not available'
+      }, { status: 500 });
+    }
+    if (!stripe) {
+      return NextResponse.json({
+        success: false,
+        message: 'Payment service not available'
       }, { status: 500 });
     }
 

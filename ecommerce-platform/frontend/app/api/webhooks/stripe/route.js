@@ -3,13 +3,18 @@ import Stripe from 'stripe';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Stripe with secret key
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
-});
-
-// Database connection (using Supabase) - lazy initialization
+// Lazy initialization for Stripe and Supabase
+let stripe = null;
 let supabase = null;
+
+function getStripeClient() {
+  if (!stripe && process.env.STRIPE_SECRET_KEY) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2023-10-16',
+    });
+  }
+  return stripe;
+}
 
 function getSupabaseClient() {
   if (!supabase && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -29,6 +34,15 @@ export async function POST(request) {
     return NextResponse.json(
       { error: 'No signature provided' },
       { status: 400 }
+    );
+  }
+
+  // Get Stripe client
+  const stripe = getStripeClient();
+  if (!stripe) {
+    return NextResponse.json(
+      { error: 'Payment service not available' },
+      { status: 500 }
     );
   }
 
@@ -94,6 +108,7 @@ export async function POST(request) {
 
 async function handlePaymentIntentSucceeded(paymentIntent) {
   const supabase = getSupabaseClient();
+  const stripe = getStripeClient();
   if (!supabase) {
     console.error('Supabase client not available');
     return;
@@ -142,6 +157,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
 
 async function handlePaymentIntentFailed(paymentIntent) {
   const supabase = getSupabaseClient();
+  const stripe = getStripeClient();
   if (!supabase) {
     console.error('Supabase client not available');
     return;
@@ -172,6 +188,7 @@ async function handlePaymentIntentFailed(paymentIntent) {
 
 async function handlePaymentIntentCanceled(paymentIntent) {
   const supabase = getSupabaseClient();
+  const stripe = getStripeClient();
   if (!supabase) {
     console.error('Supabase client not available');
     return;
@@ -202,6 +219,7 @@ async function handlePaymentIntentCanceled(paymentIntent) {
 
 async function handleChargeSucceeded(charge) {
   const supabase = getSupabaseClient();
+  const stripe = getStripeClient();
   if (!supabase) {
     console.error('Supabase client not available');
     return;
@@ -240,6 +258,7 @@ async function handleChargeSucceeded(charge) {
 
 async function handleChargeRefunded(charge) {
   const supabase = getSupabaseClient();
+  const stripe = getStripeClient();
   if (!supabase) {
     console.error('Supabase client not available');
     return;
@@ -293,6 +312,7 @@ async function handleChargeRefunded(charge) {
 
 async function handleChargeFailed(charge) {
   const supabase = getSupabaseClient();
+  const stripe = getStripeClient();
   if (!supabase) {
     console.error('Supabase client not available');
     return;
@@ -323,6 +343,7 @@ async function handleChargeFailed(charge) {
 
 async function handleCheckoutSessionCompleted(session) {
   const supabase = getSupabaseClient();
+  const stripe = getStripeClient();
   if (!supabase) {
     console.error('Supabase client not available');
     return;
