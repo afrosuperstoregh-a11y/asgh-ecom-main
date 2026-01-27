@@ -92,7 +92,7 @@ export default function AdminLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="admin@example.com"
+                placeholder="admin@afrosuperstore.ca"
               />
             </div>
 
@@ -209,8 +209,8 @@ export default function AdminLogin() {
 
           <div className="mt-4 text-sm text-gray-600 bg-gray-100 rounded-lg p-4">
             <p className="font-medium mb-2">For testing purposes:</p>
-            <p>Email: admin@example.com</p>
-            <p>Password: admin123</p>
+            <p>Email: admin@afrosuperstore.ca</p>
+            <p>Password: Admin123!</p>
           </div>
         </div>
       </div>
