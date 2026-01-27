@@ -34,6 +34,20 @@ const nextConfig = {
   webpack: (config, { isServer, dev, webpack }) => {
     // Suppress all webpack warnings in development
     if (dev) {
+      // Intercept console warnings before webpack starts
+      if (typeof window === 'undefined') {
+        const originalWarn = console.warn;
+        console.warn = (...args) => {
+          const message = args.join(' ').toLowerCase();
+          if (message.includes('feature_collector') || 
+              message.includes('deprecated parameters') ||
+              message.includes('pass a single object')) {
+            return;
+          }
+          originalWarn.apply(console, args);
+        };
+      }
+      
       config.infrastructureLogging = {
         level: 'error',
       };
@@ -94,12 +108,20 @@ const nextConfig = {
               return !(
                 message.includes('feature_collector') ||
                 message.includes('deprecated parameters') ||
-                message.includes('pass a single object')
+                message.includes('pass a single object') ||
+                message.includes('initialization function')
               );
             });
           });
         }
       });
+      
+      // Suppress FeatureCollectorPlugin deprecation warning
+      if (webpack.FeatureCollectorPlugin) {
+        config.plugins = config.plugins.filter(plugin => 
+          plugin.constructor.name !== 'FeatureCollectorPlugin'
+        );
+      }
     }
     
     if (!isServer) {

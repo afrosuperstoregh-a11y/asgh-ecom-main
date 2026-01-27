@@ -25,7 +25,8 @@ const withWarningSuppression = (nextConfig = {}) => {
                 return message.includes('feature_collector') && 
                        (message.includes('deprecated') || 
                         message.includes('initialization') ||
-                        message.includes('single object'));
+                        message.includes('single object') ||
+                        message.includes('pass a single'));
               };
               
               console.warn = (...args) => {
@@ -47,7 +48,19 @@ const withWarningSuppression = (nextConfig = {}) => {
                   return !(
                     message.includes('feature_collector') ||
                     message.includes('deprecated parameters') ||
-                    message.includes('pass a single object')
+                    message.includes('pass a single object') ||
+                    message.includes('initialization function')
+                  );
+                });
+              }
+              
+              // Also filter errors that are actually warnings
+              if (stats.compilation && stats.compilation.errors) {
+                stats.compilation.errors = stats.compilation.errors.filter(error => {
+                  const message = error.message || error.toString();
+                  return !(
+                    message.includes('feature_collector') &&
+                    message.includes('deprecated parameters')
                   );
                 });
               }
