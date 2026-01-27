@@ -1,12 +1,12 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
-import { AuthProvider } from '../src/contexts/AuthContext'
-import Head from 'next/head';
+import { AuthProvider } from '../contexts/AuthContext'
+import { CartProvider } from '../context/CartContext'
 
 const inter = Inter({ 
   subsets: ['latin'],
+  variable: '--font-inter',
   display: 'swap',
-  preload: true,
 })
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yourdomain.com';
@@ -123,9 +123,11 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>
-          {children}
+          <CartProvider>
+            {children}
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

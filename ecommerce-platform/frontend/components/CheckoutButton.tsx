@@ -6,7 +6,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { CheckoutForm } from './CheckoutForm';
 import { Button } from './ui/Button';
-import { useCart } from "../contexts/CartContext";
+import { useCart } from "../context/CartContext";
 import { Loader2 } from 'lucide-react';
 
 // Define the cart item interface

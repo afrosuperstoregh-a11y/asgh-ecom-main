@@ -6,7 +6,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { Heart, ShoppingCart, Trash2, Star } from 'lucide-react';
 import { Product } from '../../data/products';
-import { useCart } from "../../contexts/CartContext";
+import { useCart } from "../../context/CartContext";
 
 export default function WishlistPage() {
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);

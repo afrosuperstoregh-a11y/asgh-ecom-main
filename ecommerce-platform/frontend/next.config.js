@@ -145,14 +145,6 @@ const nextConfig = {
     },
   },
   
-  // Experimental features to handle modern Next.js behavior
-  experimental: {
-    // Suppress feature_collector warnings at the framework level
-    logging: {
-      level: 'error'
-    }
-  },
-  
   // Server external packages (moved from experimental)
   serverExternalPackages: [],
 };
