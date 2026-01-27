@@ -1,5 +1,3 @@
-const withWarningSuppression = require('./plugins/suppress-warnings');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Turbopack configuration
@@ -35,100 +33,6 @@ const nextConfig = {
   
   // Configure webpack for serverless compatibility
   webpack: (config, { isServer, dev, webpack }) => {
-    // Suppress all webpack warnings in development
-    if (dev) {
-      config.infrastructureLogging = {
-        level: 'error',
-      };
-      
-      // Suppress webpack 5 deprecation warnings
-      config.stats = {
-        ...config.stats,
-        warnings: false,
-        warningsFilter: [
-          'feature_collector',
-          /using deprecated parameters for the initialization function/,
-          /pass a single object instead/,
-          /feature_collector\.js/,
-        ],
-      };
-      
-      // Suppress specific deprecation warnings
-      config.ignoreWarnings = [
-        {
-          module: /feature_collector/,
-        },
-        {
-          message: /using deprecated parameters for the initialization function/,
-        },
-        {
-          message: /feature_collector\.js/,
-        },
-        {
-          message: /pass a single object instead/,
-        },
-        {
-          message: /feature_collector\.js:\d+ using deprecated parameters/,
-        },
-        (warning) => {
-          const message = warning.message || warning.toString();
-          return message && (
-            message.includes('feature_collector') ||
-            message.includes('deprecated parameters') ||
-            message.includes('pass a single object') ||
-            message.includes('initialization function')
-          );
-        },
-      ];
-      
-      // Add DefinePlugin to suppress warnings at compile time
-      config.plugins.push(
-        new webpack.DefinePlugin({
-          'process.env.SUPPRESS_FEATURE_COLLECTOR_WARNINGS': JSON.stringify(true),
-        })
-      );
-      
-      // Custom plugin to filter warnings after compilation
-      config.plugins.push({
-        apply: (compiler) => {
-          compiler.hooks.done.tap('SuppressFeatureCollectorWarnings', (stats) => {
-            stats.compilation.warnings = stats.compilation.warnings.filter(warning => {
-              const message = warning.message || warning.toString();
-              return !(
-                message.includes('feature_collector') ||
-                message.includes('deprecated parameters') ||
-                message.includes('pass a single object') ||
-                message.includes('initialization function')
-              );
-            });
-          });
-        }
-      });
-      
-      // Suppress FeatureCollectorPlugin deprecation warning
-      if (webpack.FeatureCollectorPlugin) {
-        config.plugins = config.plugins.filter(plugin => 
-          plugin.constructor.name !== 'FeatureCollectorPlugin'
-        );
-      }
-
-      // Additional suppression for feature_collector.js specifically
-      config.plugins.push({
-        apply: (compiler) => {
-          compiler.hooks.compilation.tap('SuppressFeatureCollector', (compilation) => {
-            compilation.hooks.processAssets.tap(
-              {
-                name: 'SuppressFeatureCollector',
-                stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE,
-              },
-              () => {
-                // Suppress feature_collector related warnings
-              }
-            );
-          });
-        }
-      });
-    }
     
     if (!isServer) {
       config.resolve.fallback = {
@@ -166,4 +70,4 @@ const nextConfig = {
   serverExternalPackages: [],
 };
 
-module.exports = withWarningSuppression(nextConfig);
+module.exports = nextConfig;

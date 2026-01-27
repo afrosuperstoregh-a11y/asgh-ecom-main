@@ -86,67 +86,6 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans min-h-screen bg-gray-50 antialiased overflow-x-hidden`}>
-        {/* Suppress development warnings */}
-        {process.env.NODE_ENV === 'development' && (
-          <Script
-            id="suppress-warnings"
-            strategy="beforeInteractive"
-            dangerouslySetInnerHTML={{
-              __html: `
-                (function() {
-                  const originalWarn = console.warn;
-                  const originalError = console.error;
-                  const originalLog = console.log;
-                  
-                  const shouldSuppress = (...args) => {
-                    const message = args.join(' ').toLowerCase();
-                    return message.includes('feature_collector') || 
-                           message.includes('deprecated parameters') ||
-                           message.includes('initialization function');
-                  };
-                  
-                  console.warn = (...args) => {
-                    if (shouldSuppress(...args)) return;
-                    originalWarn.apply(console, args);
-                  };
-                  
-                  console.error = (...args) => {
-                    if (shouldSuppress(...args)) return;
-                    originalError.apply(console, args);
-                  };
-                  
-                  console.log = (...args) => {
-                    if (shouldSuppress(...args)) return;
-                    originalLog.apply(console, args);
-                  };
-                  
-                  const originalError = window.onerror;
-                  window.onerror = (message, source, lineno, colno, error) => {
-                    if (typeof message === 'string' && shouldSuppress(message)) {
-                      return true;
-                    }
-                    if (originalError) {
-                      return originalError.call(window, message, source, lineno, colno, error);
-                    }
-                    return false;
-                  };
-
-                  // Suppress unhandled promise rejections related to feature_collector
-                  const originalUnhandledRejection = window.onunhandledrejection;
-                  window.onunhandledrejection = (event) => {
-                    if (event.reason && typeof event.reason === 'string' && shouldSuppress(event.reason)) {
-                      event.preventDefault();
-                      return;
-                    }
-                    if (originalUnhandledRejection) {
-                      return originalUnhandledRejection.call(window, event);
-                    }
-                  };
-                })();
-              `,
-            }}
-          />
-        )}
         <AuthProvider>
           <WishlistProvider>
             <CartProvider>
