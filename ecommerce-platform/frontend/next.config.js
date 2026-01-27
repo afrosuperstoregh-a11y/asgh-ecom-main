@@ -3,7 +3,10 @@ const withWarningSuppression = require('./plugins/suppress-warnings');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Turbopack configuration
-  turbopack: {},
+  turbopack: {
+    // Set root directory to avoid workspace warnings
+    root: __dirname
+  },
   
   // Enable React Strict Mode for better development practices
   reactStrictMode: true,
@@ -34,25 +37,11 @@ const nextConfig = {
   webpack: (config, { isServer, dev, webpack }) => {
     // Suppress all webpack warnings in development
     if (dev) {
-      // Intercept console warnings before webpack starts
-      if (typeof window === 'undefined') {
-        const originalWarn = console.warn;
-        console.warn = (...args) => {
-          const message = args.join(' ').toLowerCase();
-          if (message.includes('feature_collector') || 
-              message.includes('deprecated parameters') ||
-              message.includes('pass a single object')) {
-            return;
-          }
-          originalWarn.apply(console, args);
-        };
-      }
-      
       config.infrastructureLogging = {
         level: 'error',
       };
       
-      // Suppress webpack 5 deprecation warnings for feature_collector
+      // Suppress webpack 5 deprecation warnings
       config.stats = {
         ...config.stats,
         warnings: false,
@@ -92,7 +81,7 @@ const nextConfig = {
         },
       ];
       
-      // Add DefinePlugin to suppress feature_collector warnings at compile time
+      // Add DefinePlugin to suppress warnings at compile time
       config.plugins.push(
         new webpack.DefinePlugin({
           'process.env.SUPPRESS_FEATURE_COLLECTOR_WARNINGS': JSON.stringify(true),
@@ -159,6 +148,9 @@ const nextConfig = {
   // Experimental features to handle modern Next.js behavior
   experimental: {
     // Suppress feature_collector warnings at the framework level
+    logging: {
+      level: 'error'
+    }
   },
   
   // Server external packages (moved from experimental)
