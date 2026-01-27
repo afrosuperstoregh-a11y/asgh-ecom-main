@@ -3,7 +3,7 @@
 -- Password: Iamtech@100
 
 -- Hash the password (using bcrypt hash for "Iamtech@100")
--- Generated hash: $2b$10$ravrUoIKPiF6uLvznFeIFOu.eqxPKugqCj1lp9rU4BgKsIml4Pr7u
+-- Generated hash: $2a$10$AMoj6oiD/1/NWLE/LQcfyu70906iBSKwDN8l1om.fbt1WJhRgbEUe
 INSERT INTO users (
     id,
     email,
@@ -17,7 +17,7 @@ INSERT INTO users (
     'admin-001',
     'info@afrosuperstore.ca',
     'Super Admin',
-    '$2b$10$ravrUoIKPiF6uLvznFeIFOu.eqxPKugqCj1lp9rU4BgKsIml4Pr7u',
+    '$2a$10$AMoj6oiD/1/NWLE/LQcfyu70906iBSKwDN8l1om.fbt1WJhRgbEUe',
     NULL,
     true,
     CURRENT_TIMESTAMP,

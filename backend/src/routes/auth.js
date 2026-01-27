@@ -16,22 +16,42 @@ router.post('/login', async (req, res) => {
     }
 
     // Check for super admin credentials
+    console.log('Login attempt:', { email, passwordLength: password?.length });
+    
     if (email === 'info@afrosuperstore.ca') {
-      const hashedPassword = '$2b$10$ravrUoIKPiF6uLvznFeIFOu.eqxPKugqCj1lp9rU4BgKsIml4Pr7u';
-      const isValidPassword = await bcrypt.compare(password, hashedPassword);
+      const hashedPassword = '$2a$10$AMoj6oiD/1/NWLE/LQcfyu70906iBSKwDN8l1om.fbt1WJhRgbEUe';
+      console.log('Checking super admin credentials...');
       
-      if (isValidPassword) {
-        return res.json({
-          success: true,
-          message: 'Login successful',
-          user: {
-            id: 'admin-001',
-            email: 'info@afrosuperstore.ca',
-            name: 'Super Admin',
-            role: 'super_admin',
-            emailVerified: true
-          },
-          token: 'mock-jwt-token-for-super-admin'
+      try {
+        const isValidPassword = await bcrypt.compare(password, hashedPassword);
+        console.log('Password verification result:', isValidPassword);
+        
+        if (isValidPassword) {
+          console.log('Super admin login successful');
+          return res.json({
+            success: true,
+            message: 'Login successful',
+            user: {
+              id: 'admin-001',
+              email: 'info@afrosuperstore.ca',
+              name: 'Super Admin',
+              role: 'super_admin',
+              emailVerified: true
+            },
+            token: 'mock-jwt-token-for-super-admin'
+          });
+        } else {
+          console.log('Super admin password verification failed');
+          return res.status(401).json({
+            success: false,
+            message: 'Invalid email or password'
+          });
+        }
+      } catch (error) {
+        console.error('Error during password verification:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Authentication error'
         });
       }
     }
