@@ -85,7 +85,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} min-h-screen bg-gray-50 antialiased overflow-x-hidden`}>
+      <body className={`${inter.variable} font-sans min-h-screen bg-gray-50 antialiased overflow-x-hidden`}>
         {/* Suppress development warnings */}
         {process.env.NODE_ENV === 'development' && (
           <Script

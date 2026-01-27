@@ -3,26 +3,20 @@
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, Star, Truck, Shield } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import api from '../services/api';
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function getFeaturedProducts() {
-      try {
-        const response = await api.getProducts();
-        setProducts(response.data?.data?.slice(0, 6) || []);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        setProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    getFeaturedProducts();
+    // Mock data for now to test header display
+    const mockProducts = [
+      { id: 1, name: 'Product 1', price: 29.99, image: '/placeholder.jpg' },
+      { id: 2, name: 'Product 2', price: 39.99, image: '/placeholder.jpg' },
+      { id: 3, name: 'Product 3', price: 49.99, image: '/placeholder.jpg' },
+    ];
+    setProducts(mockProducts);
+    setLoading(false);
   }, []);
 
   return (
