@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const { findUserByEmail } = require('../config/database');
 const router = express.Router();
 
 // Authentication routes
@@ -15,60 +16,47 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Check for super admin credentials
     console.log('Login attempt:', { email, passwordLength: password?.length });
+
+    // Find user in database
+    const user = await findUserByEmail(email);
     
-    if (email === 'info@afrosuperstore.ca') {
-      const hashedPassword = '$2a$10$AMoj6oiD/1/NWLE/LQcfyu70906iBSKwDN8l1om.fbt1WJhRgbEUe';
-      console.log('Checking super admin credentials...');
-      
-      try {
-        const isValidPassword = await bcrypt.compare(password, hashedPassword);
-        console.log('Password verification result:', isValidPassword);
-        
-        if (isValidPassword) {
-          console.log('Super admin login successful');
-          return res.json({
-            success: true,
-            message: 'Login successful',
-            user: {
-              id: 'admin-001',
-              email: 'info@afrosuperstore.ca',
-              name: 'Super Admin',
-              role: 'super_admin',
-              emailVerified: true
-            },
-            token: 'mock-jwt-token-for-super-admin'
-          });
-        } else {
-          console.log('Super admin password verification failed');
-          return res.status(401).json({
-            success: false,
-            message: 'Invalid email or password'
-          });
-        }
-      } catch (error) {
-        console.error('Error during password verification:', error);
-        return res.status(500).json({
-          success: false,
-          message: 'Authentication error'
-        });
-      }
+    if (!user) {
+      console.log('User not found:', email);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
     }
 
-    // For demo purposes, accept any credentials that aren't super admin
-    // In production, this should validate against database
+    console.log('User found:', { id: user.id, email: user.email, role: user.role });
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    console.log('Password verification result:', isValidPassword);
+
+    if (!isValidPassword) {
+      console.log('Password verification failed for user:', email);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    console.log('Login successful for user:', email);
+
+    // Return success response
     return res.json({
       success: true,
       message: 'Login successful',
       user: {
-        id: 'user-demo',
-        email: email,
-        name: 'Demo User',
-        role: 'customer',
-        emailVerified: true
+        id: user.id.toString(),
+        email: user.email,
+        name: `${user.first_name} ${user.last_name}`,
+        role: user.role,
+        emailVerified: user.email_verified
       },
-      token: 'mock-jwt-token-for-user'
+      token: 'mock-jwt-token-' + user.id
     });
 
   } catch (error) {

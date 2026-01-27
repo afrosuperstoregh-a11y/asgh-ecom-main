@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const { testConnection } = require('./config/database');
 require('dotenv').config();
 
 const app = express();
@@ -66,10 +67,18 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Afro Superstore Backend API running on port ${PORT}`);
   console.log(`📊 Health check available at /api/health`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  // Test database connection
+  const dbConnected = await testConnection();
+  if (dbConnected) {
+    console.log('🗄️ Database connection established');
+  } else {
+    console.log('❌ Database connection failed');
+  }
 });
 
 module.exports = app;
