@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CreditCard, Truck, Shield, ShoppingBag } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import ShippingCalculator from '../../components/ShippingCalculator';
+import { ShippingRate } from '../../hooks/useCanadaPostShipping';
 
 interface CartItem {
   id: number;
@@ -54,6 +56,7 @@ export default function CheckoutPage() {
   });
   const [processingOrder, setProcessingOrder] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [selectedShippingRate, setSelectedShippingRate] = useState<ShippingRate | null>(null);
 
   useEffect(() => {
     // Redirect to cart if cart is empty
@@ -71,7 +74,7 @@ export default function CheckoutPage() {
   };
 
   const calculateShipping = () => {
-    return calculateSubtotal() > 50 ? 0 : 9.99;
+    return selectedShippingRate ? selectedShippingRate.price : 0;
   };
 
   const calculateTotal = () => {
@@ -80,7 +83,15 @@ export default function CheckoutPage() {
 
   const handleShippingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedShippingRate) {
+      alert('Please select a shipping method');
+      return;
+    }
     setCurrentStep(2);
+  };
+
+  const handleShippingSelected = (rate: ShippingRate) => {
+    setSelectedShippingRate(rate);
   };
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
@@ -276,6 +287,14 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                   
+                  {/* Canada Post Shipping Calculator */}
+                  <div className="mt-6">
+                    <ShippingCalculator 
+                      onShippingSelected={handleShippingSelected}
+                      className="border border-gray-200"
+                    />
+                  </div>
+                  
                   <button
                     type="submit"
                     className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
@@ -410,7 +429,16 @@ export default function CheckoutPage() {
                   <span>${calculateTax().toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Shipping</span>
+                  <span>
+                    {selectedShippingRate ? (
+                      <div>
+                        <span>Shipping</span>
+                        <div className="text-xs text-gray-500">{selectedShippingRate.service_name}</div>
+                      </div>
+                    ) : (
+                      'Shipping'
+                    )}
+                  </span>
                   <span>
                     {calculateShipping() === 0 ? 'FREE' : `$${calculateShipping().toFixed(2)}`}
                   </span>
