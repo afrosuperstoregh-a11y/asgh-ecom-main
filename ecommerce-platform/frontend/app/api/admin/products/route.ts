@@ -1,42 +1,19 @@
-import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
+import { authenticateAdmin, createAuthErrorResponse, createSuccessResponse } from '../lib/auth';
 
-// Authentication middleware
-async function authenticate() {
-  const cookieStore = cookies();
-  const token = cookieStore.get('auth-token')?.value;
-  
-  if (!token) {
-    return { error: 'No token provided', status: 401 };
-  }
-
+export async function GET(request: NextRequest) {
   try {
-    const payload = JSON.parse(atob(token));
+    console.log('Admin products API called');
     
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-      return { error: 'Token expired', status: 401 };
-    }
-
-    if (!payload.role || !['ADMIN', 'SUPER_ADMIN'].includes(payload.role)) {
-      return { error: 'Insufficient permissions', status: 403 };
-    }
-
-    return { user: payload };
-  } catch (error) {
-    return { error: 'Invalid token', status: 401 };
-  }
-}
-
-export async function GET(request) {
-  try {
     // Authenticate the request
-    const auth = await authenticate();
+    const auth = await authenticateAdmin();
     if (auth.error) {
-      return NextResponse.json({
-        success: false,
-        message: auth.error
-      }, { status: auth.status });
+      console.log('Products auth failed:', auth.error);
+      return NextResponse.json(createAuthErrorResponse(auth.error, auth.status), { status: auth.status });
     }
+
+    console.log('Products auth successful, returning data');
+    
     // Mock products data
     const products = [
       {
@@ -92,30 +69,30 @@ export async function GET(request) {
       }
     ];
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        products,
-        pagination: {
-          page: 1,
-          limit: 10,
-          total: 3,
-          totalPages: 1
-        }
+    return NextResponse.json(createSuccessResponse({
+      products,
+      pagination: {
+        page: 1,
+        limit: 10,
+        total: 3,
+        totalPages: 1
       }
-    });
+    }));
 
   } catch (error) {
     console.error('Products fetch error:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Failed to fetch products'
-    }, { status: 500 });
+    return NextResponse.json(createAuthErrorResponse('Failed to fetch products', 500), { status: 500 });
   }
 }
 
-export async function POST(request) {
+export async function POST(request: NextRequest) {
   try {
+    // Authenticate the request
+    const auth = await authenticateAdmin();
+    if (auth.error) {
+      return NextResponse.json(createAuthErrorResponse(auth.error, auth.status), { status: auth.status });
+    }
+
     const body = await request.json();
     
     // Mock product creation
@@ -136,23 +113,23 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Product creation error:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Failed to create product'
-    }, { status: 500 });
+    return NextResponse.json(createAuthErrorResponse('Failed to create product', 500), { status: 500 });
   }
 }
 
-export async function PUT(request) {
+export async function PUT(request: NextRequest) {
   try {
+    // Authenticate the request
+    const auth = await authenticateAdmin();
+    if (auth.error) {
+      return NextResponse.json(createAuthErrorResponse(auth.error, auth.status), { status: auth.status });
+    }
+
     const body = await request.json();
     const { id, ...updateData } = body;
     
     if (!id) {
-      return NextResponse.json({
-        success: false,
-        message: 'Product ID is required'
-      }, { status: 400 });
+      return NextResponse.json(createAuthErrorResponse('Product ID is required', 400), { status: 400 });
     }
 
     // Mock product update
@@ -170,23 +147,23 @@ export async function PUT(request) {
 
   } catch (error) {
     console.error('Product update error:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Failed to update product'
-    }, { status: 500 });
+    return NextResponse.json(createAuthErrorResponse('Failed to update product', 500), { status: 500 });
   }
 }
 
-export async function DELETE(request) {
+export async function DELETE(request: NextRequest) {
   try {
+    // Authenticate the request
+    const auth = await authenticateAdmin();
+    if (auth.error) {
+      return NextResponse.json(createAuthErrorResponse(auth.error, auth.status), { status: auth.status });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     
     if (!id) {
-      return NextResponse.json({
-        success: false,
-        message: 'Product ID is required'
-      }, { status: 400 });
+      return NextResponse.json(createAuthErrorResponse('Product ID is required', 400), { status: 400 });
     }
 
     // Mock product deletion
@@ -197,9 +174,6 @@ export async function DELETE(request) {
 
   } catch (error) {
     console.error('Product deletion error:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Failed to delete product'
-    }, { status: 500 });
+    return NextResponse.json(createAuthErrorResponse('Failed to delete product', 500), { status: 500 });
   }
 }

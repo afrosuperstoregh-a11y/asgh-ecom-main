@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 // Authentication middleware
 async function authenticate() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get('auth-token')?.value;
   
   if (!token) {
@@ -11,7 +11,7 @@ async function authenticate() {
   }
 
   try {
-    const payload = JSON.parse(atob(token));
+    const payload = JSON.parse(Buffer.from(token, 'base64').toString());
     
     if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
       return { error: 'Token expired', status: 401 };
@@ -27,16 +27,22 @@ async function authenticate() {
   }
 }
 
-export async function GET(request) {
+export async function GET(request: NextRequest) {
   try {
+    console.log('Dashboard overview API called');
+    
     // Authenticate the request
     const auth = await authenticate();
     if (auth.error) {
+      console.log('Dashboard auth failed:', auth.error);
       return NextResponse.json({
         success: false,
         message: auth.error
       }, { status: auth.status });
     }
+
+    console.log('Dashboard auth successful, returning data');
+    
     // Mock dashboard data
     const dashboardData = {
       overview: {
