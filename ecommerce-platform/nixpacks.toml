@@ -2,7 +2,7 @@
 nixPkgs = ["nodejs_20", "npm"]
 
 [phases.build]
-cmds = ["npm install"]
+cmds = ["rm -rf node_modules package-lock.json", "npm run build"]
 
 [start]
 cmd = "node backend/src/server.js"

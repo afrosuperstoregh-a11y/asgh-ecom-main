@@ -8,7 +8,7 @@
     "dev:client": "cd frontend && npm run dev",
     "dev:backend": "cd backend && npm run dev",
     "start": "node backend/src/server.js",
-    "build": "echo 'Please run build commands in the respective service directories' && exit 1",
+    "build": "npm install && npm install stripe",
     "start:dev": "npm run dev",
     "lint": "npm run lint --workspaces"
   },
