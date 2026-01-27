@@ -27,6 +27,8 @@ const DealProductCard: React.FC<DealProductCardProps> = ({ product, viewMode = '
   const isEndingSoon = daysUntilEnd <= 3;
 
   const handleBuyNow = () => {
+    // TODO: Implement buy now functionality
+    // This should navigate to checkout with the product pre-added
     console.log(`Buy Now: ${product.name}`);
   };
 

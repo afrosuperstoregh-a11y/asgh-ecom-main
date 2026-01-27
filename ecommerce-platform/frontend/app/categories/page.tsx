@@ -56,7 +56,7 @@ const categories = [
     id: 8,
     name: "Jewelry & Accessories",
     slug: "jewelry-accessories",
-    image: "/images/categories/jewelry.png",
+    image: "/images/categories/Jewelry.png",
     count: 60,
   },
   {

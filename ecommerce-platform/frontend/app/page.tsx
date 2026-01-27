@@ -5,15 +5,15 @@ import { ArrowRight, ShoppingBag, Star, Truck, Shield } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function HomePage() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Mock data for now to test header display
     const mockProducts = [
-      { id: 1, name: 'Product 1', price: 29.99, image: '/placeholder.jpg' },
-      { id: 2, name: 'Product 2', price: 39.99, image: '/placeholder.jpg' },
-      { id: 3, name: 'Product 3', price: 49.99, image: '/placeholder.jpg' },
+      { id: 1, name: 'Product 1', price: 29.99, image: '/placeholder-product.svg' },
+      { id: 2, name: 'Product 2', price: 39.99, image: '/placeholder-product.svg' },
+      { id: 3, name: 'Product 3', price: 49.99, image: '/placeholder-product.svg' },
     ];
     setProducts(mockProducts);
     setLoading(false);
