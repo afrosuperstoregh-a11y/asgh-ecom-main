@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 export async function POST(request) {
   try {
     const { email, password } = await request.json();
     
-    // Validate input
+    // Input validation
     if (!email || !password) {
       return NextResponse.json({
         success: false,
@@ -12,47 +13,69 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
-    // Check for super admin credentials
-    if (email === 'info@afrosuperstore.ca' && password === 'Iamtech@100') {
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({
+        success: false,
+        message: 'Invalid email format'
+      }, { status: 400 });
+    }
+
+    // Password strength validation
+    if (password.length < 8) {
+      return NextResponse.json({
+        success: false,
+        message: 'Password must be at least 8 characters long'
+      }, { status: 400 });
+    }
+
+    // TEMPORARY: Mock authentication for testing
+    // In production, this should validate against your database
+    if (email === 'admin@afrosuperstore.ca' && password === 'Admin123!') {
+      // Create a mock JWT token (in production, use real JWT)
+      const mockPayload = {
+        id: 'admin-001',
+        email: 'admin@afrosuperstore.ca',
+        name: 'Admin User',
+        role: 'SUPER_ADMIN',
+        emailVerified: true,
+        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
+      };
+      
+      const mockToken = btoa(JSON.stringify(mockPayload));
+
+      // Set secure HTTP-only cookies
+      const cookieStore = cookies();
+      
+      cookieStore.set('auth-token', mockToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60, // 24 hours
+        path: '/'
+      });
+
       return NextResponse.json({
         success: true,
         message: 'Login successful',
         user: {
-          id: 'admin-001',
-          email: 'info@afrosuperstore.ca',
-          name: 'Super Admin',
-          role: 'super_admin',
-          emailVerified: true
-        },
-        token: 'mock-jwt-token-for-super-admin'
+          id: mockPayload.id,
+          email: mockPayload.email,
+          name: mockPayload.name,
+          role: mockPayload.role,
+          emailVerified: mockPayload.emailVerified
+        }
       });
     }
 
-    // For demo purposes, accept any admin credentials
-    // In production, this should validate against database
-    if (email.includes('@afrosuperstore.ca')) {
-      return NextResponse.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          id: 'admin-demo',
-          email: email,
-          name: 'Admin User',
-          role: 'admin',
-          emailVerified: true
-        },
-        token: 'mock-jwt-token-for-admin'
-      });
-    }
-
-    // Invalid credentials
     return NextResponse.json({
       success: false,
       message: 'Invalid email or password'
     }, { status: 401 });
 
   } catch (error) {
-    console.error('Admin login error:', error);
+    console.error('Admin login API error:', error);
     return NextResponse.json({
       success: false,
       message: 'Internal server error'

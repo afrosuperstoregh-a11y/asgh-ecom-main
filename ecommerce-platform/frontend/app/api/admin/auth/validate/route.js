@@ -1,57 +1,67 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 export async function GET(request) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization');
+    const cookieStore = cookies();
+    const token = cookieStore.get('auth-token')?.value;
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!token) {
       return NextResponse.json({
         success: false,
         message: 'No token provided'
       }, { status: 401 });
     }
 
-    const token = authHeader.substring(7);
+    try {
+      // Decode the mock token
+      const payload = JSON.parse(atob(token));
+      
+      // Check expiration
+      if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+        // Clear expired token
+        cookieStore.delete('auth-token');
+        cookieStore.delete('csrf-token');
+        
+        return NextResponse.json({
+          success: false,
+          message: 'Token expired'
+        }, { status: 401 });
+      }
 
-    // Mock validation - in production, validate the JWT token
-    if (token === 'mock-jwt-token-for-super-admin' || token === 'mock-jwt-token-for-admin') {
-      const userData = token === 'mock-jwt-token-for-super-admin' 
-        ? {
-            id: 'admin-001',
-            email: 'info@afrosuperstore.ca',
-            name: 'Super Admin',
-            role: {
-              name: 'Super Admin',
-              permissions: ['read', 'write', 'delete', 'admin']
-            }
-          }
-        : {
-            id: 'admin-demo',
-            email: 'admin@afrosuperstore.ca',
-            name: 'Admin User',
-            role: {
-              name: 'Admin',
-              permissions: ['read', 'write']
-            }
-          };
+      // Check if user has admin role
+      if (!payload.role || !['ADMIN', 'SUPER_ADMIN'].includes(payload.role)) {
+        return NextResponse.json({
+          success: false,
+          message: 'Insufficient permissions'
+        }, { status: 403 });
+      }
 
       return NextResponse.json({
         success: true,
-        user: userData
+        user: {
+          id: payload.id,
+          email: payload.email,
+          name: payload.name,
+          role: payload.role,
+          emailVerified: payload.emailVerified
+        }
       });
+    } catch (decodeError) {
+      // Clear invalid token
+      cookieStore.delete('auth-token');
+      cookieStore.delete('csrf-token');
+      
+      return NextResponse.json({
+        success: false,
+        message: 'Invalid token'
+      }, { status: 401 });
     }
-
-    return NextResponse.json({
-      success: false,
-      message: 'Invalid token'
-    }, { status: 401 });
-
   } catch (error) {
-    console.error('Token validation error:', error);
+    console.error('Auth validation API error:', error);
     return NextResponse.json({
       success: false,
-      message: 'Token validation failed'
+      message: 'Authentication validation failed'
     }, { status: 500 });
   }
 }

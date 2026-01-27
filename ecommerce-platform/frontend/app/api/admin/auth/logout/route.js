@@ -1,14 +1,21 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 export async function POST(request) {
   try {
-    // Mock logout - in a real app, you might invalidate the token on the server
+    const cookieStore = cookies();
+    
+    // Clear authentication cookies
+    cookieStore.delete('auth-token');
+    cookieStore.delete('refresh-token');
+    cookieStore.delete('csrf-token');
+
     return NextResponse.json({
       success: true,
       message: 'Logout successful'
     });
-
   } catch (error) {
+    console.error('Logout API error:', error);
     return NextResponse.json({
       success: false,
       message: 'Logout failed'
