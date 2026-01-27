@@ -207,11 +207,11 @@ export default function AdminLogin() {
             </div>
           </div>
 
-          {/* <div className="mt-4 text-sm text-gray-600 bg-gray-100 rounded-lg p-4">
+          <div className="mt-4 text-sm text-gray-600 bg-gray-100 rounded-lg p-4">
             <p className="font-medium mb-2">Super Admin Credentials:</p>
             <p>Email: info@afrosuperstore.ca</p>
-            <p>Password: Iamtech@10</p>
-          </div> */}
+            <p>Password: Iamtech@100</p>
+          </div>
         </div>
       </div>
     </div>
