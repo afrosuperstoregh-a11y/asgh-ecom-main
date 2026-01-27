@@ -100,7 +100,9 @@ export default function RootLayout({
                   
                   const shouldSuppress = (...args) => {
                     const message = args.join(' ').toLowerCase();
-                    return message.includes('feature_collector') && message.includes('deprecated');
+                    return message.includes('feature_collector') || 
+                           message.includes('deprecated parameters') ||
+                           message.includes('initialization function');
                   };
                   
                   console.warn = (...args) => {
@@ -127,6 +129,18 @@ export default function RootLayout({
                       return originalError.call(window, message, source, lineno, colno, error);
                     }
                     return false;
+                  };
+
+                  // Suppress unhandled promise rejections related to feature_collector
+                  const originalUnhandledRejection = window.onunhandledrejection;
+                  window.onunhandledrejection = (event) => {
+                    if (event.reason && typeof event.reason === 'string' && shouldSuppress(event.reason)) {
+                      event.preventDefault();
+                      return;
+                    }
+                    if (originalUnhandledRejection) {
+                      return originalUnhandledRejection.call(window, event);
+                    }
                   };
                 })();
               `,

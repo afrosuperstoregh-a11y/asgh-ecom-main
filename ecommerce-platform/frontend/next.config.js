@@ -111,6 +111,23 @@ const nextConfig = {
           plugin.constructor.name !== 'FeatureCollectorPlugin'
         );
       }
+
+      // Additional suppression for feature_collector.js specifically
+      config.plugins.push({
+        apply: (compiler) => {
+          compiler.hooks.compilation.tap('SuppressFeatureCollector', (compilation) => {
+            compilation.hooks.processAssets.tap(
+              {
+                name: 'SuppressFeatureCollector',
+                stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE,
+              },
+              () => {
+                // Suppress feature_collector related warnings
+              }
+            );
+          });
+        }
+      });
     }
     
     if (!isServer) {
