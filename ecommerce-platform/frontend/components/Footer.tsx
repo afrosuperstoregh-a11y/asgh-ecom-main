@@ -11,9 +11,9 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
-          <div>
-            <img src="/asca-logo.png" alt="AfroSuperstore" className="h-40 w-auto" />
-            <p className="text-white-400 mb-4">
+          <div className="md:col-span-1">
+            <img src="/asca-logo.png" alt="AfroSuperstore" className="h-24 sm:h-32 md:h-40 w-auto" />
+            <p className="text-white/80 mb-4 text-sm sm:text-base">
               Your trusted online marketplace for quality products and exceptional service.
             </p>
             <div className="flex space-x-4">
@@ -39,11 +39,11 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li><Link href="/about" className="text-white-400 hover:text-white transition-colors">About Us</Link></li>
-              <li><Link href="/contact" className="text-white-400 hover:text-white transition-colors">Contact</Link></li>
-              <li><Link href="/faq" className="text-white-400 hover:text-white transition-colors">FAQ</Link></li>
-              <li><Link href="/shipping" className="text-white-400 hover:text-white transition-colors">Shipping Info</Link></li>
-              <li><Link href="/returns" className="text-white-400 hover:text-white transition-colors">Returns</Link></li>
+              <li><Link href="/about" className="text-white/80 hover:text-white transition-colors text-sm sm:text-base">About Us</Link></li>
+              <li><Link href="/contact" className="text-white/80 hover:text-white transition-colors text-sm sm:text-base">Contact</Link></li>
+              <li><Link href="/faq" className="text-white/80 hover:text-white transition-colors text-sm sm:text-base">FAQ</Link></li>
+              <li><Link href="/shipping" className="text-white/80 hover:text-white transition-colors text-sm sm:text-base">Shipping Info</Link></li>
+              <li><Link href="/returns" className="text-white/80 hover:text-white transition-colors text-sm sm:text-base">Returns</Link></li>
             </ul>
           </div>
 
@@ -51,25 +51,25 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Customer Service</h4>
             <ul className="space-y-2">
-              <li><Link href="/track" className="text-white-400 hover:text-white transition-colors">Track Order</Link></li>
-              <li><Link href="/account" className="text-white-400 hover:text-white transition-colors">My Account</Link></li>
-              <li><Link href="/wishlist" className="text-white-400 hover:text-white transition-colors">Wishlist</Link></li>
-              <li><Link href="/support" className="text-white-400 hover:text-white transition-colors">Support</Link></li>
-              <li><Link href="/privacy" className="text-white-400 hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/track" className="text-white/80 hover:text-white transition-colors text-sm sm:text-base">Track Order</Link></li>
+              <li><Link href="/account" className="text-white/80 hover:text-white transition-colors text-sm sm:text-base">My Account</Link></li>
+              <li><Link href="/wishlist" className="text-white/80 hover:text-white transition-colors text-sm sm:text-base">Wishlist</Link></li>
+              <li><Link href="/support" className="text-white/80 hover:text-white transition-colors text-sm sm:text-base">Support</Link></li>
+              <li><Link href="/privacy" className="text-white/80 hover:text-white transition-colors text-sm sm:text-base">Privacy Policy</Link></li>
             </ul>
           </div>
 
           {/* Contact Info */}
           <div>
             <h4 className="text-lg font-semibold mb-4">Contact Info</h4>
-            <div className="space-y-2 text-white-400">
+            <div className="space-y-2 text-white/80 text-sm sm:text-base">
               <p>620 Seventh Ave,</p>
               <p>New Westminster, BC V3M5T6 Canada</p>
               <p>Phone: +1 (604) 866-3550</p>
               <p>Email: info@afrosuperstore.ca</p>
               <div className="mt-4">
                 <p className="text-sm mb-2">We Accept:</p>
-                <div className="flex space-x-2">
+                <div className="flex flex-wrap gap-2">
                   <div className="bg-white text-black px-2 py-1 rounded text-xs font-semibold">VISA</div>
                   <div className="bg-white text-black px-2 py-1 rounded text-xs font-semibold">MC</div>
                   <div className="bg-white text-black px-2 py-1 rounded text-xs font-semibold">AMEX</div>
@@ -80,8 +80,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white-800 mt-8 pt-8 text-center text-white-400">
-          <p>&copy; {currentYear} Afro Superstore. All rights reserved.</p>
+        <div className="border-t border-white/20 mt-8 pt-8 text-center text-white/80">
+          <p className="text-sm sm:text-base">&copy; {currentYear} Afro Superstore. All rights reserved.</p>
         </div>
       </div>
     </footer>

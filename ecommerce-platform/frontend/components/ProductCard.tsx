@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Product } from '@/data/products';
 import { Heart, ShoppingCart, Star } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 interface ProductCardProps {
   product: Product;
@@ -12,18 +14,56 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [selectedColor, setSelectedColor] = useState(product.colors[0]);
   const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  
+  const isWishlisted = isInWishlist(product.id.toString());
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  const handleAddToCart = () => {
-    setIsAddingToCart(true);
-    setTimeout(() => {
+  const handleAddToCart = async () => {
+    if (isAddingToCart) return;
+    
+    try {
+      setIsAddingToCart(true);
+      
+      // Add product to cart with selected options
+      await addToCart({
+        id: product.id.toString(),
+        name: product.name,
+        price: product.discountPrice || product.price,
+        image: product.images[0],
+        category: product.category
+      });
+      
+      // Show success feedback briefly
+      setTimeout(() => {
+        setIsAddingToCart(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
       setIsAddingToCart(false);
-    }, 1000);
+      // You could add a toast notification here
+    }
   };
 
-  const handleWishlist = () => {
-    setIsWishlisted(!isWishlisted);
+  const handleWishlist = async () => {
+    try {
+      const productId = product.id.toString();
+      if (isWishlisted) {
+        await removeFromWishlist(productId);
+      } else {
+        await addToWishlist({
+          id: productId,
+          name: product.name,
+          price: product.discountPrice || product.price,
+          image: product.images[0],
+          category: product.category
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update wishlist:', error);
+      // You could add a toast notification here
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -87,7 +127,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <img
           src={isHovered && product.images[1] ? product.images[1] : product.images[0]}
           alt={product.name}
-          className="w-full h-80 object-cover transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-48 sm:h-64 md:h-80 object-cover transition-transform duration-300 group-hover:scale-105"
         />
         
         {/* Badges */}
@@ -112,10 +152,10 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Wishlist Button */}
         <button
           onClick={handleWishlist}
-          className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow duration-200"
+          className="absolute top-2 right-2 p-2 sm:p-3 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow duration-200 touch-target"
         >
           <Heart 
-            className={`h-5 w-5 transition-colors duration-200 ${
+            className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-200 ${
               isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600 hover:text-red-500'
             }`}
           />
@@ -203,7 +243,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <button
           onClick={handleAddToCart}
           disabled={!product.inStock || isAddingToCart}
-          className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+          className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base touch-target ${
             !product.inStock
               ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
               : isAddingToCart

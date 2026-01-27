@@ -43,14 +43,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const validateToken = async (token: string) => {
     try {
-      // API call to validate token
-      const response = await fetch('/api/auth/validate', {
+      // API call to validate token - using backend API endpoint
+      const response = await fetch('http://localhost:3001/api/auth/validate', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
+      } else {
+        // Token is invalid, remove it
+        localStorage.removeItem('token');
       }
     } catch (error) {
       console.error('Token validation failed:', error);
@@ -62,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('http://localhost:3001/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -80,6 +83,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem('token', token);
           return true;
         }
+      } else {
+        // Handle login errors
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Login error:', errorData.message || 'Invalid credentials');
       }
       return false;
     } catch (error) {
@@ -90,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (userData: RegisterData): Promise<boolean> => {
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('http://localhost:3001/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
@@ -108,6 +115,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem('token', token);
           return true;
         }
+      } else {
+        // Handle registration errors
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Registration error:', errorData.message || 'Registration failed');
       }
       return false;
     } catch (error) {
@@ -121,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Call backend logout endpoint
       const token = localStorage.getItem('token');
       if (token) {
-        await fetch('/api/auth/logout', {
+        await fetch('http://localhost:3001/api/auth/logout', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',

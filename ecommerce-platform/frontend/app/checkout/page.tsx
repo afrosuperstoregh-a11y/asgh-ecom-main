@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CreditCard, Truck, Shield, ShoppingBag } from 'lucide-react';
+import { useCart } from '../../context/CartContext';
 
 interface CartItem {
   id: number;
@@ -33,7 +34,7 @@ interface PaymentInfo {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { items, getCartTotal, clearCart } = useCart();
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     firstName: '',
     lastName: '',
@@ -55,28 +56,14 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState(1);
 
   useEffect(() => {
-    // Mock cart data - replace with actual cart state
-    const mockCartItems: CartItem[] = [
-      {
-        id: 1,
-        name: 'Product 1',
-        price: 29.99,
-        quantity: 2,
-        image: '/api/placeholder/100/100'
-      },
-      {
-        id: 2,
-        name: 'Product 2',
-        price: 49.99,
-        quantity: 1,
-        image: '/api/placeholder/100/100'
-      }
-    ];
-    setCartItems(mockCartItems);
-  }, []);
+    // Redirect to cart if cart is empty
+    if (items.length === 0) {
+      router.push('/cart');
+    }
+  }, [items, router]);
 
   const calculateSubtotal = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return getCartTotal();
   };
 
   const calculateTax = () => {
@@ -100,12 +87,51 @@ export default function CheckoutPage() {
     e.preventDefault();
     setProcessingOrder(true);
     
-    // Mock order processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setProcessingOrder(false);
-    alert('Order placed successfully!');
-    router.replace('/');
+    try {
+      // Create order data
+      const orderData = {
+        items: items.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image
+        })),
+        shipping: shippingInfo,
+        payment: {
+          ...paymentInfo,
+          cardNumber: paymentInfo.cardNumber.slice(-4) // Only store last 4 digits
+        },
+        totals: {
+          subtotal: calculateSubtotal(),
+          tax: calculateTax(),
+          shipping: calculateShipping(),
+          total: calculateTotal()
+        }
+      };
+
+      // Mock API call - replace with actual API endpoint
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      if (response.ok) {
+        // Clear cart and redirect to success page
+        clearCart();
+        router.push('/order-confirmation');
+      } else {
+        throw new Error('Order failed');
+      }
+    } catch (error) {
+      console.error('Order processing error:', error);
+      alert('Order processing failed. Please try again.');
+    } finally {
+      setProcessingOrder(false);
+    }
   };
 
   const handleInputChange = (section: 'shipping' | 'payment', field: string, value: string) => {
@@ -353,10 +379,10 @@ export default function CheckoutPage() {
               
               {/* Cart Items */}
               <div className="space-y-4 mb-6">
-                {cartItems.map((item) => (
+                {items.map((item) => (
                   <div key={item.id} className="flex items-center space-x-4">
                     <img
-                      src={item.image}
+                      src={item.image || '/placeholder-product.svg'}
                       alt={item.name}
                       className="w-16 h-16 object-cover rounded-lg"
                     />

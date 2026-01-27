@@ -17,10 +17,45 @@ interface CartItem {
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
+  const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleRemoveFromCart = async (id: string) => {
+    try {
+      setUpdatingItemId(id);
+      removeFromCart(id);
+    } catch (err) {
+      setError('Failed to remove item from cart');
+      console.error('Remove from cart error:', err);
+    } finally {
+      setUpdatingItemId(null);
+    }
+  };
+
+  const handleUpdateQuantity = async (id: string, quantity: number) => {
+    try {
+      setUpdatingItemId(id);
+      updateQuantity(id, quantity);
+    } catch (err) {
+      setError('Failed to update item quantity');
+      console.error('Update quantity error:', err);
+    } finally {
+      setUpdatingItemId(null);
+    }
+  };
+
+  const handleClearCart = async () => {
+    try {
+      clearCart();
+    } catch (err) {
+      setError('Failed to clear cart');
+      console.error('Clear cart error:', err);
+    }
+  };
 
   if (!mounted) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -62,6 +97,19 @@ export default function CartPage() {
           </p>
         </div>
 
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800 text-sm">{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="mt-2 text-red-600 hover:text-red-800 text-sm underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-8">
@@ -88,16 +136,18 @@ export default function CartPage() {
                     <div className="flex items-center justify-between w-full sm:w-auto sm:flex-col sm:space-y-2">
                       <div className="flex items-center space-x-2">
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="p-2 text-gray-400 hover:text-gray-600 transition-colors touch-target"
+                          onClick={() => handleUpdateQuantity(item.id.toString(), item.quantity - 1)}
+                          disabled={updatingItemId === item.id.toString()}
+                          className="p-2 text-gray-400 hover:text-gray-600 transition-colors touch-target disabled:opacity-50"
                           aria-label="Decrease quantity"
                         >
                           <Minus className="h-4 w-4" />
                         </button>
                         <span className="w-8 text-center font-medium">{item.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="p-2 text-gray-400 hover:text-gray-600 transition-colors touch-target"
+                          onClick={() => handleUpdateQuantity(item.id.toString(), item.quantity + 1)}
+                          disabled={updatingItemId === item.id.toString()}
+                          className="p-2 text-gray-400 hover:text-gray-600 transition-colors touch-target disabled:opacity-50"
                           aria-label="Increase quantity"
                         >
                           <Plus className="h-4 w-4" />
@@ -110,11 +160,12 @@ export default function CartPage() {
                           ${(item.price * item.quantity).toFixed(2)}
                         </div>
                         <button
-                          onClick={() => removeFromCart(item.id)}
-                          className="p-2 text-red-400 hover:text-red-600 transition-colors touch-target"
+                          onClick={() => handleRemoveFromCart(item.id.toString())}
+                          disabled={updatingItemId === item.id.toString()}
+                          className="p-2 text-red-500 hover:text-red-700 transition-colors touch-target disabled:opacity-50"
                           aria-label="Remove item"
                         >
-                          <Trash2 className="h-5 w-5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </div>

@@ -4,18 +4,22 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Search, ShoppingCart, Heart, Menu, X, User } from 'lucide-react';
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { getCartCount } = useCart();
-  const [wishlistCount] = useState(7); // Dummy wishlist count
+  const { getWishlistCount } = useWishlist();
   const cartCount = getCartCount();
+  const wishlistCount = getWishlistCount();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      window.location.href = `/shop?search=${encodeURIComponent(searchQuery)}`;
+      // Use Next.js router for navigation instead of window.location
+      const searchUrl = `/shop?search=${encodeURIComponent(searchQuery.trim())}`;
+      window.location.href = searchUrl;
     }
   };
 

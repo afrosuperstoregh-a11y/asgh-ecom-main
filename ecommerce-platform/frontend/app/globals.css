@@ -107,6 +107,56 @@ body {
   .mobile-button {
     @apply w-full py-3 px-4 rounded-lg font-medium transition-colors touch-target;
   }
+
+  /* Primary color variants */
+  .mobile-button.bg-primary-600 {
+    @apply bg-blue-600 text-white hover:bg-blue-700;
+  }
+
+  .mobile-button.bg-primary-700 {
+    @apply bg-blue-700 text-white hover:bg-blue-800;
+  }
+
+  .mobile-button.hover\:bg-primary-700:hover {
+    @apply bg-blue-700;
+  }
+
+  /* Generic primary colors */
+  .bg-primary-600 {
+    @apply bg-blue-600;
+  }
+
+  .bg-primary-700 {
+    @apply bg-blue-700;
+  }
+
+  .text-primary-600 {
+    @apply text-blue-600;
+  }
+
+  .text-primary-700 {
+    @apply text-blue-700;
+  }
+
+  .hover\:text-primary-600:hover {
+    @apply text-blue-600;
+  }
+
+  .hover\:text-primary-700:hover {
+    @apply text-blue-700;
+  }
+
+  .hover\:bg-primary-700:hover {
+    @apply bg-blue-700;
+  }
+
+  .focus\:ring-primary-500:focus {
+    @apply ring-blue-500;
+  }
+
+  .ring-primary-500 {
+    @apply ring-blue-500;
+  }
 }
 
 /* Mobile-specific base styles */
