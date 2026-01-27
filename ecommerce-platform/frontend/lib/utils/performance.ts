@@ -77,16 +77,14 @@ export const initPerformanceMonitoring = () => {
   // Only track in production
   if (process.env.NODE_ENV !== 'production') return;
   
-  // Use the web-vitals library if available
-  if (typeof (window as any).webVitals === 'function') {
-    import('web-vitals').then(({ onCLS, onINP, onLCP, onFCP, onTTFB }) => {
-      onCLS((metric) => trackMetric('CLS', metric.value));
-      onINP((metric) => trackMetric('INP', metric.value));
-      onLCP((metric) => trackMetric('LCP', metric.value));
-      onFCP((metric) => trackMetric('FCP', metric.value));
-      onTTFB((metric) => trackMetric('TTFB', metric.value));
-    });
-  }
+  // Use the web-vitals library with the latest API
+  import('web-vitals').then(({ onCLS, onINP, onLCP, onFCP, onTTFB }) => {
+    onCLS((metric) => trackMetric('CLS', metric.value));
+    onINP((metric) => trackMetric('INP', metric.value));
+    onLCP((metric) => trackMetric('LCP', metric.value));
+    onFCP((metric) => trackMetric('FCP', metric.value));
+    onTTFB((metric) => trackMetric('TTFB', metric.value));
+  });
   
   // Track navigation timing
   if ('performance' in window) {
