@@ -54,33 +54,19 @@ export default function AdminLayout({
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.replace('/admin/login');
-        return;
-      }
-
+      // Token is stored in HTTP-only cookies, no need to check localStorage
       const response = await fetch('/api/admin/auth/validate', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include' // Important for sending cookies
       });
 
       if (response.ok) {
         const userData = await response.json();
         setUser(userData.user || userData);
       } else {
-        localStorage.removeItem('token');
         router.replace('/admin/login');
       }
     } catch (error) {
       console.error('Auth check failed:', error);
-      // Clear any invalid token and redirect to login
-      try {
-        localStorage.removeItem('token');
-      } catch (e) {
-        // Ignore localStorage errors
-      }
       router.replace('/admin/login');
     } finally {
       setLoading(false);
@@ -89,17 +75,13 @@ export default function AdminLayout({
 
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem('token');
       await fetch('/api/admin/auth/logout', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('token');
       router.replace('/admin/login');
     }
   };

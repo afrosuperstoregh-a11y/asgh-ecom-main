@@ -1,7 +1,42 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+
+// Authentication middleware
+async function authenticate() {
+  const cookieStore = cookies();
+  const token = cookieStore.get('auth-token')?.value;
+  
+  if (!token) {
+    return { error: 'No token provided', status: 401 };
+  }
+
+  try {
+    const payload = JSON.parse(atob(token));
+    
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+      return { error: 'Token expired', status: 401 };
+    }
+
+    if (!payload.role || !['ADMIN', 'SUPER_ADMIN'].includes(payload.role)) {
+      return { error: 'Insufficient permissions', status: 403 };
+    }
+
+    return { user: payload };
+  } catch (error) {
+    return { error: 'Invalid token', status: 401 };
+  }
+}
 
 export async function GET(request) {
   try {
+    // Authenticate the request
+    const auth = await authenticate();
+    if (auth.error) {
+      return NextResponse.json({
+        success: false,
+        message: auth.error
+      }, { status: auth.status });
+    }
     // Mock dashboard data
     const dashboardData = {
       overview: {
