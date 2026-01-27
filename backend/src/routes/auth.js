@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const router = express.Router();
 
 // Authentication routes
@@ -15,23 +16,35 @@ router.post('/login', async (req, res) => {
     }
 
     // Check for super admin credentials
-    if (email === 'info@afrosuperstore.ca' && password === 'Iamtech@100') {
-      return res.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          id: 'admin-001',
-          email: 'info@afrosuperstore.ca',
-          name: 'Super Admin',
-          role: 'super_admin',
-          emailVerified: true
-        },
-        token: 'mock-jwt-token-for-super-admin'
-      });
+    if (email === 'info@afrosuperstore.ca') {
+      const hashedPassword = '$2b$10$ravrUoIKPiF6uLvznFeIFOu.eqxPKugqCj1lp9rU4BgKsIml4Pr7u';
+      const isValidPassword = await bcrypt.compare(password, hashedPassword);
+      
+      if (isValidPassword) {
+        return res.json({
+          success: true,
+          message: 'Login successful',
+          user: {
+            id: 'admin-001',
+            email: 'info@afrosuperstore.ca',
+            name: 'Super Admin',
+            role: 'super_admin',
+            emailVerified: true
+          },
+          token: 'mock-jwt-token-for-super-admin'
+        });
+      }
     }
 
-    // For demo purposes, accept any credentials
+    // For demo purposes, accept any credentials that aren't super admin
     // In production, this should validate against database
+    if (email === 'info@afrosuperstore.ca') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+    
     return res.json({
       success: true,
       message: 'Login successful',
