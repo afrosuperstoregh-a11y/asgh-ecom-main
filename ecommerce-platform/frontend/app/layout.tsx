@@ -7,8 +7,8 @@ import { AuthProvider } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Script from "next/script";
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const dynamic = 'force-dynamic';
 
@@ -102,8 +102,12 @@ export default function RootLayout({
           </WishlistProvider>
         </AuthProvider>
       </body>
-      <Analytics />
-      <SpeedInsights />
+      {process.env.NODE_ENV === 'production' && (
+        <>
+          <Analytics />
+          <SpeedInsights />
+        </>
+      )}
     </html>
   );
 }
