@@ -5,7 +5,10 @@ export async function POST(request) {
   try {
     const cookieStore = cookies();
     
-    // Clear authentication cookies
+    // Clear Supabase authentication cookies
+    cookieStore.delete('supabase-auth-token');
+    
+    // Also clear any legacy cookies
     cookieStore.delete('auth-token');
     cookieStore.delete('refresh-token');
     cookieStore.delete('csrf-token');
