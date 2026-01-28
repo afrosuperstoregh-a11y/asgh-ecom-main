@@ -6,9 +6,7 @@ let stripe: Stripe | null = null
 
 function getStripeClient(): Stripe | null {
   if (!stripe && process.env.STRIPE_SECRET_KEY) {
-    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2023-10-16' as any,
-    })
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
   }
   return stripe
 }
