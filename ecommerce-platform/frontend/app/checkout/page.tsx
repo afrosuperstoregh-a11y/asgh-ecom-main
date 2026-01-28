@@ -369,6 +369,8 @@ export default function CheckoutPage() {
                   </button>
                 </form>
               </div>
+            )}
+            
             {/* Step 2: Payment Information */}
             {currentStep === 2 && (
               <div className="bg-white rounded-lg shadow-sm p-6">

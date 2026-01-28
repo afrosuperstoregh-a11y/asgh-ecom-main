@@ -32,7 +32,7 @@ class EmailService {
   private async initializeSendGrid() {
     try {
       // Dynamic import to avoid build errors
-      const sgMail = await import('@sendgrid/mail');
+      const sgMail = await import('@sendgrid/mail') as any;
       sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
       this.sendGrid = sgMail;
       console.log('✅ SendGrid initialized successfully');

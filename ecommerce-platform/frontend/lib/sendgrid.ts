@@ -1,13 +1,7 @@
-// Optional SendGrid import - only available in production
-let sgMail: any;
-try {
-  sgMail = require('@sendgrid/mail');
-} catch (error) {
-  console.log('SendGrid not installed, using mock service');
-}
+import sgMail from '@sendgrid/mail';
 
 // Initialize SendGrid with API key
-if (sgMail && process.env.SENDGRID_API_KEY) {
+if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 }
 
@@ -28,8 +22,8 @@ export interface SendGridResponse {
 export async function sendEmail(emailData: EmailData): Promise<SendGridResponse> {
   try {
     // Check if SendGrid is configured
-    if (!sgMail || !process.env.SENDGRID_API_KEY) {
-      console.warn('⚠️ SendGrid not configured. Using mock email service.');
+    if (!process.env.SENDGRID_API_KEY) {
+      console.warn('⚠️ SendGrid API key not configured. Using mock email service.');
       return sendMockEmail(emailData);
     }
 
