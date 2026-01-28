@@ -131,6 +131,35 @@ export default function CheckoutPage() {
       });
 
       if (response.ok) {
+        // Generate order number
+        const orderNumber = `ORD-2026-${Date.now().toString().slice(-6)}`;
+        
+        // Save order data to localStorage for confirmation page
+        const confirmationData = {
+          orderNumber,
+          customerEmail: shippingInfo.email,
+          items: items.map(item => ({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            image: item.image
+          })),
+          shipping: shippingInfo,
+          payment: {
+            cardNumber: `**** **** **** ${paymentInfo.cardNumber.slice(-4)}`,
+            cardName: paymentInfo.cardName
+          },
+          totals: {
+            subtotal: calculateSubtotal(),
+            tax: calculateTax(),
+            shipping: calculateShipping(),
+            total: calculateTotal()
+          }
+        };
+        
+        localStorage.setItem('lastOrder', JSON.stringify(confirmationData));
+        
         // Clear cart and redirect to success page
         clearCart();
         router.push('/order-confirmation');
