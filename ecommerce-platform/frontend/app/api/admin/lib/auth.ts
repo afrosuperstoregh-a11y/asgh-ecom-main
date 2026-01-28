@@ -3,6 +3,20 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 // Authentication middleware for admin routes
 export async function authenticateAdmin() {
+  // Check if we're in build mode or Supabase is not configured
+  if (process.env.NODE_ENV === 'development' && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    // Development fallback - allow access for testing
+    return { 
+      user: {
+        id: 'dev-user',
+        email: 'dev@example.com',
+        name: 'Development User',
+        role: 'super_admin',
+        emailVerified: true
+      }
+    };
+  }
+
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('supabase-auth-token')?.value;
   
