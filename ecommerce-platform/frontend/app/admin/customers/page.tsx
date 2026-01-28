@@ -65,7 +65,6 @@ export default function CustomersPage() {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
@@ -76,9 +75,7 @@ export default function CustomersPage() {
       });
 
       const response = await fetch(`/api/admin/customers?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -111,13 +108,12 @@ export default function CustomersPage() {
     }
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/customers/${customerId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
+        credentials: 'include',
         body: JSON.stringify({
           action,
           reason: action === 'block' ? 'Blocked by admin' : 'Unblocked by admin'

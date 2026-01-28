@@ -76,7 +76,6 @@ export default function PromotionsPage() {
   const fetchPromotions = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
@@ -87,9 +86,7 @@ export default function PromotionsPage() {
       });
 
       const response = await fetch(`/api/admin/promotions?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -118,12 +115,9 @@ export default function PromotionsPage() {
     }
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/promotions/${promotionId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {

@@ -42,12 +42,9 @@ export default function CategoriesPage() {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       
       const response = await fetch('/api/admin/categories', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -82,12 +79,9 @@ export default function CategoriesPage() {
     }
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/categories/${categoryId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {

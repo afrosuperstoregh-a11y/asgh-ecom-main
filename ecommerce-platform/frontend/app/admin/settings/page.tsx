@@ -85,11 +85,8 @@ export default function SettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/admin/settings', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -103,11 +100,8 @@ export default function SettingsPage() {
 
   const fetchTaxZones = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/admin/settings/tax-zones', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -121,11 +115,8 @@ export default function SettingsPage() {
 
   const fetchShippingZones = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/admin/settings/shipping-zones', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -142,14 +133,13 @@ export default function SettingsPage() {
   const handleSettingChange = async (key: string, value: any) => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
       
       const response = await fetch(`/api/admin/settings/${key}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
+        credentials: 'include',
         body: JSON.stringify({ value })
       });
 

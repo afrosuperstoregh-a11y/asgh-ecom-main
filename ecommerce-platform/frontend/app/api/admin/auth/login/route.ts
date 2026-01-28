@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,55 +41,72 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Super admin authentication (hardcoded for reliability)
-    console.log('Checking super admin credentials...');
-    console.log('Email match:', trimmedEmail === 'info@afrosuperstore.ca');
-    console.log('Password match:', trimmedPassword === 'Iamtech@100');
+    // Authenticate with Supabase
+    console.log('Authenticating with Supabase...');
     
-    if (trimmedEmail === 'info@afrosuperstore.ca' && trimmedPassword === 'Iamtech@100') {
-      console.log('✅ Super admin authentication successful');
-      
-      // Create admin session token
-      const mockPayload = {
-        id: 'cdc9e3ae-08d0-455c-b322-6e7b4b03e906',
-        email: 'info@afrosuperstore.ca',
-        name: 'Super Admin',
-        role: 'SUPER_ADMIN',
-        emailVerified: true,
-        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-      };
-      
-      const mockToken = Buffer.from(JSON.stringify(mockPayload)).toString('base64');
+    const { data, error } = await supabaseAdmin.auth.signInWithPassword({
+      email: trimmedEmail,
+      password: trimmedPassword
+    });
 
-      // Set secure HTTP-only cookies
-      const cookieStore = await cookies();
-      
-      cookieStore.set('auth-token', mockToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 24 * 60 * 60, // 24 hours
-        path: '/'
-      });
-
+    if (error) {
+      console.log('❌ Supabase authentication failed:', error.message);
       return NextResponse.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          id: mockPayload.id,
-          email: mockPayload.email,
-          name: mockPayload.name,
-          role: mockPayload.role,
-          emailVerified: mockPayload.emailVerified
-        }
-      });
+        success: false,
+        message: 'Invalid email or password'
+      }, { status: 401 });
     }
 
-    console.log('❌ Authentication failed for:', trimmedEmail);
+    if (!data.user || !data.session) {
+      console.log('❌ No user or session returned from Supabase');
+      return NextResponse.json({
+        success: false,
+        message: 'Authentication failed'
+      }, { status: 401 });
+    }
+
+    // Check if user has admin role
+    const userRole = data.user.user_metadata?.role || data.user.user_metadata?.user_type;
+    if (!['admin', 'super_admin', 'ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
+      console.log('❌ User does not have admin role:', userRole);
+      return NextResponse.json({
+        success: false,
+        message: 'Insufficient permissions'
+      }, { status: 403 });
+    }
+
+    console.log('✅ Supabase authentication successful');
+    
+    // Set Supabase session token
+    const cookieStore = await cookies();
+    
+    cookieStore.set('supabase-auth-token', data.session.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: data.session.expires_in || 3600,
+      path: '/'
+    });
+
+    cookieStore.set('supabase-refresh-token', data.session.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: '/'
+    });
+
     return NextResponse.json({
-      success: false,
-      message: 'Invalid email or password'
-    }, { status: 401 });
+      success: true,
+      message: 'Login successful',
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.user_metadata?.name || data.user.email?.split('@')[0],
+        role: userRole,
+        emailVerified: data.user.email_confirmed_at != null
+      }
+    });
 
   } catch (error) {
     console.error('❌ Admin login API error:', error);

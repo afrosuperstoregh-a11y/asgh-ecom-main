@@ -66,11 +66,8 @@ export default function RolesPage() {
 
   const fetchRoles = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/admin/roles', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -84,11 +81,8 @@ export default function RolesPage() {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/admin/roles/users', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -102,11 +96,8 @@ export default function RolesPage() {
 
   const fetchPermissions = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/admin/roles/permissions', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -126,12 +117,9 @@ export default function RolesPage() {
     }
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/roles/${roleId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -152,12 +140,9 @@ export default function RolesPage() {
     }
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/roles/users/${userId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {

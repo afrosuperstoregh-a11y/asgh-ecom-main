@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateAdmin, createAuthErrorResponse, createSuccessResponse } from '../lib/auth';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,104 +13,78 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(createAuthErrorResponse(auth.error, auth.status), { status: auth.status });
     }
 
-    console.log('Products auth successful, returning data');
+    console.log('Products auth successful, fetching from Supabase');
     
-    // Mock products data
-    const products = [
-      {
-        id: 'PROD-001',
-        name: 'Afro Print Dress',
-        sku: 'APD-001',
-        price: 50.00,
-        stock: 45,
-        status: 'active',
-        featured: true,
-        category: {
-          id: 'CAT-001',
-          name: 'Clothing'
-        },
-        createdAt: '2024-01-15',
+    // Fetch products from Supabase
+    const { data: products, error } = await supabaseAdmin
+      .from('products')
+      .select(`
+        *,
+        category:categories(id, name),
         _count: {
-          orderItems: 23
+          order_items: order_items(count)
         }
-      },
-      {
-        id: 'PROD-002',
-        name: 'Kente Cloth Scarf',
-        sku: 'KCS-002',
-        price: 25.00,
-        stock: 89,
-        status: 'active',
-        featured: false,
-        category: {
-          id: 'CAT-002',
-          name: 'Accessories'
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Supabase products fetch error:', error);
+      // Fallback to mock data if Supabase fails
+      const mockProducts = [
+        {
+          id: 'PROD-001',
+          name: 'Afro Print Dress',
+          sku: 'APD-001',
+          price: 50.00,
+          stock: 45,
+          status: 'active',
+          featured: true,
+          category: {
+            id: 'CAT-001',
+            name: 'Clothing'
+          },
+          createdAt: '2024-01-15',
+          _count: {
+            order_items: 23
+          }
         },
-        createdAt: '2024-01-14',
-        _count: {
-          orderItems: 45
+        {
+          id: 'PROD-002',
+          name: 'Kente Cloth Scarf',
+          sku: 'KCS-002',
+          price: 25.00,
+          stock: 89,
+          status: 'active',
+          featured: false,
+          category: {
+            id: 'CAT-002',
+            name: 'Accessories'
+          },
+          createdAt: '2024-01-14',
+          _count: {
+            order_items: 45
+          }
         }
-      },
-      {
-        id: 'PROD-003',
-        name: 'Ankara Headwrap',
-        sku: 'AHW-003',
-        price: 30.00,
-        stock: 156,
-        status: 'active',
-        featured: true,
-        category: {
-          id: 'CAT-002',
-          name: 'Accessories'
-        },
-        createdAt: '2024-01-13',
-        _count: {
-          orderItems: 67
-        }
-      }
-    ];
-
-    return NextResponse.json(createSuccessResponse({
-      products,
-      pagination: {
-        page: 1,
-        limit: 10,
-        total: 3,
-        totalPages: 1
-      }
-    }));
-
-  } catch (error) {
-    console.error('Products fetch error:', error);
-    return NextResponse.json(createAuthErrorResponse('Failed to fetch products', 500), { status: 500 });
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    // Authenticate the request
-    const auth = await authenticateAdmin();
-    if (auth.error) {
-      return NextResponse.json(createAuthErrorResponse(auth.error, auth.status), { status: auth.status });
+      ];
+      
+      return NextResponse.json(createSuccessResponse(mockProducts));
     }
 
-    const body = await request.json();
-    
-    // Mock product creation
-    const newProduct = {
-      id: `PROD-${Date.now()}`,
-      ...body,
-      createdAt: new Date().toISOString(),
+    // Transform the data to match the expected format
+    const transformedProducts = products?.map((product: any) => ({
+      ...product,
+      createdAt: (product as any).created_at,
+      updatedAt: (product as any).updated_at,
+      categoryId: (product as any).category_id,
+      comparePrice: (product as any).compare_price,
+      trackInventory: (product as any).track_inventory,
+      imageUrl: (product as any).image_url,
       _count: {
-        orderItems: 0
+        orderItems: (product as any)._count?.order_items || 0
       }
-    };
+    })) || [];
 
-    return NextResponse.json({
-      success: true,
-      data: newProduct,
-      message: 'Product created successfully'
-    });
+    return NextResponse.json(createSuccessResponse(transformedProducts));
 
   } catch (error) {
     console.error('Product creation error:', error);

@@ -83,7 +83,6 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
@@ -94,9 +93,7 @@ export default function OrdersPage() {
       });
 
       const response = await fetch(`/api/admin/orders?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -121,17 +118,13 @@ export default function OrdersPage() {
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          status: newStatus,
-          notifyCustomer: true
-        })
+        credentials: 'include',
+        body: JSON.stringify({ status: newStatus, notifyCustomer: true })
       });
 
       if (response.ok) {

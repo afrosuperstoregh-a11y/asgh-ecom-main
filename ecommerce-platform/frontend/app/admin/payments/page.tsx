@@ -98,7 +98,6 @@ export default function PaymentsPage() {
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
@@ -109,9 +108,7 @@ export default function PaymentsPage() {
       });
 
       const response = await fetch(`/api/admin/payments?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -131,11 +128,8 @@ export default function PaymentsPage() {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/admin/payments/stats/overview', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -168,13 +162,12 @@ export default function PaymentsPage() {
     const reason = prompt('Enter refund reason (optional):');
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/payments/${paymentId}/refund`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
+        credentials: 'include',
         body: JSON.stringify({ amount, reason: reason || undefined })
       });
 

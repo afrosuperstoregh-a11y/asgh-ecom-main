@@ -179,7 +179,6 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
       
       // Prepare data for API
       const productData = {
@@ -200,8 +199,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
+        credentials: 'include',
         body: JSON.stringify(productData)
       });
 

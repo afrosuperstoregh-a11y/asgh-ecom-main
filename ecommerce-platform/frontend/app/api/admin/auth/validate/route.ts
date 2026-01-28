@@ -1,35 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('auth-token')?.value;
+    const accessToken = cookieStore.get('supabase-auth-token')?.value;
+    const refreshToken = cookieStore.get('supabase-refresh-token')?.value;
     
-    if (!token) {
+    if (!accessToken) {
       return NextResponse.json({
         success: false,
-        message: 'No token provided'
+        message: 'No authentication token provided'
       }, { status: 401 });
     }
 
     try {
-      // Decode the mock token
-      const payload = JSON.parse(Buffer.from(token, 'base64').toString());
-      
-      // Check expiration
-      if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-        // Clear expired token
-        cookieStore.delete('auth-token');
+      // Validate the token with Supabase
+      const { data, error } = await supabaseAdmin.auth.getUser(accessToken);
+
+      if (error || !data.user) {
+        // Clear invalid tokens
+        cookieStore.delete('supabase-auth-token');
+        cookieStore.delete('supabase-refresh-token');
         
         return NextResponse.json({
           success: false,
-          message: 'Token expired'
+          message: 'Invalid or expired authentication token'
         }, { status: 401 });
       }
 
       // Check if user has admin role
-      if (!payload.role || !['ADMIN', 'SUPER_ADMIN'].includes(payload.role)) {
+      const userRole = data.user.user_metadata?.role || data.user.user_metadata?.user_type;
+      if (!['admin', 'super_admin', 'ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
         return NextResponse.json({
           success: false,
           message: 'Insufficient permissions'
@@ -39,20 +42,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         user: {
-          id: payload.id,
-          email: payload.email,
-          name: payload.name,
-          role: payload.role,
-          emailVerified: payload.emailVerified
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.user_metadata?.name || data.user.email?.split('@')[0],
+          role: userRole,
+          emailVerified: data.user.email_confirmed_at != null
         }
       });
     } catch (decodeError) {
-      // Clear invalid token
-      cookieStore.delete('auth-token');
+      // Clear invalid tokens
+      cookieStore.delete('supabase-auth-token');
+      cookieStore.delete('supabase-refresh-token');
       
       return NextResponse.json({
         success: false,
-        message: 'Invalid token'
+        message: 'Invalid authentication token'
       }, { status: 401 });
     }
   } catch (error) {

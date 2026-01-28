@@ -137,7 +137,6 @@ export default function CreateProductPage() {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
       
       // Prepare data for API
       const productData = {
@@ -158,8 +157,8 @@ export default function CreateProductPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
+        credentials: 'include',
         body: JSON.stringify(productData)
       });
 
