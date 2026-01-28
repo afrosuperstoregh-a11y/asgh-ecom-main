@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Plus,
   Search,
@@ -42,8 +43,16 @@ interface Filters {
   sortOrder: string;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export default function ProductsPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
@@ -64,11 +73,28 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, [pagination.page, filters]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/admin/categories', {
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data.data || []);
+      }
+    } catch (error) {
+      console.error('Categories fetch error:', error);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
@@ -85,14 +111,22 @@ export default function ProductsPage() {
         setProducts(data.data?.products || data.products || []);
         setPagination(data.data?.pagination || data.pagination || pagination);
       } else {
-        setError('Failed to fetch products');
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.message || 'Failed to fetch products');
+        setProducts([]);
       }
     } catch (error) {
       console.error('Products fetch error:', error);
-      setError('Failed to fetch products');
+      setError('Network error while fetching products');
+      setProducts([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRetry = () => {
+    fetchProducts();
+    fetchCategories();
   };
 
   const handleFilterChange = (key: keyof Filters, value: string) => {
@@ -101,19 +135,76 @@ export default function ProductsPage() {
   };
 
   const handleAddProduct = () => {
-    // TODO: Navigate to add product page or open modal
-    alert('Add Product functionality will be implemented');
+    router.push('/admin/products/create');
   };
 
   const handleEditProduct = (productId: string) => {
-    // TODO: Navigate to edit product page or open modal
-    alert(`Edit product ${productId} functionality will be implemented`);
+    router.push(`/admin/products/${productId}/edit`);
   };
 
   const handleViewProduct = (productId: string) => {
-    // TODO: Navigate to product details page or open modal
-    alert(`View product ${productId} functionality will be implemented`);
+    router.push(`/admin/products/${productId}`);
   };
+  const handleImport = () => {
+    // Create file input element
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv,.xlsx';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          const response = await fetch('/api/admin/products/import', {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            alert(`Successfully imported ${result.imported} products. ${result.errors?.length || 0} errors.`);
+            fetchProducts(); // Refresh the list
+          } else {
+            const error = await response.json();
+            alert(`Import failed: ${error.message || 'Unknown error'}`);
+          }
+        } catch (error) {
+          console.error('Import error:', error);
+          alert('Import failed due to an error');
+        }
+      }
+    };
+    input.click();
+  };
+
+  const handleExport = async () => {
+    try {
+      const response = await fetch('/api/admin/products/export', {
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `products-export-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert('Export failed');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Export failed due to an error');
+    }
+  };
+
   const handleDelete = async (productId: string) => {
     if (!confirm('Are you sure you want to delete this product?')) {
       return;
@@ -190,11 +281,11 @@ export default function ProductsPage() {
             <p className="text-gray-600 mt-2">Manage your product catalog</p>
           </div>
           <div className="flex items-center space-x-3">
-            <button className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+            <button onClick={handleImport} className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
               <Upload className="h-4 w-4 mr-2" />
               Import
             </button>
-            <button className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+            <button onClick={handleExport} className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
               <Download className="h-4 w-4 mr-2" />
               Export
             </button>
@@ -240,9 +331,11 @@ export default function ProductsPage() {
                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">All Categories</option>
-                <option value="Clothing">Clothing</option>
-                <option value="Accessories">Accessories</option>
-                <option value="Home & Living">Home & Living</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
               </select>
 
               <select
@@ -292,7 +385,18 @@ export default function ProductsPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4 m-4">
-            <p className="text-red-800">{error}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-800 font-medium">Error loading products</p>
+                <p className="text-red-600 text-sm mt-1">{error}</p>
+              </div>
+              <button
+                onClick={handleRetry}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+              >
+                Retry
+              </button>
+            </div>
           </div>
         )}
 
