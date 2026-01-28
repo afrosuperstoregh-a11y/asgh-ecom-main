@@ -70,11 +70,25 @@ export default function ProductsPage() {
     sortOrder: 'desc'
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
   }, [pagination.page, filters]);
+
+  // Refresh data when page becomes visible (navigation back from create/edit)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchProducts();
+        fetchCategories();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   const fetchCategories = async () => {
     try {
@@ -128,6 +142,21 @@ export default function ProductsPage() {
     fetchProducts();
     fetchCategories();
   };
+
+  const toggleDropdown = (productId: string) => {
+    setActiveDropdown(activeDropdown === productId ? null : productId);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setActiveDropdown(null);
+    };
+
+    if (activeDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [activeDropdown]);
 
   const handleFilterChange = (key: keyof Filters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -508,9 +537,60 @@ export default function ProductsPage() {
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
-                        <button className="text-gray-600 hover:text-gray-900">
-                          <MoreVertical className="h-4 w-4" />
-                        </button>
+                        <div className="relative">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleDropdown(product.id);
+                            }}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </button>
+                          {activeDropdown === product.id && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                              <div className="py-1">
+                                <button
+                                  onClick={() => {
+                                    handleViewProduct(product.id);
+                                    setActiveDropdown(null);
+                                  }}
+                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                >
+                                  View Details
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleEditProduct(product.id);
+                                    setActiveDropdown(null);
+                                  }}
+                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                >
+                                  Edit Product
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    // Duplicate product functionality
+                                    setActiveDropdown(null);
+                                  }}
+                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                >
+                                  Duplicate
+                                </button>
+                                <div className="border-t border-gray-100"></div>
+                                <button
+                                  onClick={() => {
+                                    handleDelete(product.id);
+                                    setActiveDropdown(null);
+                                  }}
+                                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                >
+                                  Delete Product
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>

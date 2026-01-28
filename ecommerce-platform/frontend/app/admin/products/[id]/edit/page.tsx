@@ -33,6 +33,12 @@ interface ProductFormData {
   images: string[];
 }
 
+interface Category {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export default function EditProductPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -40,6 +46,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [error, setError] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [newTag, setNewTag] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
@@ -63,7 +70,23 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
 
   useEffect(() => {
     fetchProduct();
+    fetchCategories();
   }, [params.id]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/admin/categories', {
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data.data || []);
+      }
+    } catch (error) {
+      console.error('Categories fetch error:', error);
+    }
+  };
 
   const fetchProduct = async () => {
     try {
@@ -319,9 +342,11 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select a category</option>
-                <option value="electronics">Electronics</option>
-                <option value="clothing">Clothing</option>
-                <option value="books">Books</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
               </select>
             </div>
 
