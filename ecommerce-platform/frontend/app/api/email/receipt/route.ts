@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendEmail } from '@/lib/sendgrid';
+import emailService from '@/lib/email-service';
 
 interface OrderItem {
   id: number;
@@ -51,22 +51,23 @@ export async function POST(request: NextRequest) {
     // Create HTML email template
     const emailHtml = generateReceiptEmail(receiptData);
     
-    // Send email using SendGrid
-    const sendGridResponse = await sendEmail({
+    // Send email using email service
+    const emailResponse = await emailService.sendEmail({
       to: receiptData.customerEmail,
       from: 'noreply@afrosuperstore.ca',
       subject: `Order Confirmation - ${receiptData.orderNumber}`,
       html: emailHtml
     });
     
-    if (sendGridResponse.success && 'emailId' in sendGridResponse) {
+    if (emailResponse.success && 'emailId' in emailResponse) {
       return NextResponse.json({
         success: true,
         message: 'Receipt email sent successfully',
-        emailId: sendGridResponse.emailId
+        emailId: emailResponse.emailId,
+        service: emailResponse.service
       });
     } else {
-      throw new Error('error' in sendGridResponse ? sendGridResponse.error : 'Failed to send email');
+      throw new Error('error' in emailResponse ? emailResponse.error : 'Failed to send email');
     }
     
   } catch (error) {
