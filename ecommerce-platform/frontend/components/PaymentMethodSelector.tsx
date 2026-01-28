@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { CreditCard, Wallet } from 'lucide-react';
 import PayPalPayment from './PayPalPayment';
+import StripePayment from './StripePayment';
 
 interface PaymentMethod {
   id: string;
@@ -77,6 +78,16 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     onPaymentError(paymentError);
   };
 
+  const handleStripeSuccess = (details: any) => {
+    // Stripe details are already in the correct format
+    onPaymentSuccess(details);
+  };
+
+  const handleStripeError = (error: any) => {
+    // Stripe error is already in the correct format
+    onPaymentError(error);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -123,23 +134,12 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
       {/* Payment Method Content */}
       <div>
         {selectedMethod === 'card' && (
-          <div className="p-6 border border-gray-200 rounded-lg bg-gray-50">
-            <h4 className="font-medium text-gray-900 mb-4">Card Information</h4>
-            <p className="text-sm text-gray-600">
-              Credit card payment form will be displayed here. This would typically include:
-            </p>
-            <ul className="mt-2 text-sm text-gray-600 space-y-1">
-              <li>• Card number input</li>
-              <li>• Expiry date</li>
-              <li>• CVV code</li>
-              <li>• Cardholder name</li>
-            </ul>
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                <strong>Note:</strong> This is a placeholder. In production, integrate with Stripe or another payment processor.
-              </p>
-            </div>
-          </div>
+          <StripePayment
+            amount={amount}
+            onSuccess={handleStripeSuccess}
+            onError={handleStripeError}
+            disabled={disabled}
+          />
         )}
 
         {selectedMethod === 'paypal' && (
