@@ -160,6 +160,28 @@ export default function CheckoutPage() {
         
         localStorage.setItem('lastOrder', JSON.stringify(confirmationData));
         
+        // Send receipt email
+        try {
+          console.log('📧 Sending receipt email...');
+          const emailResponse = await fetch('/api/email/receipt', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(confirmationData)
+          });
+          
+          if (emailResponse.ok) {
+            const emailResult = await emailResponse.json();
+            console.log('✅ Receipt email sent successfully:', emailResult.emailId);
+          } else {
+            console.error('❌ Failed to send receipt email');
+          }
+        } catch (emailError) {
+          console.error('❌ Email sending error:', emailError);
+          // Don't fail the checkout if email fails
+        }
+        
         // Clear cart and redirect to success page
         clearCart();
         router.push('/order-confirmation');
