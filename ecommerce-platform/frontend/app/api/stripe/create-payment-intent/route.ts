@@ -2,10 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
 // Initialize Stripe with secret key
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy');
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Stripe is properly configured
+    if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_dummy') {
+      return NextResponse.json(
+        { error: 'Stripe is not properly configured' },
+        { status: 500 }
+      );
+    }
+
     const { amount, currency = 'usd', metadata = {} } = await request.json();
 
     // Validate input
@@ -38,10 +46,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Stripe PaymentIntent creation error:', error);
     
-    if (error instanceof Stripe.errors.StripeError) {
+    if (error && typeof error === 'object' && 'type' in error && error.type === 'StripeError') {
       return NextResponse.json(
-        { error: error.message },
-        { status: error.statusCode || 500 }
+        { error: (error as any).message },
+        { status: (error as any).statusCode || 500 }
       );
     }
 
