@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, CreditCard, Truck, Shield, ShoppingBag } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import ShippingCalculator from '../../components/ShippingCalculator';
+import PaymentMethodSelector from '../../components/PaymentMethodSelector';
 import { ShippingRate } from '../../hooks/useCanadaPostShipping';
 
 interface CartItem {
@@ -54,6 +55,7 @@ export default function CheckoutPage() {
     expiryDate: '',
     cvv: ''
   });
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('card');
   const [processingOrder, setProcessingOrder] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedShippingRate, setSelectedShippingRate] = useState<ShippingRate | null>(null);
@@ -94,8 +96,7 @@ export default function CheckoutPage() {
     setSelectedShippingRate(rate);
   };
 
-  const handlePaymentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePaymentSubmit = async (paymentDetails?: any) => {
     setProcessingOrder(true);
     
     try {
@@ -104,12 +105,19 @@ export default function CheckoutPage() {
         items: items.map(item => ({
           id: item.id,
           name: item.name,
-          price: item.price,
           quantity: item.quantity,
+          price: item.price,
           image: item.image
         })),
         shipping: shippingInfo,
-        payment: {
+        payment: selectedPaymentMethod === 'paypal' && paymentDetails ? {
+          method: 'paypal',
+          transactionId: paymentDetails.transactionId,
+          status: paymentDetails.status,
+          amount: paymentDetails.amount,
+          currency: paymentDetails.currency,
+          payer: paymentDetails.payer
+        } : {
           ...paymentInfo,
           cardNumber: paymentInfo.cardNumber.slice(-4) // Only store last 4 digits
         },
@@ -146,7 +154,14 @@ export default function CheckoutPage() {
             image: item.image
           })),
           shipping: shippingInfo,
-          payment: {
+          payment: selectedPaymentMethod === 'paypal' && paymentDetails ? {
+            method: 'paypal',
+            transactionId: paymentDetails.transactionId,
+            status: paymentDetails.status,
+            amount: paymentDetails.amount,
+            currency: paymentDetails.currency,
+            payer: paymentDetails.payer
+          } : {
             cardNumber: `**** **** **** ${paymentInfo.cardNumber.slice(-4)}`,
             cardName: paymentInfo.cardName
           },
@@ -354,90 +369,21 @@ export default function CheckoutPage() {
                   </button>
                 </form>
               </div>
-            )}
-
             {/* Step 2: Payment Information */}
             {currentStep === 2 && (
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-6">Payment Information</h2>
-                <form onSubmit={handlePaymentSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="1234 5678 9012 3456"
-                      value={paymentInfo.cardNumber}
-                      onChange={(e) => handleInputChange('payment', 'cardNumber', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={paymentInfo.cardName}
-                      onChange={(e) => handleInputChange('payment', 'cardName', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="MM/YY"
-                        value={paymentInfo.expiryDate}
-                        onChange={(e) => handleInputChange('payment', 'expiryDate', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="123"
-                        value={paymentInfo.cvv}
-                        onChange={(e) => handleInputChange('payment', 'cvv', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Shield className="h-4 w-4 text-green-600" />
-                    <span>Your payment information is secure and encrypted</span>
-                  </div>
-                  
-                  <div className="flex space-x-4">
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep(1)}
-                      className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                    >
-                      Back to Shipping
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={processingOrder}
-                      className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium"
-                    >
-                      {processingOrder ? (
-                        <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                          Processing...
-                        </div>
-                      ) : (
-                        'Place Order'
-                      )}
-                    </button>
-                  </div>
-                </form>
+                
+                <PaymentMethodSelector
+                  amount={calculateTotal()}
+                  onPaymentMethodChange={setSelectedPaymentMethod}
+                  onPaymentSuccess={handlePaymentSubmit}
+                  onPaymentError={(error) => {
+                    console.error('Payment error:', error);
+                    alert('Payment failed. Please try again.');
+                  }}
+                  disabled={processingOrder}
+                />
               </div>
             )}
           </div>
