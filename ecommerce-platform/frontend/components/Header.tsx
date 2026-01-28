@@ -5,12 +5,14 @@ import Link from 'next/link';
 import { Search, ShoppingCart, Heart, Menu, X, User } from 'lucide-react';
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { getCartCount } = useCart();
   const { getWishlistCount } = useWishlist();
+  const { isAuthenticated } = useAuth();
   const cartCount = getCartCount();
   const wishlistCount = getWishlistCount();
 
@@ -57,7 +59,7 @@ export default function Header() {
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </form>
             
-            <Link href="/account" className="p-2 text-gray-700 hover:text-indigo-600 transition-colors">
+            <Link href={isAuthenticated ? "/account" : "/login"} className="p-2 text-gray-700 hover:text-indigo-600 transition-colors">
               <User className="h-6 w-6" />
             </Link>
             
@@ -116,7 +118,7 @@ export default function Header() {
               
               <div className="pt-4 pb-2 border-t border-gray-200">
                 <div className="flex items-center justify-around space-x-2 px-2">
-                  <Link href="/account" className="flex flex-col items-center p-3 text-gray-700 hover:text-indigo-600 transition-colors touch-target" onClick={() => setIsMenuOpen(false)}>
+                  <Link href={isAuthenticated ? "/account" : "/login"} className="flex flex-col items-center p-3 text-gray-700 hover:text-indigo-600 transition-colors touch-target" onClick={() => setIsMenuOpen(false)}>
                     <User className="h-6 w-6 mb-1" />
                     <span className="text-xs">Account</span>
                   </Link>

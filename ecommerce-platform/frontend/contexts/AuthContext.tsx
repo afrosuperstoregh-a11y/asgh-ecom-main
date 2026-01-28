@@ -15,6 +15,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   register: (userData: RegisterData) => Promise<boolean>;
   logout: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithFacebook: () => Promise<void>;
   isLoading: boolean;
   isAuthenticated: boolean;
 }
@@ -139,6 +141,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      // Redirect to Google OAuth endpoint
+      window.location.href = `${API_BASE_URL}/auth/google`;
+    } catch (error) {
+      console.error('Google sign-in failed:', error);
+    }
+  };
+
+  const signInWithFacebook = async () => {
+    try {
+      // Redirect to Facebook OAuth endpoint
+      window.location.href = `${API_BASE_URL}/auth/facebook`;
+    } catch (error) {
+      console.error('Facebook sign-in failed:', error);
+    }
+  };
+
   const logout = async () => {
     try {
       // Call backend logout endpoint
@@ -166,6 +186,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     register,
     logout,
+    signInWithGoogle,
+    signInWithFacebook,
     isLoading,
     isAuthenticated: !!user,
   };
