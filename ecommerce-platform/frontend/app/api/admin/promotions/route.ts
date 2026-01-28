@@ -28,7 +28,10 @@ export async function GET(request: NextRequest) {
         usageLimit: 1000,
         usageCount: 234,
         isActive: true,
-        createdAt: '2024-05-15T10:00:00Z'
+        createdAt: '2024-05-15T10:00:00Z',
+        _count: {
+          usage: 234
+        }
       },
       {
         id: 'PROMO-002',
@@ -42,7 +45,10 @@ export async function GET(request: NextRequest) {
         usageLimit: null,
         usageCount: 567,
         isActive: true,
-        createdAt: '2023-12-20T14:30:00Z'
+        createdAt: '2023-12-20T14:30:00Z',
+        _count: {
+          usage: 567
+        }
       },
       {
         id: 'PROMO-003',
@@ -56,7 +62,10 @@ export async function GET(request: NextRequest) {
         usageLimit: 500,
         usageCount: 123,
         isActive: false,
-        createdAt: '2023-12-25T09:00:00Z'
+        createdAt: '2023-12-25T09:00:00Z',
+        _count: {
+          usage: 123
+        }
       }
     ];
 
@@ -101,7 +110,10 @@ export async function POST(request: NextRequest) {
       ...body,
       usageCount: 0,
       isActive: true,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      _count: {
+        usage: 0
+      }
     };
 
     return NextResponse.json(createSuccessResponse(newPromotion));
