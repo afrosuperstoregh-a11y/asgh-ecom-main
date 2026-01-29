@@ -154,6 +154,7 @@ app.use('/api/payments', require('./routes/payments'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/settings', require('./routes/settings'));
+app.use('/api/crm', require('./routes/crm'));
 
 // 404 handler
 app.use('*', (req, res) => {
