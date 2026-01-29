@@ -1,5 +1,8 @@
 Make sure you create, update, and enhance all required files and codes. Inject all codes into the ecommerce-platform folder as well.
 
+The workflow is complete: 
+Create → Store in Supabase → List in Admin Panel → Real-time Updates.
+
 Architecture should be as follows:
 1. Frontend + API - Next.js (Vercel Deployment)
 2. Backend - Node.js (Railway Deployment)
@@ -14,10 +17,9 @@ SMS - Twilio
 The username that owns the files for afrosuperstore.ca is dh_t5hb7x.
 When connecting via SSH, the connection should look like this:
 
-# SSH to your server
-dh_t5hb7x@vps68200.dreamhostps.com 
-ssh dh_t5hb7x@vps68200.dreamhostps.com -p 22
-ssh afrosuperstore@vps68200.dreamhostps.com -p 22
+
+# Superadmin Detials
+Username: info@afrosuperstore.ca
 Password: Iamtech@100
  
 
