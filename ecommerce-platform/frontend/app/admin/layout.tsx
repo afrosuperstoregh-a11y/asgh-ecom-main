@@ -18,7 +18,8 @@ import {
   ChevronDown,
   Store,
   FileText,
-  TrendingUp
+  TrendingUp,
+  Database
 } from 'lucide-react';
 import { storage, getApiUrl, validateToken } from '@/lib/auth-utils';
 import { AdminUser } from '@/types/admin';
@@ -168,6 +169,12 @@ export default function AdminLayout({
       href: '/admin/settings',
       icon: Settings,
       current: pathname?.startsWith('/admin/settings') || false
+    },
+    {
+      name: 'Features',
+      href: '/admin/features',
+      icon: Database,
+      current: pathname?.startsWith('/admin/features') || false
     }
   ];
 
