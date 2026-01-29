@@ -13,7 +13,7 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams?.get('redirect') || '/admin';
+  const redirectTo = searchParams?.get('redirect') || '/admin/dashboard';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +23,7 @@ export default function AdminLogin() {
     try {
       console.log('Admin login form submitted:', { email, passwordLength: password?.length });
       
-      const response = await fetch('/api/admin/auth/login', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/admin/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -39,6 +39,13 @@ export default function AdminLogin() {
 
       if (response.ok && data.success) {
         console.log('Admin login successful, redirecting to:', redirectTo);
+        
+        // Store JWT token in localStorage
+        if (data.token) {
+          localStorage.setItem('adminToken', data.token);
+          sessionStorage.setItem('adminUser', JSON.stringify(data.user));
+        }
+        
         // Redirect to intended page or dashboard
         router.replace(redirectTo);
       } else {
@@ -188,28 +195,18 @@ export default function AdminLogin() {
           <div className="mt-4 text-sm text-gray-600 bg-blue-50 rounded-lg p-4 border border-blue-200">
             <p className="font-medium mb-2 text-blue-900">🔒 Secure Login</p>
             <ul className="space-y-1 text-blue-800">
+              <li>• Use your assigned admin credentials</li>
               <li>• Passwords must be at least 8 characters</li>
               <li>• Login attempts are rate-limited</li>
-              <li>• Session is secured with HTTP-only cookies</li>
+              <li>• Session is secured with JWT tokens</li>
               <li>• All activities are logged for security</li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-50 text-gray-500">Demo Credentials</span>
-            </div>
-          </div>
-
-          <div className="mt-4 text-sm text-gray-600 bg-gray-100 rounded-lg p-4">
-            <p className="font-medium mb-2">Super Admin Credentials:</p>
-            <p>Email: info@afrosuperstore.ca</p>
-            <p>Password: Iamtech@100</p>
+        <div className="mt-6 text-center">
+          <div className="text-sm text-gray-500">
+            <p>Need access? Contact your system administrator</p>
           </div>
         </div>
       </div>
