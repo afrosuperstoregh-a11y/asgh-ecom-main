@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
           name: 'Afro Print Dress',
           sku: 'APD-001',
           price: 50.00,
+          inventory_quantity: 45,
           stock: 45,
           status: 'active',
           featured: true,
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
           name: 'Kente Cloth Scarf',
           sku: 'KCS-002',
           price: 25.00,
+          inventory_quantity: 89,
           stock: 89,
           status: 'active',
           featured: false,
@@ -91,7 +93,8 @@ export async function GET(request: NextRequest) {
       categoryId: (product as any).category_id,
       comparePrice: (product as any).compare_price,
       trackInventory: (product as any).track_inventory,
-      imageUrl: (product as any).image_url,
+      stock: (product as any).inventory_quantity,
+      shortDesc: (product as any).short_description,
       _count: {
         orderItems: (product as any)._count?.order_items || 0
       }
@@ -148,14 +151,16 @@ export async function POST(request: NextRequest) {
         .from('products')
         .insert({
           name,
+          slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now(),
           sku,
           price,
-          stock: stock || 0,
+          inventory_quantity: stock || 0,
           status: status || 'active',
           featured: featured || false,
           category_id: categoryId,
           description,
-          image_url: imageUrl,
+          short_description: description?.substring(0, 150) || '',
+          track_inventory: true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -179,16 +184,20 @@ export async function POST(request: NextRequest) {
       const mockProduct = {
         id: `PROD-${Date.now()}`,
         name,
+        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now(),
         sku,
         price,
-        stock: stock || 0,
+        inventory_quantity: stock || 0,
         status: status || 'active',
         featured: featured || false,
         categoryId,
         description,
-        imageUrl,
+        short_description: description?.substring(0, 150) || '',
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        _count: {
+          usage: 0
+        }
       };
 
       return NextResponse.json({
