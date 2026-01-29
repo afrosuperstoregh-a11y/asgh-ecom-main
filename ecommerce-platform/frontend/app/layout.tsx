@@ -102,13 +102,28 @@ export default function RootLayout({
           </WishlistProvider>
         </AuthProvider>
       </body>
-      {/* Analytics temporarily disabled for testing */}
-      {/* {process.env.NODE_ENV === 'production' && (
+      {process.env.NODE_ENV === 'production' && (
         <>
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                // Suppress deprecated analytics warning temporarily
+                const originalWarn = console.warn;
+                console.warn = function(...args) {
+                  if (args[0] && args[0].includes && args[0].includes('feature_collector.js:23 using deprecated parameters')) {
+                    return; // Suppress this specific warning
+                  }
+                  return originalWarn.apply(console, args);
+                };
+                
+                console.log('🔍 Analytics: Deprecated warning suppressed');
+              `,
+            }}
+          />
           <Analytics />
           <SpeedInsights />
         </>
-      )} */}
+      )}
     </html>
   );
 }
