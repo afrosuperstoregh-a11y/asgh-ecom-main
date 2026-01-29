@@ -102,12 +102,13 @@ export default function RootLayout({
           </WishlistProvider>
         </AuthProvider>
       </body>
-      {process.env.NODE_ENV === 'production' && (
+      {/* Analytics temporarily disabled for testing */}
+      {/* {process.env.NODE_ENV === 'production' && (
         <>
           <Analytics />
           <SpeedInsights />
         </>
-      )}
+      )} */}
     </html>
   );
 }
