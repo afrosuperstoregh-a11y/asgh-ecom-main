@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
+const { generalLimiter } = require('./middleware/rateLimiter');
 const { testConnection } = require('./config/supabase');
 require('dotenv').config();
 
@@ -18,11 +18,7 @@ app.use(cors({
 }));
 
 // Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use(limiter);
+app.use(generalLimiter);
 
 // General middleware
 app.use(compression());
@@ -48,6 +44,8 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/categories', require('./routes/categories'));
+app.use('/api/settings', require('./routes/settings'));
 
 // 404 handler
 app.use('*', (req, res) => {

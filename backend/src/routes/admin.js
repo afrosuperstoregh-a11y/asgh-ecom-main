@@ -1,8 +1,12 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
+const { findUserByEmail } = require('../config/database');
+const { authenticateToken, requireAdmin, generateToken } = require('../middleware/auth');
+const { adminAuthLimiter } = require('../middleware/rateLimiter');
 const router = express.Router();
 
 // Admin authentication routes
-router.post('/auth/login', async (req, res) => {
+router.post('/auth/login', adminAuthLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     
@@ -14,43 +18,48 @@ router.post('/auth/login', async (req, res) => {
       });
     }
 
-    // Check for super admin credentials
-    if (email === 'info@afrosuperstore.ca' && password === 'Iamtech@100') {
-      return res.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          id: 'admin-001',
-          email: 'info@afrosuperstore.ca',
-          name: 'Super Admin',
-          role: 'super_admin',
-          emailVerified: true
-        },
-        token: 'mock-jwt-token-for-super-admin'
+    // Find user in database
+    const user = await findUserByEmail(email);
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
       });
     }
 
-    // For demo purposes, accept any admin credentials
-    // In production, this should validate against database
-    if (email.includes('@afrosuperstore.ca')) {
-      return res.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          id: 'admin-demo',
-          email: email,
-          name: 'Admin User',
-          role: 'admin',
-          emailVerified: true
-        },
-        token: 'mock-jwt-token-for-admin'
+    // Check if user has admin role
+    if (!['admin', 'super_admin'].includes(user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied - admin privileges required'
       });
     }
 
-    // Invalid credentials
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid email or password'
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    
+    if (!isValidPassword) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    // Generate JWT token
+    const token = generateToken(user);
+
+    return res.json({
+      success: true,
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: `${user.first_name} ${user.last_name}`,
+        role: user.role,
+        emailVerified: user.email_verified
+      },
+      token
     });
 
   } catch (error) {
@@ -62,24 +71,49 @@ router.post('/auth/login', async (req, res) => {
   }
 });
 
-router.post('/auth/logout', (req, res) => {
+router.post('/auth/logout', authenticateToken, (req, res) => {
   res.json({
     success: true,
     message: 'Logout successful'
   });
 });
 
-router.get('/auth/me', (req, res) => {
+router.get('/auth/me', authenticateToken, (req, res) => {
   res.json({
     success: true,
     user: {
-      id: 'admin-001',
-      email: 'info@afrosuperstore.ca',
-      name: 'Super Admin',
-      role: 'super_admin',
+      id: req.user.id,
+      email: req.user.email,
+      name: `${req.user.firstName} ${req.user.lastName}`,
+      role: req.user.role,
       emailVerified: true
     }
   });
+});
+
+// Protected admin routes - all require authentication
+router.use(authenticateToken);
+router.use(requireAdmin);
+
+// Example admin dashboard endpoint
+router.get('/dashboard', async (req, res) => {
+  try {
+    // Add dashboard logic here
+    res.json({
+      success: true,
+      message: 'Admin dashboard data',
+      data: {
+        user: req.user,
+        // Add dashboard statistics here
+      }
+    });
+  } catch (error) {
+    console.error('Dashboard error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
 });
 
 module.exports = router;

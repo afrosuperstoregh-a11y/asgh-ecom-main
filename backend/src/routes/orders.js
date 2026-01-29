@@ -1,10 +1,12 @@
 const express = require('express');
-const router = express.Router();
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const { Pool } = require('pg');
+const router = express.Router();
 
-// Database connection (using existing DATABASE_URL)
+// Database connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // Update order payment status
@@ -36,8 +38,8 @@ async function updateOrderPayment(orderId, paymentData) {
   }
 }
 
-// Get all orders
-router.get('/', async (req, res) => {
+// Get all orders (admin only)
+router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
     res.json(result.rows);
@@ -47,11 +49,24 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get order by ID
-router.get('/:id', async (req, res) => {
+// Get order by ID (admin only or own order)
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await pool.query('SELECT * FROM orders WHERE id = $1 OR order_number = $1', [id]);
+    
+    // Build query based on user role
+    let query, params;
+    if (req.user.role === 'admin' || req.user.role === 'super_admin') {
+      // Admin can see any order
+      query = 'SELECT * FROM orders WHERE id = $1 OR order_number = $1';
+      params = [id];
+    } else {
+      // Customers can only see their own orders
+      query = 'SELECT * FROM orders WHERE (id = $1 OR order_number = $1) AND customer_id = $2';
+      params = [id, req.user.id];
+    }
+    
+    const result = await pool.query(query, params);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
@@ -64,8 +79,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new order
-router.post('/', async (req, res) => {
+// Create new order (authenticated users)
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       customer_id,
@@ -79,6 +94,11 @@ router.post('/', async (req, res) => {
       billing_address,
       notes
     } = req.body;
+
+    // Use authenticated user ID or provided customer_id (for admin)
+    const final_customer_id = req.user.role === 'admin' || req.user.role === 'super_admin' 
+      ? customer_id 
+      : req.user.id;
 
     // Generate unique order number
     const order_number = 'ORD-' + Date.now() + '-' + Math.random().toString(36).substring(2).toUpperCase();
@@ -94,7 +114,7 @@ router.post('/', async (req, res) => {
 
     const values = [
       order_number,
-      customer_id,
+      final_customer_id,
       email,
       subtotal,
       tax_amount,
@@ -114,8 +134,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update order
-router.put('/:id', async (req, res) => {
+// Update order (admin only)
+router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -147,7 +167,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Update order payment status (used by webhooks)
+// Update order payment status (used by webhooks - no auth required for Stripe/PayPal)
 router.patch('/:id/payment', async (req, res) => {
   try {
     const { id } = req.params;
@@ -170,8 +190,8 @@ router.patch('/:id/payment', async (req, res) => {
   }
 });
 
-// Delete/cancel order
-router.delete('/:id', async (req, res) => {
+// Delete/cancel order (admin only)
+router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     

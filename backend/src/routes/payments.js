@@ -1,10 +1,272 @@
 const express = require('express');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { auditLog } = require('../middleware/auditLog');
+const { Pool } = require('pg');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { updateOrderPayment } = require('./orders');
 
-// PayPal SDK import (add to package.json if not present)
-// const paypal = require('@paypal/checkout-server-sdk');
+// Database connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+
+// Create payments table if it doesn't exist
+async function createPaymentsTable() {
+  const query = `
+    CREATE TABLE IF NOT EXISTS payments (
+      id SERIAL PRIMARY KEY,
+      order_id INTEGER NOT NULL,
+      order_number VARCHAR(50) NOT NULL,
+      payment_method VARCHAR(50) NOT NULL,
+      payment_intent_id VARCHAR(255),
+      transaction_id VARCHAR(255),
+      amount DECIMAL(10,2) NOT NULL,
+      currency VARCHAR(3) DEFAULT 'CAD',
+      status VARCHAR(50) NOT NULL,
+      gateway_response JSONB,
+      failure_reason TEXT,
+      processed_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+    );
+    
+    CREATE INDEX IF NOT EXISTS idx_payments_order ON payments(order_id);
+    CREATE INDEX IF NOT EXISTS idx_payments_order_number ON payments(order_number);
+    CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+    CREATE INDEX IF NOT EXISTS idx_payments_method ON payments(payment_method);
+  `;
+  
+  try {
+    await pool.query(query);
+    console.log('✅ Payments table ready');
+  } catch (error) {
+    console.error('❌ Error creating payments table:', error);
+  }
+}
+
+// Get all payments (admin only)
+router.get('/', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { status, payment_method, start_date, end_date, limit = 50 } = req.query;
+    
+    let query = `
+      SELECT 
+        p.*,
+        o.customer_id,
+        o.email as customer_email,
+        u.first_name,
+        u.last_name
+      FROM payments p
+      LEFT JOIN orders o ON p.order_id = o.id
+      LEFT JOIN users u ON o.customer_id = u.id
+      WHERE 1=1
+    `;
+    
+    const params = [];
+    let paramIndex = 1;
+    
+    if (status) {
+      query += ` AND p.status = $${paramIndex++}`;
+      params.push(status);
+    }
+    
+    if (payment_method) {
+      query += ` AND p.payment_method = $${paramIndex++}`;
+      params.push(payment_method);
+    }
+    
+    if (start_date) {
+      query += ` AND p.created_at >= $${paramIndex++}`;
+      params.push(start_date);
+    }
+    
+    if (end_date) {
+      query += ` AND p.created_at <= $${paramIndex++}`;
+      params.push(end_date);
+    }
+    
+    query += ` ORDER BY p.created_at DESC LIMIT $${paramIndex}`;
+    params.push(parseInt(limit));
+    
+    const result = await pool.query(query, params);
+    
+    res.json({
+      success: true,
+      data: result.rows,
+      count: result.rows.length
+    });
+  } catch (error) {
+    console.error('Error fetching payments:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch payments'
+    });
+  }
+});
+
+// Get payment statistics (admin only)
+router.get('/stats/summary', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+    
+    let dateFilter = '';
+    const params = [];
+    
+    if (start_date && end_date) {
+      dateFilter = 'WHERE created_at BETWEEN $1 AND $2';
+      params.push(start_date, end_date);
+    }
+    
+    // Overall statistics
+    const statsQuery = `
+      SELECT 
+        COUNT(*) as total_payments,
+        COUNT(CASE WHEN status = 'succeeded' THEN 1 END) as successful_payments,
+        COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_payments,
+        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_payments,
+        COALESCE(SUM(CASE WHEN status = 'succeeded' THEN amount ELSE 0 END), 0) as total_revenue,
+        COALESCE(AVG(CASE WHEN status = 'succeeded' THEN amount END), 0) as avg_payment_amount
+      FROM payments
+      ${dateFilter}
+    `;
+    
+    const statsResult = await pool.query(statsQuery, params);
+    
+    // Payment method breakdown
+    const methodQuery = `
+      SELECT 
+        payment_method,
+        COUNT(*) as count,
+        COALESCE(SUM(CASE WHEN status = 'succeeded' THEN amount ELSE 0 END), 0) as revenue
+      FROM payments
+      ${dateFilter}
+      GROUP BY payment_method
+      ORDER BY revenue DESC
+    `;
+    
+    const methodResult = await pool.query(methodQuery, params);
+    
+    res.json({
+      success: true,
+      data: {
+        summary: statsResult.rows[0],
+        payment_methods: methodResult.rows
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching payment statistics:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch payment statistics'
+    });
+  }
+});
+
+// Get single payment (admin only or own payment)
+router.get('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    let query, params;
+    
+    if (req.user.role === 'admin' || req.user.role === 'super_admin') {
+      // Admin can see any payment
+      query = `
+        SELECT 
+          p.*,
+          o.customer_id,
+          o.email as customer_email,
+          u.first_name,
+          u.last_name
+        FROM payments p
+        LEFT JOIN orders o ON p.order_id = o.id
+        LEFT JOIN users u ON o.customer_id = u.id
+        WHERE p.id = $1 OR p.payment_intent_id = $1
+      `;
+      params = [id];
+    } else {
+      // Customers can only see their own payments
+      query = `
+        SELECT 
+          p.*,
+          o.customer_id,
+          o.email as customer_email
+        FROM payments p
+        LEFT JOIN orders o ON p.order_id = o.id
+        WHERE (p.id = $1 OR p.payment_intent_id = $1) AND o.customer_id = $2
+      `;
+      params = [id, req.user.id];
+    }
+    
+    const result = await pool.query(query, params);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Payment not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error fetching payment:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch payment'
+    });
+  }
+});
+
+// Create payment record (internal use)
+router.post('/record', async (req, res) => {
+  try {
+    const {
+      order_id,
+      order_number,
+      payment_method,
+      payment_intent_id,
+      transaction_id,
+      amount,
+      currency = 'CAD',
+      status = 'pending',
+      gateway_response
+    } = req.body;
+    
+    const query = `
+      INSERT INTO payments (
+        order_id, order_number, payment_method, payment_intent_id,
+        transaction_id, amount, currency, status, gateway_response
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING *
+    `;
+    
+    const values = [
+      order_id, order_number, payment_method, payment_intent_id,
+      transaction_id, amount, currency, status, 
+      gateway_response ? JSON.stringify(gateway_response) : null
+    ];
+    
+    const result = await pool.query(query, values);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Payment record created',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error creating payment:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create payment record'
+    });
+  }
+});
 
 // Create Stripe PaymentIntent
 router.post('/stripe/create-intent', async (req, res) => {
@@ -340,5 +602,8 @@ router.post('/webhook', (req, res) => {
 router.get('/:id', (req, res) => {
   res.json({ message: `Get payment ${req.params.id} - implement payment retrieval` });
 });
+
+// Initialize payments table
+createPaymentsTable();
 
 module.exports = router;

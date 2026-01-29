@@ -1,78 +1,61 @@
 const express = require('express');
-const { authenticateUser } = require('../config/supabase');
+const bcrypt = require('bcryptjs');
+const { findUserByEmail, createUser } = require('../config/database');
+const { generateToken } = require('../middleware/auth');
+const { authLimiter, passwordResetLimiter } = require('../middleware/rateLimiter');
 const router = express.Router();
 
 // Authentication routes
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    console.log('=== AUTHENTICATION ATTEMPT ===');
-    console.log('Email:', email);
-    console.log('Password length:', password?.length);
-    console.log('Request body:', { email, password: '***' });
-    
     // Validate input
     if (!email || !password) {
-      console.log('❌ Missing email or password');
       return res.status(400).json({
         success: false,
         message: 'Email and password are required'
       });
     }
 
-    // Hardcoded super admin check as primary fallback
-    if (email === 'info@afrosuperstore.ca' && password === 'Iamtech@100') {
-      console.log('✅ Hardcoded super admin authentication successful');
-      return res.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          id: 'cdc9e3ae-08d0-455c-b322-6e7b4b03e906',
-          email: 'info@afrosuperstore.ca',
-          name: 'Super Admin',
-          role: 'super_admin',
-          emailVerified: true
-        },
-        token: 'mock-jwt-token-super-admin'
+    // Find user in database
+    const user = await findUserByEmail(email);
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
       });
     }
 
-    console.log('❌ Hardcoded authentication failed, trying Supabase...');
-
-    // Try Supabase authentication as secondary method
-    try {
-      const user = await authenticateUser(email, password);
-      
-      if (user) {
-        console.log('✅ Supabase authentication successful for:', email);
-        return res.json({
-          success: true,
-          message: 'Login successful',
-          user: {
-            id: user.id,
-            email: user.email,
-            name: `${user.first_name} ${user.last_name}`,
-            role: user.role,
-            emailVerified: user.email_verified
-          },
-          token: 'mock-jwt-token-' + user.id
-        });
-      } else {
-        console.log('❌ Supabase authentication failed for:', email);
-      }
-    } catch (supabaseError) {
-      console.log('❌ Supabase authentication error:', supabaseError.message);
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    
+    if (!isValidPassword) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
     }
 
-    console.log('❌ All authentication methods failed for:', email);
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid email or password'
+    // Generate JWT token
+    const token = generateToken(user);
+
+    return res.json({
+      success: true,
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: `${user.first_name} ${user.last_name}`,
+        role: user.role,
+        emailVerified: user.email_verified
+      },
+      token
     });
 
   } catch (error) {
-    console.error('❌ Login route error:', error);
+    console.error('Login route error:', error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -80,11 +63,63 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.post('/register', (req, res) => {
-  res.json({ 
-    success: true,
-    message: 'Registration successful - implement user registration logic' 
-  });
+router.post('/register', authLimiter, async (req, res) => {
+  try {
+    const { email, password, first_name, last_name, phone } = req.body;
+    
+    // Validate input
+    if (!email || !password || !first_name || !last_name) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email, password, first name, and last name are required'
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await findUserByEmail(email);
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: 'User already exists with this email'
+      });
+    }
+
+    // Hash password
+    const password_hash = await bcrypt.hash(password, 10);
+
+    // Create user
+    const newUser = await createUser({
+      email,
+      password_hash,
+      first_name,
+      last_name,
+      phone,
+      role: 'customer',
+      email_verified: false
+    });
+
+    // Generate JWT token
+    const token = generateToken(newUser);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Registration successful',
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        name: `${newUser.first_name} ${newUser.last_name}`,
+        role: newUser.role,
+        emailVerified: newUser.email_verified
+      },
+      token
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
 });
 
 router.post('/logout', (req, res) => {
@@ -94,7 +129,7 @@ router.post('/logout', (req, res) => {
   });
 });
 
-router.post('/forgot-password', (req, res) => {
+router.post('/forgot-password', passwordResetLimiter, (req, res) => {
   try {
     const { email } = req.body;
     
@@ -121,14 +156,8 @@ router.post('/forgot-password', (req, res) => {
 });
 
 router.get('/me', (req, res) => {
-  res.json({ 
-    success: true,
-    message: 'Get current user - implement user profile retrieval' 
-  });
-});
-
-router.get('/validate', (req, res) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
   
   if (!token) {
     return res.status(401).json({
@@ -137,26 +166,56 @@ router.get('/validate', (req, res) => {
     });
   }
   
-  // For mock tokens, return a simple validation
-  if (token.startsWith('mock-jwt-token-')) {
+  try {
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    return res.json({
+      success: true,
+      user: {
+        id: decoded.id,
+        email: decoded.email,
+        role: decoded.role
+      }
+    });
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid token'
+    });
+  }
+});
+
+router.get('/validate', (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'No token provided'
+    });
+  }
+  
+  try {
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
     return res.json({
       success: true,
       message: 'Token is valid',
       user: {
-        id: token.replace('mock-jwt-token-', ''),
-        email: 'info@afrosuperstore.ca',
-        name: 'Super Admin',
-        role: 'super_admin',
-        emailVerified: true
+        id: decoded.id,
+        email: decoded.email,
+        role: decoded.role
       }
     });
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid token'
+    });
   }
-  
-  // For other tokens, you'd validate against a database or JWT service
-  return res.status(401).json({
-    success: false,
-    message: 'Invalid token'
-  });
 });
 
 module.exports = router;
