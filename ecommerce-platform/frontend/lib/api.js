@@ -10,16 +10,16 @@ const getApiUrl = () => {
     if (process.env.NODE_ENV === 'development') {
       return 'http://localhost:3001/api'; // Local backend
     } else if (window.location.hostname.includes('afrosuperstore.ca')) {
-      return 'https://www.afrosuperstore.ca/api'; // Production domain
+      return '/api'; // Use local API proxy for now (will switch to Railway when deployed)
     } else if (window.location.hostname.includes('vercel.app')) {
-      return 'https://www.afrosuperstore.ca/api'; // Vercel frontend with production backend
+      return '/api'; // Use local API proxy for Vercel
     } else {
       return '/api'; // Relative path for same deployment
     }
   } else {
     // Server-side
     return process.env.NEXT_PUBLIC_API_URL || 
-           (process.env.NODE_ENV === 'development' ? 'http://localhost:3001/api' : 'https://www.afrosuperstore.ca/api');
+           (process.env.NODE_ENV === 'development' ? 'http://localhost:3001/api' : '/api');
   }
 };
 
