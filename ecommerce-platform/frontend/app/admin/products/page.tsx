@@ -55,8 +55,8 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,
@@ -74,7 +74,13 @@ export default function ProductsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
+  // Immediate debugging on component mount
+  console.log('🚀 ProductsPage component mounted!');
+  console.log('🍪 Document cookies:', document.cookie);
+  console.log('🌐 Current URL:', window.location.href);
+
   useEffect(() => {
+    console.log('🔄 ProductsPage useEffect triggered');
     fetchProducts();
     fetchCategories();
   }, [pagination.page, filters]);
