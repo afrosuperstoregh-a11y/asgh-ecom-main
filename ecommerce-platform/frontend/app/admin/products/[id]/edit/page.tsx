@@ -39,7 +39,7 @@ interface Category {
   description: string;
 }
 
-export default function EditProductPage({ params }: { params: { id: string } }) {
+export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -47,6 +47,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
+  const [productId, setProductId] = useState<string>('');
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
@@ -69,9 +70,15 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   });
 
   useEffect(() => {
-    fetchProduct();
-    fetchCategories();
-  }, [params.id]);
+    const getParams = async () => {
+      const resolvedParams = await params;
+      setProductId(resolvedParams.id);
+      fetchProduct(resolvedParams.id);
+      fetchCategories();
+    };
+    
+    getParams();
+  }, [params]);
 
   const fetchCategories = async () => {
     try {
@@ -88,10 +95,10 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     }
   };
 
-  const fetchProduct = async () => {
+  const fetchProduct = async (id: string) => {
     try {
       setFetchLoading(true);
-      const response = await fetch(`/api/admin/products/${params.id}`, {
+      const response = await fetch(`/api/admin/products/${id}`, {
         credentials: 'include'
       });
 

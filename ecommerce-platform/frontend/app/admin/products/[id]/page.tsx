@@ -45,34 +45,42 @@ interface Product {
   };
 }
 
-export default function ViewProductPage({ params }: { params: { id: string } }) {
+export default function ViewProductPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [productId, setProductId] = useState<string>('');
 
   useEffect(() => {
-    // Check if ID is valid
-    if (!params.id || params.id === 'undefined') {
-      setError('Invalid product ID');
-      setLoading(false);
-      return;
-    }
+    const getParams = async () => {
+      const resolvedParams = await params;
+      setProductId(resolvedParams.id);
+      
+      // Check if ID is valid
+      if (!resolvedParams.id || resolvedParams.id === 'undefined') {
+        setError('Invalid product ID');
+        setLoading(false);
+        return;
+      }
+      
+      fetchProduct(resolvedParams.id);
+    };
     
-    fetchProduct();
-  }, [params.id]);
+    getParams();
+  }, [params]);
 
-  const fetchProduct = async () => {
+  const fetchProduct = async (id: string) => {
     try {
       setLoading(true);
       setError(null);
       
-      if (!params.id || params.id === 'undefined') {
+      if (!id || id === 'undefined') {
         setError('Invalid product ID');
         return;
       }
       
-      const response = await fetch(`/api/admin/products/${params.id}`, {
+      const response = await fetch(`/api/admin/products/${id}`, {
         credentials: 'include'
       });
 
@@ -97,7 +105,7 @@ export default function ViewProductPage({ params }: { params: { id: string } }) 
     }
 
     try {
-      const response = await fetch(`/api/admin/products/${params.id}`, {
+      const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
