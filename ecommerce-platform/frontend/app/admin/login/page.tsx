@@ -38,9 +38,9 @@ export default function AdminLogin() {
 
       const apiUrl = getApiUrl();
       console.log('Using API URL:', apiUrl);
-      console.log('Full login URL:', `${apiUrl}/admin/auth/login`);
+      console.log('Full login URL:', `${apiUrl}/api/admin/auth/login`);
       
-      const response = await fetch(`${apiUrl}/admin/auth/login`, {
+      const response = await fetch(`${apiUrl}/api/admin/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

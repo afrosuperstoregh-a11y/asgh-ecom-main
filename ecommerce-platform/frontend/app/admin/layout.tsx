@@ -74,7 +74,7 @@ export default function AdminLayout({
       console.log('Auth validation API URL:', apiUrl);
       console.log('Token available:', !!token);
 
-      const response = await fetch(`${apiUrl}/admin/auth/me`, {
+      const response = await fetch(`${apiUrl}/api/admin/auth/me`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ export default function AdminLayout({
       const apiUrl = getApiUrl();
       const token = localStorage.getItem('adminToken');
 
-      await fetch(`${apiUrl}/admin/auth/logout`, {
+      await fetch(`${apiUrl}/api/admin/auth/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

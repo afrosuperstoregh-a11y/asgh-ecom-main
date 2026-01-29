@@ -68,10 +68,10 @@ export default function AdminDashboard() {
       const token = localStorage.getItem('adminToken');
       
       console.log('Dashboard API URL:', apiUrl);
-      console.log('Dashboard full URL:', `${apiUrl}/admin/dashboard`);
+      console.log('Dashboard full URL:', `${apiUrl}/api/admin/dashboard`);
       console.log('Token available:', !!token);
 
-      const response = await fetch(`${apiUrl}/admin/dashboard`, {
+      const response = await fetch(`${apiUrl}/api/admin/dashboard`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
