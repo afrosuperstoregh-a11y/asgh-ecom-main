@@ -202,7 +202,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         } : null
       };
 
-      const response = await fetch(`/api/admin/products/${params.id}`, {
+      const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
