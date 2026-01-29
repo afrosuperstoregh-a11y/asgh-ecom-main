@@ -3,6 +3,10 @@ Make sure you create, update, and enhance all required files and codes. Inject a
 Super Admin Account: Created and validated
 (admin@afrosuperstore.ca / Admin123!)
 
+Super Admin Account: Created and validated
+Username: info@afrosuperstore.ca
+Password: Iamtech@100
+
 The workflow is complete: 
 Create → Store in Supabase → List in Admin Panel → Real-time Updates.
 
@@ -11,8 +15,8 @@ Architecture should be as follows:
 2. Backend - Node.js (Railway Deployment)
 3. API - Node.js, Express (Railway Deployment)
 4. Database - Supabase (Railway Deployment)
-Auth - NextAuth.js
-Payment - PayPal
-Shipping - Canada Post
-Email - SendGrid
+5. Auth - NextAuth.js
+6. Payment - PayPal
+7. Shipping - Canada Post
+8. Email - SendGrid
 

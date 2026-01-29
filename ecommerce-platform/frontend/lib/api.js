@@ -10,16 +10,16 @@ const getApiUrl = () => {
     if (process.env.NODE_ENV === 'development') {
       return 'http://localhost:3001/api'; // Local backend
     } else if (window.location.hostname.includes('afrosuperstore.ca')) {
-      return '/api'; // Use local API proxy to avoid CORS
+      return 'https://www.afrosuperstore.ca/api'; // Production backend
     } else if (window.location.hostname.includes('vercel.app')) {
-      return '/api'; // Use local API proxy for Vercel
+      return 'https://www.afrosuperstore.ca/api'; // Production backend for Vercel
     } else {
       return '/api'; // Relative path for same deployment
     }
   } else {
     // Server-side
     return process.env.NEXT_PUBLIC_API_URL || 
-           (process.env.NODE_ENV === 'development' ? 'http://localhost:3001/api' : '/api');
+           (process.env.NODE_ENV === 'development' ? 'http://localhost:3001/api' : 'https://www.afrosuperstore.ca/api');
   }
 };
 
@@ -30,6 +30,7 @@ export async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   
   const defaultOptions = {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
     },
@@ -57,7 +58,7 @@ export async function apiRequest(endpoint, options = {}) {
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error?.message || errorData.message || `HTTP error! status: ${response.status}`);
     }
 
     return await response.json();

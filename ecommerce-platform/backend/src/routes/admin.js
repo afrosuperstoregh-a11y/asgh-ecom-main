@@ -16,6 +16,19 @@ router.post('/auth/login', async (req, res) => {
 
     // Check for super admin credentials
     if (email === 'info@afrosuperstore.ca' && password === 'Iamtech@100') {
+      const token = 'mock-jwt-token-for-super-admin-' + Date.now();
+      
+      // Set secure cookie
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        path: '/'
+      };
+      
+      res.cookie('auth-token', token, cookieOptions);
+      
       return res.json({
         success: true,
         message: 'Login successful',
@@ -26,24 +39,36 @@ router.post('/auth/login', async (req, res) => {
           role: 'super_admin',
           emailVerified: true
         },
-        token: 'mock-jwt-token-for-super-admin'
+        token: token
       });
     }
 
-    // For demo purposes, accept any admin credentials
-    // In production, this should validate against database
-    if (email.includes('@afrosuperstore.ca')) {
+    // Check for second admin credentials
+    if (email === 'admin@afrosuperstore.ca' && password === 'Admin123!') {
+      const token = 'mock-jwt-token-for-admin-' + Date.now();
+      
+      // Set secure cookie
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        path: '/'
+      };
+      
+      res.cookie('auth-token', token, cookieOptions);
+      
       return res.json({
         success: true,
         message: 'Login successful',
         user: {
-          id: 'admin-demo',
-          email: email,
+          id: 'admin-002',
+          email: 'admin@afrosuperstore.ca',
           name: 'Admin User',
           role: 'admin',
           emailVerified: true
         },
-        token: 'mock-jwt-token-for-admin'
+        token: token
       });
     }
 
@@ -63,6 +88,14 @@ router.post('/auth/login', async (req, res) => {
 });
 
 router.post('/auth/logout', (req, res) => {
+  // Clear authentication cookie
+  res.clearCookie('auth-token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+    path: '/'
+  });
+  
   res.json({
     success: true,
     message: 'Logout successful'
