@@ -1,12 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Environment-safe logging
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+const logger = {
+  log: (message: string, data?: any) => {
+    if (isDevelopment) {
+      console.log(`[API] ${message}`, data || '');
+    }
+  },
+  error: (message: string, error?: any) => {
+    if (isDevelopment) {
+      console.error(`[API] ${message}`, error || '');
+    }
+  }
+};
+
 // Production admin login proxy - handles CORS and authentication
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email, password } = body;
 
-    console.log('Production admin login proxy:', { email, passwordLength: password?.length });
+    logger.log('Production admin login attempt', { email, passwordLength: password?.length });
 
     // Hardcoded admin credentials for production
     const adminCredentials = [
@@ -45,17 +61,17 @@ export async function POST(request: NextRequest) {
       const nextResponse = NextResponse.json(response);
       nextResponse.cookies.set('auth-token', token, cookieOptions);
 
-      console.log('✅ Production admin login successful:', user.email);
+      logger.log('Production admin login successful', user.email);
       return nextResponse;
     } else {
-      console.log('❌ Invalid credentials for:', email);
+      logger.log('Invalid credentials for', email);
       return NextResponse.json({
         success: false,
         message: 'Invalid email or password'
       }, { status: 401 });
     }
   } catch (error) {
-    console.error('❌ Production login proxy error:', error);
+    logger.error('Production login proxy error', error);
     return NextResponse.json({
       success: false,
       message: 'Internal server error'

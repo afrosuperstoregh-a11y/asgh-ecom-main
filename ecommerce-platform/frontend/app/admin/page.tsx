@@ -13,6 +13,7 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react';
+import { logger } from '../../lib/logger';
 
 interface DashboardStats {
   overview: {
@@ -40,25 +41,20 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Immediate debugging on component mount
-  console.log('🚀 AdminDashboard component mounted!');
-  console.log('🍪 Document cookies:', document.cookie);
-  console.log('🌐 Current URL:', window.location.href);
-
   useEffect(() => {
-    console.log('🔄 AdminDashboard useEffect triggered');
+    logger.log('AdminDashboard component mounted');
     fetchDashboardData();
   }, []);
 
   const fetchDashboardData = async () => {
     try {
+      logger.log('Fetching dashboard data...');
+      
       // Use the API configuration from lib/api.js
       const { apiRequest } = await import('../../lib/api');
       
-      console.log('Fetching dashboard data...');
-      
       const data = await apiRequest('/admin/dashboard');
-      console.log('Dashboard data:', data);
+      logger.log('Dashboard data received successfully');
       
       // Map backend data structure to frontend expectations
       const mappedData = {
@@ -90,8 +86,8 @@ export default function AdminDashboard() {
       };
       
       setStats(mappedData);
-    } catch (error) {
-      console.error('Dashboard data fetch error:', error);
+    } catch (error: any) {
+      logger.auth('Dashboard data fetch failed', false, error?.message);
       setError('Failed to fetch dashboard data');
     } finally {
       setLoading(false);

@@ -11,16 +11,16 @@ export const getApiUrl = (): string => {
     
     // Development environment
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'http://localhost:3001';
+      return 'http://localhost:3002'; // Admin backend on port 3002
     }
     
     // Fallback for other environments
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3001`;
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3002`;
     return baseUrl.replace(/\/api$/, '');
   }
   
   // Server-side fallback
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
   return baseUrl.replace(/\/api$/, '');
 };
 

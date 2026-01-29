@@ -1,5 +1,21 @@
 import { NextResponse } from 'next/server';
 
+// Environment-safe logging
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+const logger = {
+  log: (message: string, data?: any) => {
+    if (isDevelopment) {
+      console.log(`[API] ${message}`, data || '');
+    }
+  },
+  error: (message: string, error?: any) => {
+    if (isDevelopment) {
+      console.error(`[API] ${message}`, error || '');
+    }
+  }
+};
+
 // Production admin logout proxy
 export async function POST() {
   try {
@@ -17,10 +33,10 @@ export async function POST() {
       path: '/'
     });
 
-    console.log('✅ Production admin logout successful');
+    logger.log('Production admin logout successful');
     return response;
   } catch (error) {
-    console.error('❌ Production logout proxy error:', error);
+    logger.error('Production logout proxy error', error);
     return NextResponse.json({
       success: false,
       message: 'Internal server error'

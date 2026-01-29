@@ -8,7 +8,7 @@ const getApiUrl = () => {
     
     // Development environment
     if (process.env.NODE_ENV === 'development') {
-      return 'http://localhost:3001/api'; // Local backend
+      return 'http://localhost:3002/api'; // Admin backend on port 3002
     }
     
     // Fallback URLs for other environments
@@ -20,7 +20,7 @@ const getApiUrl = () => {
   } else {
     // Server-side
     return process.env.NEXT_PUBLIC_API_URL || 
-           (process.env.NODE_ENV === 'development' ? 'http://localhost:3001/api' : '/api');
+           (process.env.NODE_ENV === 'development' ? 'http://localhost:3002/api' : '/api');
   }
 };
 

@@ -1,9 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Environment-safe logging
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+const logger = {
+  log: (message: string, data?: any) => {
+    if (isDevelopment) {
+      console.log(`[API] ${message}`, data || '');
+    }
+  },
+  error: (message: string, error?: any) => {
+    if (isDevelopment) {
+      console.error(`[API] ${message}`, error || '');
+    }
+  }
+};
+
 // Production admin auth validation proxy
 export async function GET(request: NextRequest) {
   try {
-    console.log('Production admin auth validation check');
+    logger.log('Production admin auth validation check');
     
     // Get token from Authorization header or cookie
     const authHeader = request.headers.get('authorization');
@@ -11,10 +27,10 @@ export async function GET(request: NextRequest) {
     
     const token = authHeader?.replace('Bearer ', '') || cookieToken;
     
-    console.log('Token validation request:', !!token);
+    logger.log('Token validation request', !!token);
 
     if (!token) {
-      console.log('No token provided');
+      logger.log('No token provided');
       return NextResponse.json({
         success: false,
         message: 'No authentication token provided'
@@ -37,17 +53,17 @@ export async function GET(request: NextRequest) {
         }
       };
 
-      console.log('✅ Production admin token validation successful');
+      logger.log('Production admin token validation successful');
       return NextResponse.json(userData);
     } else {
-      console.log('❌ Invalid token format');
+      logger.log('Invalid token format');
       return NextResponse.json({
         success: false,
         message: 'Invalid authentication token'
       }, { status: 401 });
     }
   } catch (error) {
-    console.error('❌ Production auth validation error:', error);
+    logger.error('Production auth validation error', error);
     return NextResponse.json({
       success: false,
       message: 'Authentication validation failed'

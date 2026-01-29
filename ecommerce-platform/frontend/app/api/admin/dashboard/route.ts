@@ -1,5 +1,21 @@
 import { NextResponse } from 'next/server';
 
+// Environment-safe logging
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+const logger = {
+  log: (message: string, data?: any) => {
+    if (isDevelopment) {
+      console.log(`[API] ${message}`, data || '');
+    }
+  },
+  error: (message: string, error?: any) => {
+    if (isDevelopment) {
+      console.error(`[API] ${message}`, error || '');
+    }
+  }
+};
+
 // Production admin dashboard proxy
 export async function GET() {
   try {
@@ -33,10 +49,10 @@ export async function GET() {
       }
     };
 
-    console.log('✅ Production admin dashboard data served');
+    logger.log('Production admin dashboard data served');
     return NextResponse.json(mockData);
   } catch (error) {
-    console.error('❌ Production dashboard proxy error:', error);
+    logger.error('Production dashboard proxy error', error);
     return NextResponse.json({
       success: false,
       message: 'Failed to fetch dashboard data'
