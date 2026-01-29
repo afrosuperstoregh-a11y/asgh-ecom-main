@@ -23,7 +23,24 @@ export default function AdminLogin() {
     try {
       console.log('Admin login form submitted:', { email, passwordLength: password?.length });
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/admin/auth/login`, {
+      // Determine API URL based on environment
+      const getApiUrl = () => {
+        if (typeof window !== 'undefined') {
+          const hostname = window.location.hostname;
+          if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:3001';
+          }
+          // For production, use the same domain but port 3001 or configured API URL
+          return process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3001`;
+        }
+        return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      };
+
+      const apiUrl = getApiUrl();
+      console.log('Using API URL:', apiUrl);
+      console.log('Full login URL:', `${apiUrl}/admin/auth/login`);
+      
+      const response = await fetch(`${apiUrl}/admin/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
