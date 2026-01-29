@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { findUserByEmail } = require('../config/database');
+const { findUserByEmail: findSupabaseUserByEmail } = require('../config/supabase');
 const { authenticateToken, requireAdmin, generateToken } = require('../middleware/auth');
 const { adminAuthLimiter } = require('../middleware/rateLimiter');
 const router = express.Router();
@@ -18,8 +19,26 @@ router.post('/auth/login', adminAuthLimiter, async (req, res) => {
       });
     }
 
-    // Find user in database
-    const user = await findUserByEmail(email);
+    // Find user in Supabase first, then fall back to PostgreSQL
+    let user = null;
+    
+    try {
+      // Try Supabase first
+      user = await findSupabaseUserByEmail(email);
+      console.log('✅ User found in Supabase:', user?.email);
+    } catch (supabaseError) {
+      console.log('⚠️ Supabase lookup failed, trying PostgreSQL:', supabaseError.message);
+    }
+    
+    // If not found in Supabase, try PostgreSQL
+    if (!user) {
+      try {
+        user = await findUserByEmail(email);
+        console.log('✅ User found in PostgreSQL:', user?.email);
+      } catch (pgError) {
+        console.log('❌ PostgreSQL lookup failed:', pgError.message);
+      }
+    }
     
     if (!user) {
       return res.status(401).json({

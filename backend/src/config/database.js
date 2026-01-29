@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 
 // Database connection configuration
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres123@localhost:5432/ecommerce',
+  connectionString: process.env.DATABASE_URL || process.env.SUPABASE_DB_URL || 'postgresql://postgres:postgres123@localhost:5432/ecommerce',
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
