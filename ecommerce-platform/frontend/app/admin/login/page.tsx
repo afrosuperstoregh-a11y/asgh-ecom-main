@@ -23,7 +23,7 @@ export default function AdminLogin() {
     try {
       console.log('Admin login form submitted:', { email, passwordLength: password?.length });
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/admin/auth/login`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/admin/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
