@@ -57,6 +57,25 @@ app.use((req, res, next) => {
   next();
 });
 
+// Prevent browser extension interference with HTML responses
+app.use((req, res, next) => {
+  const originalSend = res.send;
+  
+  res.send = function(data) {
+    // Add anti-interference headers to prevent extensions from modifying HTML
+    if (typeof data === 'string' && data.includes('<!DOCTYPE html>')) {
+      res.setHeader('Content-Security-Policy', "script-src 'self' 'unsafe-inline' 'unsafe-eval' *; style-src 'self' 'unsafe-inline' *; img-src 'self' data: *; font-src 'self' *; connect-src 'self' *;");
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    }
+    
+    return originalSend.call(this, data);
+  };
+  
+  next();
+});
+
 // General middleware
 app.use(compression());
 app.use(morgan('combined'));
@@ -93,6 +112,24 @@ app.options('*', (req, res) => {
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-Extension-ID');
   res.status(200).send();
+});
+
+// Handle extension interference with main routes
+app.use((req, res, next) => {
+  // Check if this is an extension request trying to interfere
+  const userAgent = req.get('User-Agent') || '';
+  const isExtension = userAgent.includes('Chrome/') && (
+    req.url.includes('extension') || 
+    req.get('X-Extension-ID') ||
+    req.headers['x-extension-id']
+  );
+  
+  if (isExtension && req.method === 'GET' && !req.url.startsWith('/api/')) {
+    // Return empty response for extension requests to prevent HTML interference
+    return res.status(200).send('');
+  }
+  
+  next();
 });
 
 // API Routes
