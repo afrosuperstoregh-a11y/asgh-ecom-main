@@ -43,7 +43,14 @@ export default function AdminLogin() {
       console.log('Using API URL:', apiUrl);
       console.log('Full login URL:', `${apiUrl}/api/admin/auth/login`);
       
-      const response = await fetch(`${apiUrl}/api/admin/auth/login`, {
+      // Fallback if API URL is still empty
+      const finalApiUrl = apiUrl || 'http://localhost:3001';
+      const loginUrl = `${finalApiUrl}/api/admin/auth/login`;
+      
+      console.log('Final API URL:', finalApiUrl);
+      console.log('Final login URL:', loginUrl);
+      
+      const response = await fetch(loginUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
