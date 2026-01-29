@@ -144,6 +144,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve static files from public directory
+app.use(express.static('public'));
+
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
