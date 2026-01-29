@@ -59,9 +59,12 @@ export default function AdminDashboard() {
           if (hostname === 'localhost' || hostname === '127.0.0.1') {
             return 'http://localhost:3001';
           }
-          return process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3001`;
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3001`;
+          // Remove /api suffix if it exists to prevent double /api
+          return baseUrl.replace(/\/api$/, '');
         }
-        return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        return baseUrl.replace(/\/api$/, '');
       };
 
       const apiUrl = getApiUrl();

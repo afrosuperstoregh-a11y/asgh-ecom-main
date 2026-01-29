@@ -31,9 +31,12 @@ export default function AdminLogin() {
             return 'http://localhost:3001';
           }
           // For production, use the same domain but port 3001 or configured API URL
-          return process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3001`;
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3001`;
+          // Remove /api suffix if it exists to prevent double /api
+          return baseUrl.replace(/\/api$/, '');
         }
-        return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        return baseUrl.replace(/\/api$/, '');
       };
 
       const apiUrl = getApiUrl();
