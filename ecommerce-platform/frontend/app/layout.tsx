@@ -44,6 +44,54 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable}`}>
       <head>
+        {/* Early suppression script - must run before any analytics */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Aggressive early suppression of deprecated analytics messages
+              (function() {
+                const originalConsole = {
+                  log: console.log,
+                  warn: console.warn,
+                  error: console.error,
+                  info: console.info,
+                  debug: console.debug
+                };
+                
+                function shouldSuppress(args) {
+                  const message = args[0];
+                  if (typeof message === 'string') {
+                    return message.includes('feature_collector.js') || 
+                           (message.includes('deprecated') && message.includes('parameters'));
+                  }
+                  return false;
+                }
+                
+                Object.keys(originalConsole).forEach(method => {
+                  console[method] = function(...args) {
+                    if (shouldSuppress(args)) {
+                      // Silently suppress
+                      return;
+                    }
+                    return originalConsole[method].apply(console, args);
+                  };
+                });
+                
+                // Override window.onerror for script errors
+                const originalOnError = window.onerror;
+                window.onerror = function(message, source, lineno, colno, error) {
+                  if (typeof message === 'string' && message.includes('feature_collector.js')) {
+                    return true; // Suppress the error
+                  }
+                  return originalOnError ? originalOnError.call(window, message, source, lineno, colno, error) : false;
+                };
+                
+                console.log('🔍 Analytics: Early aggressive suppression active');
+              })();
+            `,
+          }}
+        />
+        
         {/* Preconnect to important third-party domains */}
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         
@@ -104,43 +152,6 @@ export default function RootLayout({
       </body>
       {process.env.NODE_ENV === 'production' && (
         <>
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-                // Comprehensive suppression of deprecated analytics messages
-                const originalWarn = console.warn;
-                const originalError = console.error;
-                const originalLog = console.log;
-                
-                function shouldSuppress(args) {
-                  const message = args[0];
-                  if (typeof message === 'string') {
-                    return message.includes('feature_collector.js') && 
-                           message.includes('deprecated parameters') &&
-                           message.includes('initialization function');
-                  }
-                  return false;
-                }
-                
-                console.warn = function(...args) {
-                  if (shouldSuppress(args)) return;
-                  return originalWarn.apply(console, args);
-                };
-                
-                console.error = function(...args) {
-                  if (shouldSuppress(args)) return;
-                  return originalError.apply(console, args);
-                };
-                
-                console.log = function(...args) {
-                  if (shouldSuppress(args)) return;
-                  return originalLog.apply(console, args);
-                };
-                
-                console.log('🔍 Analytics: All deprecated messages suppressed');
-              `,
-            }}
-          />
           <Analytics />
           <SpeedInsights />
         </>
