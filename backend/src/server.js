@@ -41,9 +41,15 @@ app.use(generalLimiter);
 app.use((req, res, next) => {
   // Handle browser extension requests that might cause issues
   const userAgent = req.get('User-Agent') || '';
+  const origin = req.get('Origin') || '';
   
-  // Check if request is from a browser extension
-  if (userAgent.includes('Chrome/') && (req.url.includes('extension') || req.get('X-Extension-ID'))) {
+  // Only apply extension compatibility for actual extension requests
+  // Don't interfere with legitimate CORS requests from known origins
+  const isExtensionRequest = (req.url.includes('extension') || req.get('X-Extension-ID')) &&
+                             !origin.includes('afrosuperstore.ca') &&
+                             !origin.includes('localhost');
+  
+  if (userAgent.includes('Chrome/') && isExtensionRequest) {
     // Set headers to prevent extension interference
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
