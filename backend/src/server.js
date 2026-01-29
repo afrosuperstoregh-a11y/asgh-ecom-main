@@ -37,20 +37,25 @@ app.use(cors({
 // Rate limiting
 app.use(generalLimiter);
 
-// Browser extension compatibility middleware
+// Browser extension compatibility middleware - only for actual extension requests
 app.use((req, res, next) => {
-  // Handle browser extension requests that might cause issues
   const userAgent = req.get('User-Agent') || '';
   const origin = req.get('Origin') || '';
   
   // Only apply extension compatibility for actual extension requests
-  // Don't interfere with legitimate CORS requests from known origins
-  const isExtensionRequest = (req.url.includes('extension') || req.get('X-Extension-ID')) &&
-                             !origin.includes('afrosuperstore.ca') &&
-                             !origin.includes('localhost');
+  // Must have explicit extension indicators AND not be from our known origins
+  const hasExtensionIndicators = req.get('X-Extension-ID') || 
+                                req.url.includes('extension') || 
+                                req.url.includes('chrome-extension://') ||
+                                req.url.includes('moz-extension://');
   
-  if (userAgent.includes('Chrome/') && isExtensionRequest) {
-    // Set headers to prevent extension interference
+  const isKnownOrigin = origin.includes('afrosuperstore.ca') || 
+                        origin.includes('localhost') || 
+                        !origin; // Allow same-origin requests
+  
+  // Only apply extension compatibility for actual extension requests from unknown origins
+  if (userAgent.includes('Chrome/') && hasExtensionIndicators && !isKnownOrigin) {
+    console.log('🔧 Applying extension compatibility for unknown origin');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', '*');
