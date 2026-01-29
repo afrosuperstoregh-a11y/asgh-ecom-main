@@ -2,27 +2,86 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { products, Product } from '../../data/products';
 import { useCart } from "../../context/CartContext";
 import { Loader2, Search, Filter, Grid, List, Star, ShoppingCart } from 'lucide-react';
+
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  comparePrice?: number;
+  sku: string;
+  status: string;
+  featured: boolean;
+  stock: number;
+  images: string[];
+  category: {
+    id: string;
+    name: string;
+  };
+  createdAt: string;
+  _count: {
+    orderItems: number;
+  };
+  // Additional fields for frontend compatibility
+  rating?: number;
+  reviewCount?: number;
+  inStock?: boolean;
+  discountPrice?: number;
+}
 
 export default function ProductsPage() {
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const { addToCart } = useCart();
 
   useEffect(() => {
-    // Simulate loading and set products from local data
     const loadProducts = async () => {
       try {
         setLoading(true);
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setProductsList(products);
+        setError('');
+        
+        // Determine API URL
+        const getApiUrl = () => {
+          if (typeof window !== 'undefined') {
+            const hostname = window.location.hostname;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+              return 'http://localhost:3001';
+            }
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3001`;
+            return baseUrl.replace(/\/api$/, '');
+          }
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+          return baseUrl.replace(/\/api$/, '');
+        };
+
+        const apiUrl = getApiUrl();
+        console.log('Fetching products from:', `${apiUrl}/api/products`);
+
+        const response = await fetch(`${apiUrl}/api/products`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch products: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Products data:', data);
+        
+        // Handle different response formats
+        const products = data.data || data.products || data;
+        setProductsList(Array.isArray(products) ? products : []);
       } catch (err) {
         console.error('Error loading products:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load products');
         setProductsList([]);
       } finally {
         setLoading(false);
@@ -36,19 +95,48 @@ export default function ProductsPage() {
   const filteredProducts = productsList.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchQuery.toLowerCase())
+    product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.category?.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleAddToCart = (product: Product) => {
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.discountPrice || product.price,
-      image: product.images[0],
-      category: product.category
+      price: product.comparePrice || product.price,
+      image: product.images[0] || '/placeholder-product.svg',
+      category: product.category?.name || 'Uncategorized'
     });
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 max-w-md">
+            <p className="text-red-800">Error loading products: {error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
