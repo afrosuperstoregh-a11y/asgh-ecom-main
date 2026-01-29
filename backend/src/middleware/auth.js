@@ -39,8 +39,9 @@ const authenticateToken = async (req, res, next) => {
       id: user.id,
       email: user.email,
       role: user.role,
-      firstName: user.first_name,
-      lastName: user.last_name
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email_verified: user.email_verified
     };
 
     next();

@@ -11,10 +11,20 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP to prevent extension conflicts
+  crossOriginEmbedderPolicy: false
+}));
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://www.afrosuperstore.ca',
-  credentials: true
+  origin: [
+    process.env.FRONTEND_URL || 'https://www.afrosuperstore.ca',
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // Rate limiting
@@ -58,9 +68,57 @@ app.use('*', (req, res) => {
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-  res.status(err.status || 500).json({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  console.error('Stack:', err.stack);
+  
+  // Handle specific error types
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      success: false,
+      error: 'Validation Error',
+      message: err.message
+    });
+  }
+  
+  if (err.name === 'CastError') {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid ID',
+      message: 'The provided ID is not valid'
+    });
+  }
+  
+  if (err.code === '23505') { // PostgreSQL unique violation
+    return res.status(409).json({
+      success: false,
+      error: 'Duplicate Entry',
+      message: 'This record already exists'
+    });
+  }
+  
+  if (err.code === '23503') { // PostgreSQL foreign key violation
+    return res.status(400).json({
+      success: false,
+      error: 'Reference Error',
+      message: 'Referenced record does not exist'
+    });
+  }
+  
+  // Handle undefined/null errors that cause browser extension issues
+  if (err.message && err.message.includes('Cannot destructure')) {
+    return res.status(400).json({
+      success: false,
+      error: 'Request Error',
+      message: 'Invalid request format'
+    });
+  }
+  
+  // Default error response
+  const statusCode = err.status || err.statusCode || 500;
+  res.status(statusCode).json({
+    success: false,
+    error: statusCode < 500 ? 'Request Error' : 'Internal Server Error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
 

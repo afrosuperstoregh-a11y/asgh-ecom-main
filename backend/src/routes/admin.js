@@ -84,9 +84,9 @@ router.get('/auth/me', authenticateToken, (req, res) => {
     user: {
       id: req.user.id,
       email: req.user.email,
-      name: `${req.user.firstName} ${req.user.lastName}`,
+      name: `${req.user.first_name} ${req.user.last_name}`,
       role: req.user.role,
-      emailVerified: true
+      emailVerified: req.user.email_verified
     }
   });
 });
