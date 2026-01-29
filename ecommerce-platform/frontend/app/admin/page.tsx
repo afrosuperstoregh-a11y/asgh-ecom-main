@@ -52,15 +52,44 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await fetch('/api/admin/dashboard/overview', {
+      // Determine API URL based on environment
+      const getApiUrl = () => {
+        if (typeof window !== 'undefined') {
+          const hostname = window.location.hostname;
+          if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:3001';
+          }
+          return process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3001`;
+        }
+        return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      };
+
+      const apiUrl = getApiUrl();
+      const token = localStorage.getItem('adminToken');
+      
+      console.log('Dashboard API URL:', apiUrl);
+      console.log('Dashboard full URL:', `${apiUrl}/admin/dashboard`);
+      console.log('Token available:', !!token);
+
+      const response = await fetch(`${apiUrl}/admin/dashboard`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
         credentials: 'include' // Important for sending cookies
       });
 
+      console.log('Dashboard response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('Dashboard data:', data);
         setStats(data.data || data);
       } else {
-        setError('Failed to fetch dashboard data');
+        const errorData = await response.json();
+        console.error('Dashboard error:', errorData);
+        setError(errorData.message || 'Failed to fetch dashboard data');
       }
     } catch (error) {
       console.error('Dashboard data fetch error:', error);

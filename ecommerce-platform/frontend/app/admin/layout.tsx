@@ -56,8 +56,30 @@ export default function AdminLayout({
     try {
       console.log('Checking admin authentication...');
       
-      // Token is stored in HTTP-only cookies, no need to check localStorage
-      const response = await fetch('/api/admin/auth/validate', {
+      // Get API URL and token
+      const getApiUrl = () => {
+        if (typeof window !== 'undefined') {
+          const hostname = window.location.hostname;
+          if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:3001';
+          }
+          return process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3001`;
+        }
+        return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      };
+
+      const apiUrl = getApiUrl();
+      const token = localStorage.getItem('adminToken');
+      
+      console.log('Auth validation API URL:', apiUrl);
+      console.log('Token available:', !!token);
+
+      const response = await fetch(`${apiUrl}/admin/auth/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
         credentials: 'include' // Important for sending cookies
       });
 
@@ -69,10 +91,16 @@ export default function AdminLayout({
         setUser(userData.user || userData);
       } else {
         console.log('Auth validation failed, redirecting to login');
+        // Clear invalid token
+        localStorage.removeItem('adminToken');
+        sessionStorage.removeItem('adminUser');
         router.replace('/admin/login');
       }
     } catch (error) {
       console.error('Auth check failed:', error);
+      // Clear invalid token
+      localStorage.removeItem('adminToken');
+      sessionStorage.removeItem('adminUser');
       router.replace('/admin/login');
     } finally {
       setLoading(false);
@@ -81,13 +109,35 @@ export default function AdminLayout({
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/admin/auth/logout', {
+      // Get API URL
+      const getApiUrl = () => {
+        if (typeof window !== 'undefined') {
+          const hostname = window.location.hostname;
+          if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:3001';
+          }
+          return process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3001`;
+        }
+        return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      };
+
+      const apiUrl = getApiUrl();
+      const token = localStorage.getItem('adminToken');
+
+      await fetch(`${apiUrl}/admin/auth/logout`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
         credentials: 'include'
       });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Clear local storage
+      localStorage.removeItem('adminToken');
+      sessionStorage.removeItem('adminUser');
       router.replace('/admin/login');
     }
   };
