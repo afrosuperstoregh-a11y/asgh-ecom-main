@@ -44,53 +44,53 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable}`}>
       <head>
-        {/* Early suppression script - must run before any analytics */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              // Aggressive early suppression of deprecated analytics messages
-              (function() {
-                const originalConsole = {
-                  log: console.log,
-                  warn: console.warn,
-                  error: console.error,
-                  info: console.info,
-                  debug: console.debug
-                };
-                
-                function shouldSuppress(args) {
-                  const message = args[0];
-                  if (typeof message === 'string') {
-                    return message.includes('feature_collector.js') || 
-                           (message.includes('deprecated') && message.includes('parameters'));
-                  }
-                  return false;
-                }
-                
-                Object.keys(originalConsole).forEach(method => {
-                  console[method] = function(...args) {
-                    if (shouldSuppress(args)) {
-                      // Silently suppress
-                      return;
-                    }
-                    return originalConsole[method].apply(console, args);
+        {/* Early suppression script - only in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                // Development-only suppression of deprecated analytics messages
+                (function() {
+                  const originalConsole = {
+                    log: console.log,
+                    warn: console.warn,
+                    error: console.error,
+                    info: console.info,
+                    debug: console.debug
                   };
-                });
-                
-                // Override window.onerror for script errors
-                const originalOnError = window.onerror;
-                window.onerror = function(message, source, lineno, colno, error) {
-                  if (typeof message === 'string' && message.includes('feature_collector.js')) {
-                    return true; // Suppress the error
+                  
+                  function shouldSuppress(args) {
+                    const message = args[0];
+                    if (typeof message === 'string') {
+                      return message.includes('feature_collector.js') || 
+                             (message.includes('deprecated') && message.includes('parameters'));
+                    }
+                    return false;
                   }
-                  return originalOnError ? originalOnError.call(window, message, source, lineno, colno, error) : false;
-                };
-                
-                console.log('🔍 Analytics: Early aggressive suppression active');
-              })();
-            `,
-          }}
-        />
+                  
+                  Object.keys(originalConsole).forEach(method => {
+                    console[method] = function(...args) {
+                      if (shouldSuppress(args)) {
+                        // Silently suppress
+                        return;
+                      }
+                      return originalConsole[method].apply(console, args);
+                    };
+                  });
+                  
+                  // Override window.onerror for script errors
+                  const originalOnError = window.onerror;
+                  window.onerror = function(message, source, lineno, colno, error) {
+                    if (typeof message === 'string' && message.includes('feature_collector.js')) {
+                      return true; // Suppress the error
+                    }
+                    return originalOnError ? originalOnError.call(window, message, source, lineno, colno, error) : false;
+                  };
+                })();
+              `,
+            }}
+          />
+        )}
         
         {/* Preconnect to important third-party domains */}
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
@@ -98,8 +98,8 @@ export default function RootLayout({
         {/* Preload critical resources */}
         <link rel="preload" href="/asca-logo.png" as="image" />
         
-        {/* Google Analytics */}
-        {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
+        {/* Google Analytics - Production Only */}
+        {process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
           <>
             <script async src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}`} />
             <script

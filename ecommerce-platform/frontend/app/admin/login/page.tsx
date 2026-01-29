@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Eye, EyeOff, Store, AlertTriangle } from 'lucide-react';
 import { storage } from '../../../lib/auth-utils';
 import { LoginResponse } from '../../../types/admin';
+import { logger } from '../../../lib/logger';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -23,7 +24,7 @@ export default function AdminLogin() {
     setError('');
 
     try {
-      console.log('Admin login form submitted:', { email, passwordLength: password?.length });
+      logger.auth('Admin login form submitted', true);
       
       // Use the API configuration from lib/api.js
       const { apiRequest } = await import('../../../lib/api');
@@ -33,10 +34,10 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password }),
       });
 
-      console.log('Admin login response data:', data);
+      logger.log('Admin login response received');
 
       if (data.success && data.token && data.user) {
-        console.log('Admin login successful, redirecting to:', redirectTo);
+        logger.log('Admin login successful, redirecting to:', redirectTo);
         
         // Store JWT token and user data using standardized storage
         storage.setToken(data.token);
@@ -47,8 +48,8 @@ export default function AdminLogin() {
       } else {
         setError(data.message || 'Login failed');
       }
-    } catch (error) {
-      console.error('Admin login error:', error);
+    } catch (error: any) {
+      logger.auth('Admin login', false, error?.message || 'Unknown error');
       setError('An error occurred during login');
     } finally {
       setLoading(false);

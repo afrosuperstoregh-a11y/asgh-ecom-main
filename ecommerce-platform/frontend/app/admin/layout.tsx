@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { storage, getApiUrl, validateToken } from '@/lib/auth-utils';
 import { AdminUser } from '@/types/admin';
+import { logger } from '@/lib/logger';
 
 export default function AdminLayout({
   children,
@@ -47,22 +48,22 @@ export default function AdminLayout({
 
   const checkAuth = async () => {
     try {
-      console.log('Checking admin authentication...');
+      logger.log('Checking admin authentication...');
       
       const token = storage.getToken();
       
-      console.log('Token available:', !!token);
+      logger.log('Token available:', !!token);
 
       // Validate token format and expiration
       if (!validateToken(token)) {
-        console.log('Token invalid or expired, redirecting to login');
+        logger.log('Token invalid or expired, redirecting to login');
         storage.removeToken();
         router.replace('/admin/login');
         return;
       }
 
       const apiUrl = getApiUrl();
-      console.log('Auth validation API URL:', apiUrl);
+      logger.log('Auth validation API URL:', apiUrl);
 
       const response = await fetch(`${apiUrl}/api/admin/auth/me`, {
         method: 'GET',
@@ -73,20 +74,20 @@ export default function AdminLayout({
         credentials: 'include'
       });
 
-      console.log('Auth validation response status:', response.status);
+      logger.log('Auth validation response status:', response.status);
 
       if (response.ok) {
         const userData = await response.json();
-        console.log('Auth validation successful:', userData);
+        logger.log('Auth validation successful');
         setUser(userData.user || userData);
         storage.setUser(userData.user || userData);
       } else {
-        console.log('Auth validation failed, redirecting to login');
+        logger.log('Auth validation failed, redirecting to login');
         storage.removeToken();
         router.replace('/admin/login');
       }
-    } catch (error) {
-      console.error('Auth check failed:', error);
+    } catch (error: any) {
+      logger.auth('Auth check failed', false, error?.message);
       storage.removeToken();
       router.replace('/admin/login');
     } finally {
@@ -107,8 +108,8 @@ export default function AdminLayout({
         },
         credentials: 'include'
       });
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch (error: any) {
+      logger.auth('Logout error', false, error?.message);
     } finally {
       storage.removeToken();
       router.replace('/admin/login');

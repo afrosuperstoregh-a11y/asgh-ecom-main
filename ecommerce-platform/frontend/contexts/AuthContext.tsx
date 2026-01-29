@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { logger } from '../lib/logger';
 import { API_BASE_URL } from '../lib/api';
 
 interface User {
@@ -58,8 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Token is invalid, remove it
         localStorage.removeItem('token');
       }
-    } catch (error) {
-      console.error('Token validation failed:', error);
+    } catch (error: any) {
+      logger.auth('Token validation failed', false, error?.message);
       localStorage.removeItem('token');
     } finally {
       setIsLoading(false);
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      console.log('Frontend login attempt:', { email, apiBaseUrl: API_BASE_URL });
+      logger.auth('Frontend login attempt', true);
       
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
@@ -76,35 +77,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ email, password })
       });
 
-      console.log('Frontend login response status:', response.status);
+      logger.log('Frontend login response status:', response.status);
       
       if (response.ok) {
         const responseData = await response.json();
-        console.log('Frontend login response data:', responseData);
+        logger.log('Frontend login response parsed successfully');
         
         // Handle both response formats - direct user data or nested data
         const userData = responseData.data?.user || responseData.user || responseData;
         const token = responseData.data?.token || responseData.token;
         
-        console.log('Frontend parsed user data:', userData);
-        console.log('Frontend parsed token:', token ? 'exists' : 'missing');
+        logger.log('Frontend parsed user data and token');
         
         if (userData && token) {
           setUser(userData);
           localStorage.setItem('token', token);
-          console.log('Frontend login successful');
+          logger.log('Frontend login successful');
           return true;
         } else {
-          console.log('Frontend login failed: missing user data or token');
+          logger.auth('Frontend login failed - missing data', false);
         }
       } else {
         // Handle login errors
         const errorData = await response.json().catch(() => ({}));
-        console.error('Frontend login error:', errorData.message || 'Invalid credentials');
+        logger.auth('Frontend login error', false, errorData.message || 'Invalid credentials');
       }
       return false;
-    } catch (error) {
-      console.error('Frontend login failed:', error);
+    } catch (error: any) {
+      logger.auth('Frontend login failed', false, error?.message || 'Unknown error');
       return false;
     }
   };
@@ -132,11 +132,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         // Handle registration errors
         const errorData = await response.json().catch(() => ({}));
-        console.error('Registration error:', errorData.message || 'Registration failed');
+        logger.auth('Registration error', false, errorData.message || 'Registration failed');
       }
       return false;
-    } catch (error) {
-      console.error('Registration failed:', error);
+    } catch (error: any) {
+      logger.auth('Registration failed', false, error?.message || 'Unknown error');
       return false;
     }
   };
@@ -145,8 +145,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Redirect to Google OAuth endpoint
       window.location.href = `${API_BASE_URL}/auth/google`;
-    } catch (error) {
-      console.error('Google sign-in failed:', error);
+    } catch (error: any) {
+      logger.auth('Google sign-in failed', false, error?.message);
     }
   };
 
@@ -154,8 +154,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Redirect to Facebook OAuth endpoint
       window.location.href = `${API_BASE_URL}/auth/facebook`;
-    } catch (error) {
-      console.error('Facebook sign-in failed:', error);
+    } catch (error: any) {
+      logger.auth('Facebook sign-in failed', false, error?.message);
     }
   };
 
@@ -172,8 +172,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         });
       }
-    } catch (error) {
-      console.error('Logout API call failed:', error);
+    } catch (error: any) {
+      logger.auth('Logout API call failed', false, error?.message);
     } finally {
       // Always clear local state regardless of API call success
       setUser(null);

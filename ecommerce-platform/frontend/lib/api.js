@@ -26,6 +26,17 @@ const getApiUrl = () => {
 
 export const API_BASE_URL = getApiUrl();
 
+// Environment-safe logging
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+const logger = {
+  error: (message, ...args) => {
+    if (isDevelopment) {
+      console.error(`[API] ${message}`, ...args);
+    }
+  }
+};
+
 // Helper function for API calls
 export async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
@@ -64,7 +75,7 @@ export async function apiRequest(endpoint, options = {}) {
 
     return await response.json();
   } catch (error) {
-    console.error('API Request Error:', error);
+    logger.error('API Request Error:', error);
     throw error;
   }
 }
