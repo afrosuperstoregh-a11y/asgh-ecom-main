@@ -13,28 +13,60 @@ const PORT = process.env.PORT || 3001;
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: false, // Disable CSP to prevent extension conflicts
-  crossOriginEmbedderPolicy: false
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: false,
+  hsts: false, // Disable HSTS to prevent extension issues
+  noSniff: false // Disable MIME type sniffing prevention
 }));
 
 app.use(cors({
   origin: [
     process.env.FRONTEND_URL || 'https://www.afrosuperstore.ca',
     'http://localhost:3000',
-    'http://localhost:3001'
+    'http://localhost:3001',
+    'chrome-extension://*', // Allow browser extensions
+    'moz-extension://*' // Allow Firefox extensions
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Extension-ID'],
+  preflightContinue: true
 }));
 
 // Rate limiting
 app.use(generalLimiter);
 
+// Browser extension compatibility middleware
+app.use((req, res, next) => {
+  // Handle browser extension requests that might cause issues
+  const userAgent = req.get('User-Agent') || '';
+  
+  // Check if request is from a browser extension
+  if (userAgent.includes('Chrome/') && (req.url.includes('extension') || req.get('X-Extension-ID'))) {
+    // Set headers to prevent extension interference
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+  }
+  
+  // Handle undefined/null requests that extensions might send
+  if (req.body === undefined || req.body === null) {
+    req.body = {};
+  }
+  
+  next();
+});
+
 // General middleware
 app.use(compression());
 app.use(morgan('combined'));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ 
+  limit: '10mb',
+  strict: false // Allow non-strict JSON parsing to handle extension requests
+}));
+app.use(express.urlencoded({ 
+  extended: true
+}));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -44,6 +76,23 @@ app.get('/api/health', (req, res) => {
     service: 'Afro Superstore Backend API',
     version: '1.0.0'
   });
+});
+
+// Handle browser extension requests that might cause errors
+app.all('/api/extension/*', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Extension request handled',
+    data: null
+  });
+});
+
+// Handle OPTIONS requests for CORS preflight
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-Extension-ID');
+  res.status(200).send();
 });
 
 // API Routes
