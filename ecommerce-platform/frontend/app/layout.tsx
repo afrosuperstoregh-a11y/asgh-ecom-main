@@ -107,16 +107,37 @@ export default function RootLayout({
           <script
             dangerouslySetInnerHTML={{
               __html: `
-                // Suppress deprecated analytics warning temporarily
+                // Comprehensive suppression of deprecated analytics messages
                 const originalWarn = console.warn;
-                console.warn = function(...args) {
-                  if (args[0] && args[0].includes && args[0].includes('feature_collector.js:23 using deprecated parameters')) {
-                    return; // Suppress this specific warning
+                const originalError = console.error;
+                const originalLog = console.log;
+                
+                function shouldSuppress(args) {
+                  const message = args[0];
+                  if (typeof message === 'string') {
+                    return message.includes('feature_collector.js') && 
+                           message.includes('deprecated parameters') &&
+                           message.includes('initialization function');
                   }
+                  return false;
+                }
+                
+                console.warn = function(...args) {
+                  if (shouldSuppress(args)) return;
                   return originalWarn.apply(console, args);
                 };
                 
-                console.log('🔍 Analytics: Deprecated warning suppressed');
+                console.error = function(...args) {
+                  if (shouldSuppress(args)) return;
+                  return originalError.apply(console, args);
+                };
+                
+                console.log = function(...args) {
+                  if (shouldSuppress(args)) return;
+                  return originalLog.apply(console, args);
+                };
+                
+                console.log('🔍 Analytics: All deprecated messages suppressed');
               `,
             }}
           />
