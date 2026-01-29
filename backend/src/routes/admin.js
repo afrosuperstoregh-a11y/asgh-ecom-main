@@ -59,7 +59,8 @@ router.post('/auth/login', adminAuthLimiter, async (req, res) => {
         role: user.role,
         emailVerified: user.email_verified
       },
-      token
+      token,
+      redirectTo: '/admin/dashboard'
     });
 
   } catch (error) {
@@ -95,23 +96,104 @@ router.get('/auth/me', authenticateToken, (req, res) => {
 router.use(authenticateToken);
 router.use(requireAdmin);
 
-// Example admin dashboard endpoint
-router.get('/dashboard', async (req, res) => {
+// Admin root endpoint - provides admin info and available routes
+router.get('/', async (req, res) => {
   try {
-    // Add dashboard logic here
     res.json({
       success: true,
-      message: 'Admin dashboard data',
+      message: 'Admin panel access confirmed',
       data: {
-        user: req.user,
-        // Add dashboard statistics here
+        user: {
+          id: req.user.id,
+          email: req.user.email,
+          name: `${req.user.first_name} ${req.user.last_name}`,
+          role: req.user.role
+        },
+        availableRoutes: [
+          '/admin/dashboard',
+          '/admin/products',
+          '/admin/categories',
+          '/admin/orders',
+          '/admin/users',
+          '/admin/payments',
+          '/admin/settings',
+          '/admin/analytics'
+        ],
+        permissions: {
+          canManageProducts: true,
+          canManageOrders: true,
+          canManageUsers: req.user.role === 'super_admin',
+          canManageSettings: req.user.role === 'super_admin',
+          canViewAnalytics: true
+        }
       }
+    });
+  } catch (error) {
+    console.error('Admin root error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to load admin panel'
+    });
+  }
+});
+
+// Admin dashboard endpoint
+router.get('/dashboard', async (req, res) => {
+  try {
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    });
+
+    // Get dashboard statistics
+    const [
+      totalOrdersResult,
+      totalUsersResult,
+      totalProductsResult,
+      recentOrdersResult,
+      totalRevenueResult
+    ] = await Promise.all([
+      pool.query('SELECT COUNT(*) as count FROM orders'),
+      pool.query('SELECT COUNT(*) as count FROM users'),
+      pool.query('SELECT COUNT(*) as count FROM products WHERE status = \'active\''),
+      pool.query(`
+        SELECT o.order_number, o.total_amount, o.status, o.created_at, u.email 
+        FROM orders o 
+        LEFT JOIN users u ON o.customer_id = u.id 
+        ORDER BY o.created_at DESC 
+        LIMIT 5
+      `),
+      pool.query('SELECT COALESCE(SUM(total_amount), 0) as revenue FROM orders WHERE payment_status = \'paid\'')
+    ]);
+
+    const dashboardData = {
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        name: `${req.user.first_name} ${req.user.last_name}`,
+        role: req.user.role
+      },
+      stats: {
+        totalOrders: parseInt(totalOrdersResult.rows[0].count),
+        totalUsers: parseInt(totalUsersResult.rows[0].count),
+        totalProducts: parseInt(totalProductsResult.rows[0].count),
+        totalRevenue: parseFloat(totalRevenueResult.rows[0].revenue)
+      },
+      recentOrders: recentOrdersResult.rows,
+      lastLogin: new Date().toISOString()
+    };
+
+    res.json({
+      success: true,
+      message: 'Admin dashboard loaded successfully',
+      data: dashboardData
     });
   } catch (error) {
     console.error('Dashboard error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Failed to load dashboard data'
     });
   }
 });
