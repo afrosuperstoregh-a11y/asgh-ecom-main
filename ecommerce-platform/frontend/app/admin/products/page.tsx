@@ -125,27 +125,36 @@ export default function ProductsPage() {
       setLoading(true);
       setError(null);
       
+      console.log('🛒 Fetching products...');
+      
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
         ...filters
       });
 
+      console.log('📡 Making request to:', `/api/admin/products?${queryParams}`);
+      
       const response = await fetch(`/api/admin/products?${queryParams}`, {
         credentials: 'include'
       });
 
+      console.log('📊 Response status:', response.status);
+      console.log('📊 Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Products fetched successfully:', data);
         setProducts(data.data?.products || data.products || []);
         setPagination(data.data?.pagination || data.pagination || pagination);
       } else {
         const errorData = await response.json().catch(() => ({}));
+        console.log('❌ Products fetch failed:', errorData);
         setError(errorData.message || 'Failed to fetch products');
         setProducts([]);
       }
     } catch (error) {
-      console.error('Products fetch error:', error);
+      console.error('❌ Products fetch error:', error);
       setError('Network error while fetching products');
       setProducts([]);
     } finally {

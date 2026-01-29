@@ -4,16 +4,18 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('Admin products API called');
+    console.log('🛒 Admin products API called');
+    console.log('🌐 Request URL:', request.url);
+    console.log('🍪 Request cookies:', request.cookies.getAll().map(c => ({ name: c.name, value: c.value.substring(0, 20) + '...' })));
     
     // Authenticate the request
     const auth = await authenticateAdmin();
     if (auth.error) {
-      console.log('Products auth failed:', auth.error);
+      console.log('❌ Products auth failed:', auth.error);
       return NextResponse.json(createAuthErrorResponse(auth.error, auth.status), { status: auth.status });
     }
 
-    console.log('Products auth successful, fetching from Supabase');
+    console.log('✅ Products auth successful, fetching from Supabase');
     
     // Fetch products from Supabase
     const { data: products, error } = await supabaseAdmin
