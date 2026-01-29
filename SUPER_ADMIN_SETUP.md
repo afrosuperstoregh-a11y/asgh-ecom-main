@@ -1,4 +1,12 @@
-# Super Admin Setup - AfroSuperStore
+## Current Super Admin Credentials
+
+### Primary Super Admin
+- **Email:** admin@afrosuperstore.ca
+- **Password:** Admin123!
+
+### Secondary Super Admin  
+- **Email:** info@afrosuperstore.ca
+- **Password:** Iamtech@100
 
 ## ⚠️ SECURITY NOTICE
 
