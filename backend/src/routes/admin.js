@@ -43,7 +43,7 @@ router.post('/auth/login', adminAuthLimiter, async (req, res) => {
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid credentials'
       });
     }
 
@@ -61,7 +61,7 @@ router.post('/auth/login', adminAuthLimiter, async (req, res) => {
     if (!isValidPassword) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid credentials'
       });
     }
 
@@ -79,7 +79,7 @@ router.post('/auth/login', adminAuthLimiter, async (req, res) => {
         emailVerified: user.email_verified
       },
       token,
-      redirectTo: '/admin/dashboard'
+      redirectTo: '/admin-dashboard.html'
     });
 
   } catch (error) {

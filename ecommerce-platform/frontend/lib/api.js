@@ -1,17 +1,18 @@
 // API configuration for different environments
 const getApiUrl = () => {
   if (typeof window !== 'undefined') {
-    // Client-side
-    if (process.env.NEXT_PUBLIC_API_URL) {
-      return process.env.NEXT_PUBLIC_API_URL;
+    // Production environment for afrosuperstore.ca
+    if (window.location.hostname.includes('afrosuperstore.ca')) {
+      return '/api'; // Use API proxy in production
     }
     
-    // Fallback URLs for different environments
+    // Development environment
     if (process.env.NODE_ENV === 'development') {
       return 'http://localhost:3001/api'; // Local backend
-    } else if (window.location.hostname.includes('afrosuperstore.ca')) {
-      return '/api'; // Use local API proxy to avoid CORS
-    } else if (window.location.hostname.includes('vercel.app')) {
+    }
+    
+    // Fallback URLs for other environments
+    if (window.location.hostname.includes('vercel.app')) {
       return '/api'; // Use local API proxy for Vercel
     } else {
       return '/api'; // Relative path for same deployment

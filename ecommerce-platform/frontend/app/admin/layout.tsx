@@ -20,16 +20,8 @@ import {
   FileText,
   TrendingUp
 } from 'lucide-react';
-
-interface AdminUser {
-  id: string;
-  email: string;
-  name: string;
-  role: {
-    name: string;
-    permissions: string[];
-  };
-}
+import { storage, getApiUrl, validateToken } from '@/lib/auth-utils';
+import { AdminUser } from '@/types/admin';
 
 export default function AdminLayout({
   children,
@@ -56,26 +48,20 @@ export default function AdminLayout({
     try {
       console.log('Checking admin authentication...');
       
-      // Get API URL and token
-      const getApiUrl = () => {
-        if (typeof window !== 'undefined') {
-          const hostname = window.location.hostname;
-          if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return 'http://localhost:3001';
-          }
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3001`;
-          // Remove /api suffix if it exists to prevent double /api
-          return baseUrl.replace(/\/api$/, '');
-        }
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-        return baseUrl.replace(/\/api$/, '');
-      };
+      const token = storage.getToken();
+      
+      console.log('Token available:', !!token);
+
+      // Validate token format and expiration
+      if (!validateToken(token)) {
+        console.log('Token invalid or expired, redirecting to login');
+        storage.removeToken();
+        router.replace('/admin/login');
+        return;
+      }
 
       const apiUrl = getApiUrl();
-      const token = localStorage.getItem('adminToken');
-      
       console.log('Auth validation API URL:', apiUrl);
-      console.log('Token available:', !!token);
 
       const response = await fetch(`${apiUrl}/api/admin/auth/me`, {
         method: 'GET',
@@ -83,7 +69,7 @@ export default function AdminLayout({
           'Content-Type': 'application/json',
           ...(token && { 'Authorization': `Bearer ${token}` })
         },
-        credentials: 'include' // Important for sending cookies
+        credentials: 'include'
       });
 
       console.log('Auth validation response status:', response.status);
@@ -92,18 +78,15 @@ export default function AdminLayout({
         const userData = await response.json();
         console.log('Auth validation successful:', userData);
         setUser(userData.user || userData);
+        storage.setUser(userData.user || userData);
       } else {
         console.log('Auth validation failed, redirecting to login');
-        // Clear invalid token
-        localStorage.removeItem('adminToken');
-        sessionStorage.removeItem('adminUser');
+        storage.removeToken();
         router.replace('/admin/login');
       }
     } catch (error) {
       console.error('Auth check failed:', error);
-      // Clear invalid token
-      localStorage.removeItem('adminToken');
-      sessionStorage.removeItem('adminUser');
+      storage.removeToken();
       router.replace('/admin/login');
     } finally {
       setLoading(false);
@@ -112,23 +95,8 @@ export default function AdminLayout({
 
   const handleLogout = async () => {
     try {
-      // Get API URL
-      const getApiUrl = () => {
-        if (typeof window !== 'undefined') {
-          const hostname = window.location.hostname;
-          if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return 'http://localhost:3001';
-          }
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3001`;
-          // Remove /api suffix if it exists to prevent double /api
-          return baseUrl.replace(/\/api$/, '');
-        }
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-        return baseUrl.replace(/\/api$/, '');
-      };
-
       const apiUrl = getApiUrl();
-      const token = localStorage.getItem('adminToken');
+      const token = storage.getToken();
 
       await fetch(`${apiUrl}/api/admin/auth/logout`, {
         method: 'POST',
@@ -141,9 +109,7 @@ export default function AdminLayout({
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear local storage
-      localStorage.removeItem('adminToken');
-      sessionStorage.removeItem('adminUser');
+      storage.removeToken();
       router.replace('/admin/login');
     }
   };
@@ -326,7 +292,7 @@ export default function AdminLayout({
                       <div className="px-4 py-2 text-sm text-gray-700 border-b">
                         <div className="font-medium">{user?.name}</div>
                         <div className="text-gray-500">{user?.email}</div>
-                        <div className="text-xs text-blue-600">{user?.role?.name}</div>
+                        <div className="text-xs text-blue-600">{user?.role}</div>
                       </div>
                       <button
                         onClick={handleLogout}

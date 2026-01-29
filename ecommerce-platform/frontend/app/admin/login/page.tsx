@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, Store, AlertTriangle } from 'lucide-react';
+import { storage } from '../../../lib/auth-utils';
+import { LoginResponse } from '../../../types/admin';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -26,21 +28,19 @@ export default function AdminLogin() {
       // Use the API configuration from lib/api.js
       const { apiRequest } = await import('../../../lib/api');
       
-      const data = await apiRequest('/admin/auth/login', {
+      const data: LoginResponse = await apiRequest('/admin/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
 
       console.log('Admin login response data:', data);
 
-      if (data.success) {
+      if (data.success && data.token && data.user) {
         console.log('Admin login successful, redirecting to:', redirectTo);
         
-        // Store JWT token in localStorage
-        if (data.token) {
-          localStorage.setItem('adminToken', data.token);
-          sessionStorage.setItem('adminUser', JSON.stringify(data.user));
-        }
+        // Store JWT token and user data using standardized storage
+        storage.setToken(data.token);
+        storage.setUser(data.user);
         
         // Redirect to intended page or dashboard
         router.replace(redirectTo);
