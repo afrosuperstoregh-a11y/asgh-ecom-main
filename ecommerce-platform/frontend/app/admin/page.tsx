@@ -40,7 +40,13 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Immediate debugging on component mount
+  console.log('🚀 AdminDashboard component mounted!');
+  console.log('🍪 Document cookies:', document.cookie);
+  console.log('🌐 Current URL:', window.location.href);
+
   useEffect(() => {
+    console.log('🔄 AdminDashboard useEffect triggered');
     fetchDashboardData();
   }, []);
 
