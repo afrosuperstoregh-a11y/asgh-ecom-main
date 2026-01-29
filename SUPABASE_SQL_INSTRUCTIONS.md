@@ -14,10 +14,14 @@
 -- Enable UUID extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Drop existing customer_profiles table if it exists with wrong structure
+DROP TABLE IF EXISTS customer_profiles CASCADE;
+
 -- Customer Profiles (extends existing users table)
 CREATE TABLE IF NOT EXISTS customer_profiles (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id INTEGER NOT NULL,
+    full_name TEXT,
     lifecycle_stage TEXT DEFAULT 'lead' CHECK (lifecycle_stage IN ('lead', 'active', 'inactive', 'vip', 'churned')),
     total_spend DECIMAL(12,2) DEFAULT 0,
     order_count INTEGER DEFAULT 0,
@@ -41,7 +45,7 @@ CREATE TABLE IF NOT EXISTS customer_profiles (
 CREATE TABLE IF NOT EXISTS customer_notes (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     customer_id UUID NOT NULL REFERENCES customer_profiles(id) ON DELETE CASCADE,
-    admin_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    admin_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     note TEXT NOT NULL,
     note_type TEXT DEFAULT 'general' CHECK (note_type IN ('general', 'support', 'sales', 'risk', 'complaint')),
     is_private BOOLEAN DEFAULT true,
@@ -65,7 +69,7 @@ CREATE TABLE IF NOT EXISTS customer_tag_map (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     customer_id UUID NOT NULL REFERENCES customer_profiles(id) ON DELETE CASCADE,
     tag_id UUID NOT NULL REFERENCES customer_tags(id) ON DELETE CASCADE,
-    assigned_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    assigned_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     assigned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(customer_id, tag_id)
 );
@@ -78,7 +82,7 @@ CREATE TABLE IF NOT EXISTS customer_segments (
     is_active BOOLEAN DEFAULT true,
     is_dynamic BOOLEAN DEFAULT false,
     customer_count INTEGER DEFAULT 0,
-    created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -95,7 +99,7 @@ CREATE TABLE IF NOT EXISTS email_templates (
     variables JSONB DEFAULT '[]',
     is_active BOOLEAN DEFAULT true,
     version INTEGER DEFAULT 1,
-    created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -131,7 +135,7 @@ CREATE TABLE IF NOT EXISTS crm_automations (
     actions JSONB NOT NULL,
     run_count INTEGER DEFAULT 0,
     last_run_at TIMESTAMP WITH TIME ZONE,
-    created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -165,7 +169,7 @@ CREATE TABLE IF NOT EXISTS email_campaigns (
     delivered_count INTEGER DEFAULT 0,
     opened_count INTEGER DEFAULT 0,
     clicked_count INTEGER DEFAULT 0,
-    created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -277,8 +281,8 @@ SELECT
     u.id,
     CASE 
         WHEN u.created_at > NOW() - INTERVAL '30 days' THEN 'lead'
-        WHEN EXISTS(SELECT 1 FROM orders o WHERE o.customer_id = u.id AND o.created_at > NOW() - INTERVAL '90 days') THEN 'active'
-        WHEN EXISTS(SELECT 1 FROM orders o WHERE o.customer_id = u.id AND o.created_at < NOW() - INTERVAL '180 days') THEN 'inactive'
+        WHEN EXISTS(SELECT 1 FROM orders o WHERE o.customer_id::text = u.id::text AND o.created_at > NOW() - INTERVAL '90 days') THEN 'active'
+        WHEN EXISTS(SELECT 1 FROM orders o WHERE o.customer_id::text = u.id::text AND o.created_at < NOW() - INTERVAL '180 days') THEN 'inactive'
         ELSE 'lead'
     END,
     COALESCE(SUM.total_spend, 0),
@@ -287,14 +291,14 @@ SELECT
 FROM users u
 LEFT JOIN (
     SELECT 
-        o.customer_id,
+        o.customer_id::text as customer_id_text,
         COALESCE(SUM(o.total_amount), 0) as total_spend,
         COUNT(*) as order_count,
         MAX(o.created_at) as last_order
     FROM orders o 
     WHERE o.payment_status = 'paid'
     GROUP BY o.customer_id
-) SUM ON u.id = SUM.customer_id
+) SUM ON u.id::text = SUM.customer_id_text
 WHERE u.role = 'customer'
 ON CONFLICT (user_id) DO UPDATE SET
     total_spend = EXCLUDED.total_spend,
@@ -304,6 +308,9 @@ ON CONFLICT (user_id) DO UPDATE SET
 
 ### Step 3: Run Security Policies (New Query)
 ```sql
+-- First, create any missing tables
+-- Run the fix_missing_tables.sql script if you haven't already
+
 -- Enable RLS on all CRM tables
 ALTER TABLE customer_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customer_notes ENABLE ROW LEVEL SECURITY;
@@ -321,7 +328,7 @@ CREATE POLICY "Admins can view all customer profiles" ON customer_profiles
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM users u 
-      WHERE u.id = auth.uid() 
+      WHERE u.id::text = auth.uid()::text 
       AND u.role IN ('admin', 'super_admin')
     )
   );
@@ -330,7 +337,7 @@ CREATE POLICY "Admins can manage customer profiles" ON customer_profiles
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM users u 
-      WHERE u.id = auth.uid() 
+      WHERE u.id::text = auth.uid()::text 
       AND u.role IN ('admin', 'super_admin')
     )
   );
@@ -340,7 +347,7 @@ CREATE POLICY "Admins can view all customer notes" ON customer_notes
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM users u 
-      WHERE u.id = auth.uid() 
+      WHERE u.id::text = auth.uid()::text 
       AND u.role IN ('admin', 'super_admin')
     )
   );
@@ -349,7 +356,7 @@ CREATE POLICY "Admins can manage customer notes" ON customer_notes
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM users u 
-      WHERE u.id = auth.uid() 
+      WHERE u.id::text = auth.uid()::text 
       AND u.role IN ('admin', 'super_admin')
     )
   );
