@@ -13,7 +13,7 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams?.get('redirect') || '/admin/dashboard';
+  const redirectTo = searchParams?.get('redirect') || '/admin';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,48 +23,17 @@ export default function AdminLogin() {
     try {
       console.log('Admin login form submitted:', { email, passwordLength: password?.length });
       
-      // Determine API URL based on environment
-      const getApiUrl = () => {
-        if (typeof window !== 'undefined') {
-          const hostname = window.location.hostname;
-          if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return 'http://localhost:3001';
-          }
-          // For production, use the same domain but port 3001 or configured API URL
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3001`;
-          // Remove /api suffix if it exists to prevent double /api
-          return baseUrl.replace(/\/api$/, '');
-        }
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-        return baseUrl.replace(/\/api$/, '');
-      };
-
-      const apiUrl = getApiUrl();
-      console.log('Using API URL:', apiUrl);
-      console.log('Full login URL:', `${apiUrl}/api/admin/auth/login`);
+      // Use the API configuration from lib/api.js
+      const { apiRequest } = await import('../../../lib/api');
       
-      // Fallback if API URL is still empty
-      const finalApiUrl = apiUrl || 'http://localhost:3001';
-      const loginUrl = `${finalApiUrl}/api/admin/auth/login`;
-      
-      console.log('Final API URL:', finalApiUrl);
-      console.log('Final login URL:', loginUrl);
-      
-      const response = await fetch(loginUrl, {
+      const data = await apiRequest('/admin/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Important for cookies
         body: JSON.stringify({ email, password }),
       });
 
-      console.log('Admin login response status:', response.status);
-
-      const data = await response.json();
       console.log('Admin login response data:', data);
 
-      if (response.ok && data.success) {
+      if (data.success) {
         console.log('Admin login successful, redirecting to:', redirectTo);
         
         // Store JWT token in localStorage

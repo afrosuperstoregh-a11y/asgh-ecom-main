@@ -52,78 +52,44 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // Determine API URL based on environment
-      const getApiUrl = () => {
-        if (typeof window !== 'undefined') {
-          const hostname = window.location.hostname;
-          if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return 'http://localhost:3001';
-          }
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3001`;
-          // Remove /api suffix if it exists to prevent double /api
-          return baseUrl.replace(/\/api$/, '');
-        }
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-        return baseUrl.replace(/\/api$/, '');
-      };
-
-      const apiUrl = getApiUrl();
-      const token = localStorage.getItem('adminToken');
+      // Use the API configuration from lib/api.js
+      const { apiRequest } = await import('../../lib/api');
       
-      console.log('Dashboard API URL:', apiUrl);
-      console.log('Dashboard full URL:', `${apiUrl}/api/admin/dashboard`);
-      console.log('Token available:', !!token);
-
-      const response = await fetch(`${apiUrl}/api/admin/dashboard`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
+      console.log('Fetching dashboard data...');
+      
+      const data = await apiRequest('/admin/dashboard');
+      console.log('Dashboard data:', data);
+      
+      // Map backend data structure to frontend expectations
+      const mappedData = {
+        overview: {
+          totalOrders: data.data?.stats?.totalOrders || 0,
+          totalRevenue: data.data?.stats?.totalRevenue || 0,
+          totalCustomers: data.data?.stats?.totalUsers || 0,
+          totalProducts: data.data?.stats?.totalProducts || 0,
+          pendingOrders: 0 // TODO: Add pending orders query
         },
-        credentials: 'include' // Important for sending cookies
-      });
-
-      console.log('Dashboard response status:', response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Dashboard data:', data);
-        
-        // Map backend data structure to frontend expectations
-        const mappedData = {
-          overview: {
-            totalOrders: data.data?.stats?.totalOrders || 0,
-            totalRevenue: data.data?.stats?.totalRevenue || 0,
-            totalCustomers: data.data?.stats?.totalUsers || 0,
-            totalProducts: data.data?.stats?.totalProducts || 0,
-            pendingOrders: 0 // TODO: Add pending orders query
-          },
-          growth: {
-            orders: 0, // TODO: Add growth calculations
-            revenue: 0 // TODO: Add growth calculations
-          },
-          currentMonth: {
-            orders: data.data?.stats?.totalOrders || 0,
-            revenue: data.data?.stats?.totalRevenue || 0
-          },
-          recentOrders: data.data?.recentOrders?.map((order: any) => ({
-            id: order.order_number,
-            orderNumber: order.order_number,
-            total: order.total_amount,
-            status: order.status,
-            user: { name: order.email, email: order.email },
-            createdAt: order.created_at
-          })) || [],
-          topProducts: [], // TODO: Add top products query
-          lowStockProducts: [] // TODO: Add low stock products query
-        };
-        
-        setStats(mappedData);
-      } else {
-        const errorData = await response.json();
-        console.error('Dashboard error:', errorData);
-        setError(errorData.message || 'Failed to fetch dashboard data');
-      }
+        growth: {
+          orders: 0, // TODO: Add growth calculations
+          revenue: 0 // TODO: Add growth calculations
+        },
+        currentMonth: {
+          orders: data.data?.stats?.totalOrders || 0,
+          revenue: data.data?.stats?.totalRevenue || 0
+        },
+        recentOrders: data.data?.recentOrders?.map((order: any) => ({
+          id: order.order_number,
+          orderNumber: order.order_number,
+          total: order.total_amount,
+          status: order.status,
+          user: { name: order.email, email: order.email },
+          createdAt: order.created_at
+        })) || [],
+        topProducts: [], // TODO: Add top products query
+        lowStockProducts: [] // TODO: Add low stock products query
+      };
+      
+      setStats(mappedData);
     } catch (error) {
       console.error('Dashboard data fetch error:', error);
       setError('Failed to fetch dashboard data');
