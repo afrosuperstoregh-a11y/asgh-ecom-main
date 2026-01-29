@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
     console.log('=== ADMIN LOGIN ATTEMPT ===');
     console.log('Email:', email);
     console.log('Password length:', password?.length);
+    console.log('Request headers:', Object.fromEntries(request.headers.entries()));
     
     // Trim whitespace from inputs
     const trimmedEmail = email?.trim();
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
     
     // Input validation
     if (!trimmedEmail || !trimmedPassword) {
+      console.log('❌ Missing email or password');
       return NextResponse.json({
         success: false,
         message: 'Email and password are required'
@@ -27,6 +29,7 @@ export async function POST(request: NextRequest) {
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(trimmedEmail)) {
+      console.log('❌ Invalid email format:', trimmedEmail);
       return NextResponse.json({
         success: false,
         message: 'Invalid email format'
@@ -35,6 +38,7 @@ export async function POST(request: NextRequest) {
 
     // Password strength validation
     if (trimmedPassword.length < 8) {
+      console.log('❌ Password too short:', trimmedPassword.length);
       return NextResponse.json({
         success: false,
         message: 'Password must be at least 8 characters long'
@@ -42,7 +46,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Authenticate with Supabase
-    console.log('Authenticating with Supabase...');
+    console.log('🔐 Authenticating with Supabase...');
+    console.log('📧 Email:', trimmedEmail);
+    console.log('🔑 Password length:', trimmedPassword.length);
     
     const { data, error } = await supabaseAdmin.auth.signInWithPassword({
       email: trimmedEmail,
@@ -51,6 +57,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.log('❌ Supabase authentication failed:', error.message);
+      console.log('❌ Error details:', error);
       return NextResponse.json({
         success: false,
         message: 'Invalid email or password'
@@ -59,14 +66,22 @@ export async function POST(request: NextRequest) {
 
     if (!data.user || !data.session) {
       console.log('❌ No user or session returned from Supabase');
+      console.log('❌ Data received:', data);
       return NextResponse.json({
         success: false,
         message: 'Authentication failed'
       }, { status: 401 });
     }
 
+    console.log('✅ Supabase authentication successful');
+    console.log('✅ User ID:', data.user.id);
+    console.log('✅ User Email:', data.user.email);
+    console.log('✅ User Metadata:', data.user.user_metadata);
+
     // Check if user has admin role
     const userRole = data.user.user_metadata?.role || data.user.user_metadata?.user_type;
+    console.log('🔍 Checking user role:', userRole);
+    
     if (!['admin', 'super_admin', 'ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
       console.log('❌ User does not have admin role:', userRole);
       return NextResponse.json({
@@ -75,10 +90,12 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    console.log('✅ Supabase authentication successful');
+    console.log('✅ User has admin role:', userRole);
     
     // Set Supabase session token
     const cookieStore = await cookies();
+    
+    console.log('🍪 Setting authentication cookies...');
     
     cookieStore.set('supabase-auth-token', data.session.access_token, {
       httpOnly: true,
@@ -96,7 +113,9 @@ export async function POST(request: NextRequest) {
       path: '/'
     });
 
-    return NextResponse.json({
+    console.log('✅ Authentication cookies set successfully');
+
+    const responseData = {
       success: true,
       message: 'Login successful',
       user: {
@@ -106,14 +125,17 @@ export async function POST(request: NextRequest) {
         role: userRole,
         emailVerified: data.user.email_confirmed_at != null
       }
-    });
+    };
+
+    console.log('✅ Returning successful response:', responseData);
+
+    return NextResponse.json(responseData);
 
   } catch (error) {
-    console.error('❌ Admin login API error:', error);
-    console.error('Error stack:', error instanceof Error ? error.stack : 'Unknown error');
+    console.error('❌ Login API error:', error);
     return NextResponse.json({
       success: false,
-      message: 'Internal server error'
+      message: 'An error occurred during login'
     }, { status: 500 });
   }
 }
