@@ -88,7 +88,37 @@ export default function AdminDashboard() {
       if (response.ok) {
         const data = await response.json();
         console.log('Dashboard data:', data);
-        setStats(data.data || data);
+        
+        // Map backend data structure to frontend expectations
+        const mappedData = {
+          overview: {
+            totalOrders: data.data?.stats?.totalOrders || 0,
+            totalRevenue: data.data?.stats?.totalRevenue || 0,
+            totalCustomers: data.data?.stats?.totalUsers || 0,
+            totalProducts: data.data?.stats?.totalProducts || 0,
+            pendingOrders: 0 // TODO: Add pending orders query
+          },
+          growth: {
+            orders: 0, // TODO: Add growth calculations
+            revenue: 0 // TODO: Add growth calculations
+          },
+          currentMonth: {
+            orders: data.data?.stats?.totalOrders || 0,
+            revenue: data.data?.stats?.totalRevenue || 0
+          },
+          recentOrders: data.data?.recentOrders?.map((order: any) => ({
+            id: order.order_number,
+            orderNumber: order.order_number,
+            total: order.total_amount,
+            status: order.status,
+            user: { name: order.email, email: order.email },
+            createdAt: order.created_at
+          })) || [],
+          topProducts: [], // TODO: Add top products query
+          lowStockProducts: [] // TODO: Add low stock products query
+        };
+        
+        setStats(mappedData);
       } else {
         const errorData = await response.json();
         console.error('Dashboard error:', errorData);
