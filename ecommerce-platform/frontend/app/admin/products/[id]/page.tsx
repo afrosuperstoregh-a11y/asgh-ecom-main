@@ -52,21 +52,36 @@ export default function ViewProductPage({ params }: { params: { id: string } }) 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check if ID is valid
+    if (!params.id || params.id === 'undefined') {
+      setError('Invalid product ID');
+      setLoading(false);
+      return;
+    }
+    
     fetchProduct();
   }, [params.id]);
 
   const fetchProduct = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      if (!params.id || params.id === 'undefined') {
+        setError('Invalid product ID');
+        return;
+      }
+      
       const response = await fetch(`/api/admin/products/${params.id}`, {
         credentials: 'include'
       });
 
       if (response.ok) {
         const data = await response.json();
-        setProduct(data);
+        setProduct(data.data || data);
       } else {
-        setError('Failed to fetch product');
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.message || 'Failed to fetch product');
       }
     } catch (error) {
       console.error('Fetch product error:', error);
