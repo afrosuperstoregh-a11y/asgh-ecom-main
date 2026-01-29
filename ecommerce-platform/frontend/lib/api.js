@@ -39,7 +39,7 @@ export async function apiRequest(endpoint, options = {}) {
 
   // Add authorization header if token is available
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('adminToken');
     if (token) {
       defaultOptions.headers.Authorization = `Bearer ${token}`;
     }
