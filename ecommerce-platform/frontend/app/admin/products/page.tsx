@@ -13,7 +13,8 @@ import {
   Eye,
   MoreVertical,
   ChevronDown,
-  Package
+  Package,
+  RefreshCw
 } from 'lucide-react';
 
 interface Product {
@@ -54,6 +55,7 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -81,13 +83,26 @@ export default function ProductsPage() {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
+        console.log('Page became visible, refreshing products...');
         fetchProducts();
         fetchCategories();
       }
     };
 
+    // Also refresh when window gets focus (better detection of navigation)
+    const handleFocus = () => {
+      console.log('Window got focus, refreshing products...');
+      fetchProducts();
+      fetchCategories();
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const fetchCategories = async () => {
@@ -141,6 +156,13 @@ export default function ProductsPage() {
   const handleRetry = () => {
     fetchProducts();
     fetchCategories();
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchProducts();
+    await fetchCategories();
+    setRefreshing(false);
   };
 
   const toggleDropdown = (productId: string) => {
@@ -310,6 +332,14 @@ export default function ProductsPage() {
             <p className="text-gray-600 mt-2">Manage your product catalog</p>
           </div>
           <div className="flex items-center space-x-3">
+            <button 
+              onClick={handleRefresh} 
+              disabled={refreshing}
+              className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
             <button onClick={handleImport} className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
               <Upload className="h-4 w-4 mr-2" />
               Import

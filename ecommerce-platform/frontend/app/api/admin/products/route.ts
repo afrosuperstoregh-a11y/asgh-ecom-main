@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
           },
           createdAt: '2024-01-15',
           _count: {
-            order_items: 23
+            orderItems: 23
           }
         },
         {
@@ -62,12 +62,25 @@ export async function GET(request: NextRequest) {
           },
           createdAt: '2024-01-14',
           _count: {
-            order_items: 45
+            orderItems: 45
           }
         }
       ];
+
+      const pagination = {
+        page: 1,
+        limit: 20,
+        total: mockProducts.length,
+        pages: Math.ceil(mockProducts.length / 20)
+      };
       
-      return NextResponse.json(createSuccessResponse(mockProducts));
+      return NextResponse.json({
+        success: true,
+        data: {
+          products: mockProducts,
+          pagination
+        }
+      });
     }
 
     // Transform the data to match the expected format
@@ -84,7 +97,21 @@ export async function GET(request: NextRequest) {
       }
     })) || [];
 
-    return NextResponse.json(createSuccessResponse(transformedProducts));
+    // Add pagination info
+    const pagination = {
+      page: 1,
+      limit: 20,
+      total: transformedProducts.length,
+      pages: Math.ceil(transformedProducts.length / 20)
+    };
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        products: transformedProducts,
+        pagination
+      }
+    });
 
   } catch (error) {
     console.error('Products API error:', error);
