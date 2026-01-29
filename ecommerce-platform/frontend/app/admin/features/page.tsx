@@ -23,7 +23,7 @@ interface Feature {
   id: string;
   category: string;
   name: string;
-  type: string;
+  type: FeatureType;
   required: boolean;
   default_value: any;
   validation_rules: Record<string, any>;
@@ -42,6 +42,8 @@ interface FeatureStats {
   active: number;
   required: number;
 }
+
+type FeatureType = 'string' | 'number' | 'boolean' | 'datetime' | 'url' | 'text' | 'select';
 
 export default function FeaturesManager() {
   const [features, setFeatures] = useState<Feature[]>([]);
@@ -149,8 +151,8 @@ export default function FeaturesManager() {
     }
   };
 
-  const getTypeColor = (type: string) => {
-    const colors = {
+  const getTypeColor = (type: FeatureType) => {
+    const colors: Record<FeatureType, string> = {
       string: 'bg-gray-100 text-gray-800',
       number: 'bg-blue-100 text-blue-800',
       boolean: 'bg-green-100 text-green-800',
