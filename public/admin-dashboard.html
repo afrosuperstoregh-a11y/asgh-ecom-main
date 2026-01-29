@@ -453,7 +453,7 @@
 
         // Check authentication on load
         if (!authToken) {
-            window.location.href = '/admin-test.html';
+            window.location.href = '/admin-login.html';
         }
 
         // API helper functions
@@ -476,7 +476,7 @@
 
             if (response.status === 401) {
                 localStorage.removeItem('adminToken');
-                window.location.href = '/admin-test.html';
+                window.location.href = '/admin-login.html';
                 return;
             }
 
@@ -714,7 +714,7 @@
         // Utility functions
         function logout() {
             localStorage.removeItem('adminToken');
-            window.location.href = '/admin-test.html';
+            window.location.href = '/admin-login.html';
         }
 
         function showError(message) {
