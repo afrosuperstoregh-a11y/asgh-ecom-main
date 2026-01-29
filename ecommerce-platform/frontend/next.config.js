@@ -1,10 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Turbopack configuration
-  turbopack: {
-    // Set root directory to avoid workspace warnings
-    root: __dirname
-  },
+  turbopack: {},
   
   // Enable React Strict Mode for better development practices
   reactStrictMode: true,
