@@ -65,7 +65,10 @@ export default function AdminLayout({
       const apiUrl = getApiUrl();
       logger.log('Auth validation API URL:', apiUrl);
 
-      const response = await fetch(`${apiUrl}/api/admin/auth/me`, {
+      // Construct the correct API endpoint
+      const authEndpoint = apiUrl.endsWith('/api') ? `${apiUrl}/admin/auth/me` : `${apiUrl}/api/admin/auth/me`;
+      
+      const response = await fetch(authEndpoint, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +103,10 @@ export default function AdminLayout({
       const apiUrl = getApiUrl();
       const token = storage.getToken();
 
-      await fetch(`${apiUrl}/api/admin/auth/logout`, {
+      // Construct the correct API endpoint
+      const logoutEndpoint = apiUrl.endsWith('/api') ? `${apiUrl}/admin/auth/logout` : `${apiUrl}/api/admin/auth/logout`;
+
+      await fetch(logoutEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

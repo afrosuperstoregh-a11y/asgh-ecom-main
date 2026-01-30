@@ -62,6 +62,20 @@ export const storage = {
 
 export const isTokenExpired = (token: string): boolean => {
   try {
+    // Handle production mock tokens
+    if (token.startsWith('prod-jwt-token-')) {
+      // Extract timestamp from production token
+      const timestamp = token.split('-')[3];
+      if (timestamp) {
+        const tokenTime = parseInt(timestamp);
+        const currentTime = Date.now();
+        // Check if token is older than 24 hours
+        return (currentTime - tokenTime) > 24 * 60 * 60 * 1000;
+      }
+      return false; // If we can't parse timestamp, assume it's valid
+    }
+    
+    // Handle development JWT tokens
     const payload = JSON.parse(atob(token.split('.')[1]));
     const currentTime = Date.now() / 1000;
     return payload.exp < currentTime;
@@ -72,5 +86,8 @@ export const isTokenExpired = (token: string): boolean => {
 
 export const validateToken = (token: string | null): boolean => {
   if (!token) return false;
-  return !isTokenExpired(token);
+  
+  // Production tokens should start with 'prod-jwt-token-'
+  // Development tokens should be valid JWTs
+  return token.startsWith('prod-jwt-token-') || !isTokenExpired(token);
 };
