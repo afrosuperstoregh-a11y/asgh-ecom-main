@@ -129,7 +129,7 @@ router.post('/logout', (req, res) => {
   });
 });
 
-router.post('/forgot-password', passwordResetLimiter, (req, res) => {
+router.post('/forgot-password', passwordResetLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     
@@ -140,14 +140,140 @@ router.post('/forgot-password', passwordResetLimiter, (req, res) => {
       });
     }
 
-    // Mock password reset response
+    // Find user by email
+    const user = await findUserByEmail(email);
+    
+    // Always return success to prevent email enumeration attacks
+    if (!user) {
+      return res.json({
+        success: true,
+        message: 'If an account with that email exists, password reset instructions have been sent'
+      });
+    }
+
+    // Generate secure reset token
+    const crypto = require('crypto');
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+    // Store reset token in database (you'll need to add these columns to users table)
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    });
+
+    await pool.query(
+      'UPDATE users SET reset_token = $1, reset_token_expiry = $2 WHERE email = $3',
+      [resetToken, resetTokenExpiry, email]
+    );
+
+    // Send reset email (using your email service)
+    try {
+      const nodemailer = require('nodemailer');
+      const transporter = nodemailer.createTransporter({
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT || 587,
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS
+        }
+      });
+
+      const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+      
+      await transporter.sendMail({
+        from: process.env.FROM_EMAIL || 'noreply@afrosuperstore.ca',
+        to: email,
+        subject: 'Password Reset - Afro Superstore',
+        html: `
+          <h2>Password Reset Request</h2>
+          <p>Hello ${user.first_name},</p>
+          <p>You requested a password reset for your Afro Superstore account.</p>
+          <p>Click the link below to reset your password:</p>
+          <a href="${resetUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a>
+          <p>Or copy and paste this link: ${resetUrl}</p>
+          <p>This link will expire in 1 hour.</p>
+          <p>If you didn't request this password reset, you can safely ignore this email.</p>
+          <p>Best regards,<br>Afro Superstore Team</p>
+        `
+      });
+
+      console.log('Password reset email sent to:', email);
+    } catch (emailError) {
+      console.error('Failed to send password reset email:', emailError);
+      // Still return success to prevent enumeration
+    }
+
     return res.json({
       success: true,
-      message: 'Password reset instructions sent to your email',
-      email: email
+      message: 'If an account with that email exists, password reset instructions have been sent'
     });
   } catch (error) {
     console.error('Forgot password error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    
+    if (!token || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reset token and new password are required'
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters long'
+      });
+    }
+
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    });
+
+    // Find user with valid reset token
+    const result = await pool.query(
+      'SELECT id, email FROM users WHERE reset_token = $1 AND reset_token_expiry > NOW()',
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token'
+      });
+    }
+
+    const user = result.rows[0];
+
+    // Hash new password
+    const bcrypt = require('bcryptjs');
+    const password_hash = await bcrypt.hash(newPassword, 10);
+
+    // Update password and clear reset token
+    await pool.query(
+      'UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expiry = NULL WHERE id = $2',
+      [password_hash, user.id]
+    );
+
+    return res.json({
+      success: true,
+      message: 'Password reset successfully'
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error'

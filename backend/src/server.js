@@ -10,13 +10,33 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Security middleware
+// Security middleware with proper configuration
 app.use(helmet({
-  contentSecurityPolicy: false, // Disable CSP to prevent extension conflicts
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      fontSrc: ["'self'", "data:"],
+      connectSrc: ["'self'", "https:"],
+      mediaSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      childSrc: ["'self'"],
+      frameSrc: ["'self'"],
+      workerSrc: ["'self'"],
+      manifestSrc: ["'self'"],
+      upgradeInsecureRequests: []
+    }
+  },
   crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: false,
-  hsts: false, // Disable HSTS to prevent extension issues
-  noSniff: false // Disable MIME type sniffing prevention
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true
 }));
 
 app.use(cors({
@@ -37,28 +57,46 @@ app.use(cors({
 // Rate limiting
 app.use(generalLimiter);
 
-// Browser extension compatibility middleware - only for actual extension requests
+// Browser extension validation middleware - secure approach
 app.use((req, res, next) => {
   const userAgent = req.get('User-Agent') || '';
   const origin = req.get('Origin') || '';
+  const extensionId = req.get('X-Extension-ID');
   
-  // Only apply extension compatibility for actual extension requests
-  // Must have explicit extension indicators AND not be from our known origins
-  const hasExtensionIndicators = req.get('X-Extension-ID') || 
-                                req.url.includes('extension') || 
-                                req.url.includes('chrome-extension://') ||
-                                req.url.includes('moz-extension://');
+  // List of allowed extension IDs (replace with actual approved extensions)
+  const allowedExtensionIds = process.env.ALLOWED_EXTENSION_IDS ? 
+    process.env.ALLOWED_EXTENSION_IDS.split(',') : [];
+  
+  // Check if this is an extension request
+  const isExtensionRequest = extensionId || 
+    req.url.includes('extension') || 
+    req.url.includes('chrome-extension://') ||
+    req.url.includes('moz-extension://');
   
   const isKnownOrigin = origin.includes('afrosuperstore.ca') || 
                         origin.includes('localhost') || 
                         !origin; // Allow same-origin requests
   
-  // Only apply extension compatibility for actual extension requests from unknown origins
-  if (userAgent.includes('Chrome/') && hasExtensionIndicators && !isKnownOrigin) {
-    console.log('🔧 Applying extension compatibility for unknown origin');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', '*');
+  // Validate extension requests
+  if (isExtensionRequest && !isKnownOrigin) {
+    if (extensionId && allowedExtensionIds.length > 0) {
+      // Check if extension ID is in allowed list
+      if (!allowedExtensionIds.includes(extensionId)) {
+        console.log('🚫 Unauthorized extension access attempt:', extensionId);
+        return res.status(403).json({
+          error: 'Unauthorized extension',
+          message: 'Extension not approved for access'
+        });
+      }
+      console.log('✅ Authorized extension access:', extensionId);
+    } else {
+      // Block unknown extensions
+      console.log('🚫 Unknown extension access blocked');
+      return res.status(403).json({
+        error: 'Unknown extension',
+        message: 'Extension validation required'
+      });
+    }
   }
   
   // Handle undefined/null requests that extensions might send

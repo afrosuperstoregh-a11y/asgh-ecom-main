@@ -3,24 +3,24 @@ const getApiUrl = () => {
   if (typeof window !== 'undefined') {
     // Production environment for afrosuperstore.ca
     if (window.location.hostname.includes('afrosuperstore.ca')) {
-      return '/api'; // Use API proxy in production
+      return 'https://api.afrosuperstore.ca'; // Production API endpoint
     }
     
     // Development environment
     if (process.env.NODE_ENV === 'development') {
-      return 'http://localhost:3002/api'; // Admin backend on port 3002
+      return 'http://localhost:3001/api'; // Backend on port 3001
     }
     
     // Fallback URLs for other environments
     if (window.location.hostname.includes('vercel.app')) {
-      return '/api'; // Use local API proxy for Vercel
+      return 'https://asca-backend.onrender.com/api'; // Production backend
     } else {
       return '/api'; // Relative path for same deployment
     }
   } else {
     // Server-side
     return process.env.NEXT_PUBLIC_API_URL || 
-           (process.env.NODE_ENV === 'development' ? 'http://localhost:3002/api' : '/api');
+           (process.env.NODE_ENV === 'development' ? 'http://localhost:3001/api' : 'https://api.afrosuperstore.ca');
   }
 };
 

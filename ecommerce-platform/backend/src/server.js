@@ -3,57 +3,141 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
+const { testConnection } = require('./config/database');
+const { testConnection: testSupabaseConnection } = require('./config/supabase');
+const { generalLimiter } = require('./middleware/rateLimiter');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Security middleware
-app.use(helmet());
-
-// Enhanced CORS configuration
-const allowedOrigins = [
-  'https://www.afrosuperstore.ca',
-  'https://afrosuperstore.ca',
-  'https://asca-ecom.vercel.app',
-  'http://localhost:3000',
-  'http://localhost:3001'
-];
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+// Security middleware with proper configuration
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      fontSrc: ["'self'", "data:"],
+      connectSrc: ["'self'", "https:"],
+      mediaSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      childSrc: ["'self'"],
+      frameSrc: ["'self'"],
+      workerSrc: ["'self'"],
+      manifestSrc: ["'self'"],
+      upgradeInsecureRequests: []
     }
   },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true
+}));
+
+app.use(cors({
+  origin: [
+    process.env.FRONTEND_URL || 'https://www.afrosuperstore.ca',
+    'https://afrosuperstore.ca',
+    'https://asca-ecom.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'chrome-extension://*', // Allow browser extensions
+    'moz-extension://*' // Allow Firefox extensions
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Extension-ID'],
-  exposedHeaders: ['Set-Cookie'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-};
-
-app.use(cors(corsOptions));
+  preflightContinue: true
+}));
 
 // Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+app.use(generalLimiter);
+
+// Browser extension validation middleware - secure approach
+app.use((req, res, next) => {
+  const userAgent = req.get('User-Agent') || '';
+  const origin = req.get('Origin') || '';
+  const extensionId = req.get('X-Extension-ID');
+  
+  // List of allowed extension IDs (replace with actual approved extensions)
+  const allowedExtensionIds = process.env.ALLOWED_EXTENSION_IDS ? 
+    process.env.ALLOWED_EXTENSION_IDS.split(',') : [];
+  
+  // Check if this is an extension request
+  const isExtensionRequest = extensionId || 
+    req.url.includes('extension') || 
+    req.url.includes('chrome-extension://') ||
+    req.url.includes('moz-extension://');
+  
+  const isKnownOrigin = origin.includes('afrosuperstore.ca') || 
+                        origin.includes('localhost') || 
+                        !origin; // Allow same-origin requests
+  
+  // Validate extension requests
+  if (isExtensionRequest && !isKnownOrigin) {
+    if (extensionId && allowedExtensionIds.length > 0) {
+      // Check if extension ID is in allowed list
+      if (!allowedExtensionIds.includes(extensionId)) {
+        console.log('🚫 Unauthorized extension access attempt:', extensionId);
+        return res.status(403).json({
+          error: 'Unauthorized extension',
+          message: 'Extension not approved for access'
+        });
+      }
+      console.log('✅ Authorized extension access:', extensionId);
+    } else {
+      // Block unknown extensions
+      console.log('🚫 Unknown extension access blocked');
+      return res.status(403).json({
+        error: 'Unknown extension',
+        message: 'Extension validation required'
+      });
+    }
+  }
+  
+  // Handle undefined/null requests that extensions might send
+  if (req.body === undefined || req.body === null) {
+    req.body = {};
+  }
+  
+  next();
 });
-app.use(limiter);
+
+// Prevent browser extension interference with HTML responses
+app.use((req, res, next) => {
+  const originalSend = res.send;
+  
+  res.send = function(data) {
+    // Add anti-interference headers to prevent extensions from modifying HTML
+    if (typeof data === 'string' && data.includes('<!DOCTYPE html>')) {
+      res.setHeader('Content-Security-Policy', "script-src 'self' 'unsafe-inline' 'unsafe-eval' *; style-src 'self' 'unsafe-inline' *; img-src 'self' data: *; font-src 'self' *; connect-src 'self' *;");
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    }
+    
+    return originalSend.call(this, data);
+  };
+  
+  next();
+});
 
 // General middleware
 app.use(compression());
 app.use(morgan('combined'));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ 
+  limit: '10mb',
+  strict: false // Allow non-strict JSON parsing to handle extension requests
+}));
+app.use(express.urlencoded({ 
+  extended: true
+}));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -65,13 +149,52 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Handle browser extension requests that might cause errors
+app.all('/api/extension/*', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Extension request handled',
+    data: null
+  });
+});
+
+// Handle OPTIONS requests for CORS preflight
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-Extension-ID');
+  res.status(200).send();
+});
+
+// Handle extension interference with main routes
+app.use((req, res, next) => {
+  // Check if this is an extension request trying to interfere
+  const userAgent = req.get('User-Agent') || '';
+  const isExtension = userAgent.includes('Chrome/') && (
+    req.url.includes('extension') || 
+    req.get('X-Extension-ID') ||
+    req.headers['x-extension-id']
+  );
+  
+  if (isExtension && req.method === 'GET' && !req.url.startsWith('/api/')) {
+    // Return empty response for extension requests to prevent HTML interference
+    return res.status(200).send('');
+  }
+  
+  next();
+});
+
+// Serve static files from public directory
+app.use(express.static('public'));
+
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/admin', require('./routes/admin'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/users', require('./routes/users'));
-app.use('/api/admin', require('./routes/admin'));
+app.use('/api/categories', require('./routes/categories'));
 app.use('/api/admin/products', require('./routes/products'));
 app.use('/api/admin/categories', require('./routes/categories'));
 app.use('/api/admin/features', require('./routes/features'));
@@ -87,17 +210,80 @@ app.use('*', (req, res) => {
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-  res.status(err.status || 500).json({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  console.error('Stack:', err.stack);
+  
+  // Handle specific error types
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      success: false,
+      error: 'Validation Error',
+      message: err.message
+    });
+  }
+  
+  if (err.name === 'CastError') {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid ID',
+      message: 'The provided ID is not valid'
+    });
+  }
+  
+  if (err.code === '23505') { // PostgreSQL unique violation
+    return res.status(409).json({
+      success: false,
+      error: 'Duplicate Entry',
+      message: 'This record already exists'
+    });
+  }
+  
+  if (err.code === '23503') { // PostgreSQL foreign key violation
+    return res.status(400).json({
+      success: false,
+      error: 'Reference Error',
+      message: 'Referenced record does not exist'
+    });
+  }
+  
+  // Handle undefined/null errors that cause browser extension issues
+  if (err.message && err.message.includes('Cannot destructure')) {
+    return res.status(400).json({
+      success: false,
+      error: 'Request Error',
+      message: 'Invalid request format'
+    });
+  }
+  
+  // Default error response
+  const statusCode = err.status || err.statusCode || 500;
+  res.status(statusCode).json({
+    success: false,
+    error: statusCode < 500 ? 'Request Error' : 'Internal Server Error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Afro Superstore Backend API running on port ${PORT}`);
   console.log(`📊 Health check available at /api/health`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  // Test database connections
+  const dbConnected = await testConnection();
+  if (dbConnected) {
+    console.log('🔐 PostgreSQL connection established');
+  } else {
+    console.log('❌ PostgreSQL connection failed');
+  }
+  
+  const supabaseConnected = await testSupabaseConnection();
+  if (supabaseConnected) {
+    console.log('🔐 Supabase connection established');
+  } else {
+    console.log('⚠️ Supabase not configured or connection failed');
+  }
 });
 
 module.exports = app;
