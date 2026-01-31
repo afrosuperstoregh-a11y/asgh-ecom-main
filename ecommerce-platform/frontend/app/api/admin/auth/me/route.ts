@@ -48,6 +48,8 @@ export async function GET(request: NextRequest) {
     // In a real implementation, you would validate the JWT against your secret
     if (token.startsWith('prod-jwt-token-')) {
       console.log('🔍 [DEBUG] Valid production token format');
+      
+      // Extract user info from token or return default admin user
       const userData = {
         success: true,
         message: 'Token valid',
@@ -56,8 +58,10 @@ export async function GET(request: NextRequest) {
           email: 'info@afrosuperstore.ca',
           name: 'Super Admin',
           role: 'super_admin',
-          permissions: ['read', 'write', 'delete', 'admin'],
-          emailVerified: true
+          permissions: ['read', 'write', 'delete', 'admin', 'super_admin'],
+          emailVerified: true,
+          lastLogin: new Date().toISOString(),
+          sessionActive: true
         }
       };
 

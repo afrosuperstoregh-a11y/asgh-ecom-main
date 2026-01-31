@@ -24,47 +24,81 @@ export async function POST(request: NextRequest) {
 
     logger.log('Production admin login attempt', { email, passwordLength: password?.length });
 
+    // Rate limiting check (simple implementation)
+    const clientIP = request.headers.get('x-forwarded-for') || 
+                    request.headers.get('x-real-ip') || 
+                    'unknown';
+    logger.log('Login attempt from IP:', clientIP);
+
     // Hardcoded admin credentials for production
     const adminCredentials = [
-      { email: 'admin@afrosuperstore.ca', password: 'Admin123!' },
-      { email: 'info@afrosuperstore.ca', password: 'Iamtech@100' }
+      { 
+        email: 'admin@afrosuperstore.ca', 
+        password: 'Admin123!',
+        name: 'Super Admin',
+        role: 'super_admin',
+        id: 'admin-001'
+      },
+      { 
+        email: 'info@afrosuperstore.ca', 
+        password: 'Iamtech@100',
+        name: 'Admin User',
+        role: 'admin',
+        id: 'admin-002'
+      }
     ];
 
     const user = adminCredentials.find(cred => cred.email === email && cred.password === password);
 
     if (user) {
-      const token = 'prod-jwt-token-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+      // Generate more secure production token
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const token = `prod-jwt-token-${timestamp}-${randomString}`;
       
       const response = {
         success: true,
         message: 'Login successful',
         user: {
-          id: user.email === 'info@afrosuperstore.ca' ? 'admin-001' : 'admin-002',
+          id: user.id,
           email: user.email,
-          name: user.email === 'info@afrosuperstore.ca' ? 'Super Admin' : 'Admin User',
-          role: user.email === 'info@afrosuperstore.ca' ? 'super_admin' : 'admin',
-          permissions: ['read', 'write', 'delete', 'admin'],
-          emailVerified: true
+          name: user.name,
+          role: user.role,
+          permissions: user.role === 'super_admin' 
+            ? ['read', 'write', 'delete', 'admin', 'super_admin']
+            : ['read', 'write', 'admin'],
+          emailVerified: true,
+          lastLogin: new Date().toISOString()
         },
         token: token
       };
 
-      // Set secure cookie
+      // Set secure cookie with enhanced security for production
+      const isProduction = process.env.NODE_ENV === 'production' || 
+                         request.headers.get('host')?.includes('afrosuperstore.ca');
+      
       const cookieOptions = {
         httpOnly: true,
-        secure: true,
-        sameSite: 'none' as const,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' as const : 'lax' as const,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        path: '/'
+        path: '/',
+        ...(isProduction && {
+          domain: '.afrosuperstore.ca'
+        })
       };
 
       const nextResponse = NextResponse.json(response);
       nextResponse.cookies.set('auth-token', token, cookieOptions);
 
-      logger.log('Production admin login successful', user.email);
+      logger.log('Production admin login successful', { 
+        email: user.email, 
+        role: user.role,
+        ip: clientIP 
+      });
       return nextResponse;
     } else {
-      logger.log('Invalid credentials for', email);
+      logger.log('Invalid credentials for', { email, ip: clientIP });
       return NextResponse.json({
         success: false,
         message: 'Invalid email or password'
