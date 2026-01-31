@@ -8,10 +8,10 @@ const { createClient } = require('@supabase/supabase-js');
 
 class FeatureCollector {
   constructor() {
-    this.supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_KEY
-    );
+    this.supabase = createClient({
+      url: process.env.SUPABASE_URL,
+      serviceKey: process.env.SUPABASE_SERVICE_KEY
+    });
     this.features = new Map();
     this.cacheTimeout = 5 * 60 * 1000; // 5 minutes cache
     this.lastCacheUpdate = 0;
