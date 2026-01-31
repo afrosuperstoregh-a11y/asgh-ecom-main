@@ -24,33 +24,47 @@ export default function AdminLogin() {
     setError('');
 
     try {
+      console.log('🔍 [DEBUG] Admin login form submitted', { email, passwordLength: password.length });
       logger.auth('Admin login form submitted', true);
       
-      // Use the API configuration from lib/api.js
-      const { apiRequest } = await import('../../../lib/api');
-      
-      const data: LoginResponse = await apiRequest('/admin/auth/login', {
+      // Use the local API route instead of external API
+      console.log('🔍 [DEBUG] Making request to /api/admin/auth/login');
+      const response = await fetch('/api/admin/auth/login', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ email, password }),
       });
+
+      console.log('🔍 [DEBUG] Login response status:', response.status);
+      const data = await response.json();
+      console.log('🔍 [DEBUG] Login response data:', data);
 
       logger.log('Admin login response received');
 
       if (data.success && data.token && data.user) {
+        console.log('🔍 [DEBUG] Login successful, storing token and user');
         logger.log('Admin login successful, redirecting to:', redirectTo);
         
         // Store JWT token and user data using standardized storage
         storage.setToken(data.token);
         storage.setUser(data.user);
         
+        console.log('🔍 [DEBUG] Token stored, redirecting to:', redirectTo);
+        console.log('🔍 [DEBUG] Stored token:', storage.getToken());
+        console.log('🔍 [DEBUG] Stored user:', storage.getUser());
+        
         // Redirect to intended page or dashboard
         router.replace(redirectTo);
       } else {
+        console.log('🔍 [DEBUG] Login failed:', data.message);
         setError(data.message || 'Login failed');
       }
     } catch (error: any) {
+      console.error('🔍 [DEBUG] Login error:', error);
       logger.auth('Admin login', false, error?.message || 'Unknown error');
-      setError('An error occurred during login');
+      setError('An error occurred during login: ' + (error?.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }

@@ -48,25 +48,32 @@ export default function AdminLayout({
 
   const checkAuth = async () => {
     try {
+      console.log('🔍 [DEBUG] Checking admin authentication...');
       logger.log('Checking admin authentication...');
       
       const token = storage.getToken();
       
+      console.log('🔍 [DEBUG] Token available:', !!token);
+      console.log('🔍 [DEBUG] Token value:', token);
       logger.log('Token available:', !!token);
 
       // Validate token format and expiration
       if (!validateToken(token)) {
+        console.log('🔍 [DEBUG] Token invalid or expired, redirecting to login');
         logger.log('Token invalid or expired, redirecting to login');
         storage.removeToken();
         router.replace('/admin/login');
         return;
       }
 
+      console.log('🔍 [DEBUG] Token validation passed');
       const apiUrl = getApiUrl();
+      console.log('🔍 [DEBUG] Auth validation API URL:', apiUrl);
       logger.log('Auth validation API URL:', apiUrl);
 
-      // Construct the correct API endpoint
-      const authEndpoint = apiUrl.endsWith('/api') ? `${apiUrl}/admin/auth/me` : `${apiUrl}/api/admin/auth/me`;
+      // Use local API endpoint instead of external API
+      const authEndpoint = '/api/admin/auth/me';
+      console.log('🔍 [DEBUG] Making request to:', authEndpoint);
       
       const response = await fetch(authEndpoint, {
         method: 'GET',
@@ -77,19 +84,25 @@ export default function AdminLayout({
         credentials: 'include'
       });
 
+      console.log('🔍 [DEBUG] Auth validation response status:', response.status);
       logger.log('Auth validation response status:', response.status);
 
       if (response.ok) {
         const userData = await response.json();
+        console.log('🔍 [DEBUG] Auth validation successful, user data:', userData);
         logger.log('Auth validation successful');
         setUser(userData.user || userData);
         storage.setUser(userData.user || userData);
       } else {
+        console.log('🔍 [DEBUG] Auth validation failed, status:', response.status);
+        const errorData = await response.json().catch(() => ({}));
+        console.log('🔍 [DEBUG] Error response:', errorData);
         logger.log('Auth validation failed, redirecting to login');
         storage.removeToken();
         router.replace('/admin/login');
       }
     } catch (error: any) {
+      console.error('🔍 [DEBUG] Auth check failed:', error);
       logger.auth('Auth check failed', false, error?.message);
       storage.removeToken();
       router.replace('/admin/login');

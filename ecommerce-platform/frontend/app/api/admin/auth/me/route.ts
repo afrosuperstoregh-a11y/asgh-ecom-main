@@ -19,6 +19,7 @@ const logger = {
 // Production admin auth validation proxy
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔍 [DEBUG] Production admin auth validation check');
     logger.log('Production admin auth validation check');
     
     // Get token from Authorization header or cookie
@@ -27,9 +28,15 @@ export async function GET(request: NextRequest) {
     
     const token = authHeader?.replace('Bearer ', '') || cookieToken;
     
+    console.log('🔍 [DEBUG] Token validation request', { 
+      hasAuthHeader: !!authHeader, 
+      hasCookieToken: !!cookieToken,
+      tokenPrefix: token?.substring(0, 20)
+    });
     logger.log('Token validation request', !!token);
 
     if (!token) {
+      console.log('🔍 [DEBUG] No token provided');
       logger.log('No token provided');
       return NextResponse.json({
         success: false,
@@ -40,6 +47,7 @@ export async function GET(request: NextRequest) {
     // For production, validate token format and return mock user data
     // In a real implementation, you would validate the JWT against your secret
     if (token.startsWith('prod-jwt-token-')) {
+      console.log('🔍 [DEBUG] Valid production token format');
       const userData = {
         success: true,
         message: 'Token valid',
@@ -53,9 +61,11 @@ export async function GET(request: NextRequest) {
         }
       };
 
+      console.log('🔍 [DEBUG] Production admin token validation successful');
       logger.log('Production admin token validation successful');
       return NextResponse.json(userData);
     } else {
+      console.log('🔍 [DEBUG] Invalid token format:', token);
       logger.log('Invalid token format');
       return NextResponse.json({
         success: false,
@@ -63,6 +73,7 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
   } catch (error) {
+    console.error('🔍 [DEBUG] Production auth validation error:', error);
     logger.error('Production auth validation error', error);
     return NextResponse.json({
       success: false,
