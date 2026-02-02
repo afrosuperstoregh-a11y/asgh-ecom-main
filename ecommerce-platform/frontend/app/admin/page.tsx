@@ -43,12 +43,27 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [canFetch, setCanFetch] = useState(false);
 
   useEffect(() => {
     console.log('🔍 [DEBUG] AdminDashboard component mounted');
     logger.log('AdminDashboard component mounted');
-    fetchDashboardData();
+    
+    // Wait a tick to ensure layout authentication is complete
+    const timer = setTimeout(() => {
+      setCanFetch(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    // Only fetch data when we're allowed to (after auth is complete)
+    if (canFetch) {
+      console.log('🔍 [DEBUG] Authentication confirmed, fetching dashboard data...');
+      fetchDashboardData();
+    }
+  }, [canFetch]);
 
   const fetchDashboardData = async () => {
     try {
@@ -168,6 +183,29 @@ export default function AdminDashboard() {
       </div>
     );
   };
+
+  if (!canFetch) {
+    console.log('🔍 [DEBUG] Dashboard waiting for authentication...');
+    return (
+      <div className="p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white p-6 rounded-lg shadow">
+                <div className="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="text-center text-gray-500 mt-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Verifying authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     console.log('🔍 [DEBUG] Dashboard is in loading state');

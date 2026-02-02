@@ -33,65 +33,57 @@ export default function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
-  // KEY STEP 1: Auth initialization effect - runs once on mount and pathname change
+  // KEY STEP 1: Single auth initialization effect - handles all auth logic
   useEffect(() => {
     console.log('🚀 [LAYOUT] Layout render →', pathname);
     console.log('🚀 [LAYOUT] Token value →', tokenManager.getToken());
     console.log('🚀 [LAYOUT] User value →', user);
     console.log('🚀 [LAYOUT] Page mount →', pathname);
     
-    // Skip auth check for login page - let it render normally
+    // Skip auth check for login page - let it render immediately without layout
     if (pathname === '/admin/login') {
-      console.log('� [LAYOUT] Login page detected, skipping auth check');
+      console.log('🚀 [LAYOUT] Login page detected, skipping auth check');
       setLoading(false);
+      setAuthChecked(true);
       return;
     }
 
-    // Start auth check for protected pages
-    checkAuth();
+    // For all other pages, perform auth check
+    performAuthCheck();
   }, [pathname]);
 
-  // KEY STEP 2: Redirect effect - ONLY handles redirects, no auth logic
-  useEffect(() => {
-    // Only redirect if:
-    // 1. Loading is complete (auth check finished)
-    // 2. No user found (auth failed)
-    // 3. Not already on login page
-    if (!loading && !user && pathname !== '/admin/login') {
-      console.log('🚀 [LAYOUT] Redirecting to login - no user found');
-      router.replace('/admin/login');
-    }
-  }, [loading, user, pathname, router]);
-
-  // KEY STEP 3: Auth check function - validates token and fetches user data
-  const checkAuth = async () => {
+  // KEY STEP 2: Auth check function - consolidated auth logic
+  const performAuthCheck = async () => {
     try {
-      console.log('� [AUTH] Starting authentication check...');
+      console.log('🚀 [AUTH] Starting authentication check...');
       logger.log('Checking admin authentication...');
       
       const token = tokenManager.getToken();
       
       if (!token) {
-        console.log('� [AUTH] No token found');
+        console.log('🚀 [AUTH] No token found');
         logger.log('No token found');
         setLoading(false);
+        setAuthChecked(true);
         return;
       }
 
       // Validate token format and expiration
       if (!tokenManager.validateToken(token)) {
-        console.log('� [AUTH] Token invalid or expired');
+        console.log('🚀 [AUTH] Token invalid or expired');
         logger.log('Token invalid or expired');
         tokenManager.removeToken();
         setLoading(false);
+        setAuthChecked(true);
         return;
       }
 
-      console.log('� [AUTH] Token valid, fetching user data...');
+      console.log('🚀 [AUTH] Token valid, fetching user data...');
       
       // Fetch user data from auth endpoint
       const response = await fetch('/api/admin/auth/me', {
@@ -105,25 +97,37 @@ export default function AdminLayout({
 
       if (response.ok) {
         const userData = await response.json();
-        console.log('� [AUTH] User data received:', userData.user || userData);
+        console.log('🚀 [AUTH] User data received:', userData.user || userData);
         logger.log('Authentication successful');
         setUser(userData.user || userData);
         tokenManager.setUser(userData.user || userData);
       } else {
-        console.log('� [AUTH] Auth failed, status:', response.status);
+        console.log('🚀 [AUTH] Auth failed, status:', response.status);
         logger.log('Authentication failed');
         tokenManager.removeToken();
-        setLoading(false);
       }
     } catch (error: any) {
-      console.error('� [AUTH] Auth check error:', error);
+      console.error('🚀 [AUTH] Auth check error:', error);
       logger.auth('Auth check failed', false, error?.message);
       tokenManager.removeToken();
-      setLoading(false);
     } finally {
       setLoading(false);
+      setAuthChecked(true);
     }
   };
+
+  // KEY STEP 3: Redirect effect - ONLY handles redirects after auth is complete
+  useEffect(() => {
+    // Only redirect if:
+    // 1. Auth check is complete
+    // 2. Loading is finished
+    // 3. No user found (auth failed)
+    // 4. Not already on login page
+    if (authChecked && !loading && !user && pathname !== '/admin/login') {
+      console.log('🚀 [LAYOUT] Redirecting to login - no user found');
+      router.replace('/admin/login');
+    }
+  }, [authChecked, loading, user, pathname, router]);
 
   // KEY STEP 4: Logout function
   const handleLogout = async () => {
@@ -211,7 +215,7 @@ export default function AdminLayout({
   ];
 
   // KEY STEP 5: Loading state - shows spinner while auth is being checked
-  if (loading) {
+  if (loading || !authChecked) {
     console.log('🚀 [LAYOUT] Showing loading spinner');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -229,9 +233,20 @@ export default function AdminLayout({
     return <>{children}</>;
   }
 
-  // KEY STEP 7: Admin layout - render full dashboard for authenticated users
-  // NOTE: We don't check user state here - redirect useEffect handles authentication
-  console.log('🚀 [LAYOUT] Rendering admin layout');
+  // KEY STEP 7: Admin layout - render full dashboard for authenticated users only
+  if (!user) {
+    console.log('🚀 [LAYOUT] No user found, showing loading while redirecting');
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('🚀 [LAYOUT] Rendering admin layout for authenticated user');
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile sidebar */}
