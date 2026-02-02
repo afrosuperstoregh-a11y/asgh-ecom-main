@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateTokenFormat } from '../../../../lib/auth';
+import { validateTokenFormat } from '../../../../../lib/auth';
 
 // Environment-safe logging
 const isDevelopment = process.env.NODE_ENV === 'development';
