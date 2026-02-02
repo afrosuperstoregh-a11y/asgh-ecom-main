@@ -38,8 +38,10 @@ export default function AdminLayout({
   const pathname = usePathname();
 
   useEffect(() => {
+    console.log('🔍 [DEBUG] Admin layout useEffect triggered, pathname:', pathname);
     // Skip auth check for login page
     if (pathname === '/admin/login') {
+      console.log('🔍 [DEBUG] Skipping auth check for login page');
       setLoading(false);
       return;
     }
@@ -56,6 +58,14 @@ export default function AdminLayout({
       console.log('🔍 [DEBUG] Token available:', !!token);
       console.log('🔍 [DEBUG] Token value:', token);
       logger.log('Token available:', !!token);
+
+      // If no token, redirect to login immediately
+      if (!token) {
+        console.log('🔍 [DEBUG] No token found, redirecting to login');
+        logger.log('No token found, redirecting to login');
+        router.replace('/admin/login');
+        return;
+      }
 
       // Validate token format and expiration
       if (!tokenManager.validateToken(token)) {

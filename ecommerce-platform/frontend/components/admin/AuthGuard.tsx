@@ -15,20 +15,24 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   useEffect(() => {
     const checkAuth = () => {
+      console.log('🔍 [DEBUG] AuthGuard: Checking authentication...');
       const token = tokenManager.getToken();
       
+      console.log('🔍 [DEBUG] AuthGuard: Token available:', !!token);
+      
       if (!token) {
-        console.log('🔍 [DEBUG] No token found, redirecting to login');
+        console.log('🔍 [DEBUG] AuthGuard: No token found, redirecting to login');
         router.replace('/admin/login');
         return;
       }
 
       // Use centralized token validation
       if (tokenManager.validateToken(token)) {
+        console.log('🔍 [DEBUG] AuthGuard: Token validation successful');
         setIsAuthenticated(true);
         setIsLoading(false);
       } else {
-        console.log('🔍 [DEBUG] Invalid token format, redirecting to login');
+        console.log('🔍 [DEBUG] AuthGuard: Invalid token format, redirecting to login');
         tokenManager.removeToken();
         router.replace('/admin/login');
       }

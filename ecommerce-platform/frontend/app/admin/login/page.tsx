@@ -56,8 +56,16 @@ export default function AdminLogin() {
         console.log('🔍 [DEBUG] Stored token:', tokenManager.getToken());
         console.log('🔍 [DEBUG] Stored user:', tokenManager.getUser());
         
-        // Redirect to intended page or dashboard
-        router.replace(redirectTo);
+        // Verify token was stored before redirecting
+        const storedToken = tokenManager.getToken();
+        if (storedToken) {
+          console.log('🔍 [DEBUG] Token verification successful, redirecting...');
+          // Use window.location for hard redirect to ensure layout re-evaluates
+          window.location.href = redirectTo;
+        } else {
+          console.error('🔍 [DEBUG] Failed to store token');
+          setError('Login succeeded but failed to store session. Please try again.');
+        }
       } else {
         console.log('🔍 [DEBUG] Login failed:', data.message);
         setError(data.message || 'Login failed');

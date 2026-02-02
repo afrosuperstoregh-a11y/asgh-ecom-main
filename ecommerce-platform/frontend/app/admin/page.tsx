@@ -14,6 +14,7 @@ import {
   ArrowDownRight
 } from 'lucide-react';
 import { logger } from '../../lib/logger';
+import AuthGuard from '../../components/admin/AuthGuard';
 import AdminDebug from '../../components/admin/AdminDebug';
 
 interface DashboardStats {
@@ -38,23 +39,29 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
+  console.log('🔍 [DEBUG] AdminDashboard component rendering...');
+  
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('🔍 [DEBUG] AdminDashboard component mounted');
     logger.log('AdminDashboard component mounted');
     fetchDashboardData();
   }, []);
 
   const fetchDashboardData = async () => {
     try {
+      console.log('🔍 [DEBUG] Starting dashboard data fetch...');
       logger.log('Fetching dashboard data...');
       
       // Use the API configuration from lib/api.js
       const { api } = await import('../../lib/api.js');
+      console.log('🔍 [DEBUG] API module loaded');
       
       const data = await api.getDashboard();
+      console.log('🔍 [DEBUG] Dashboard API response:', data);
       logger.log('Dashboard data received successfully');
       
       // Map backend data structure to frontend expectations
@@ -88,6 +95,7 @@ export default function AdminDashboard() {
       
       setStats(mappedData);
     } catch (error: any) {
+      console.error('🔍 [DEBUG] Dashboard fetch error:', error);
       logger.auth('Dashboard data fetch failed', false, error?.message);
       
       // Handle 401 errors specifically
@@ -163,6 +171,7 @@ export default function AdminDashboard() {
   };
 
   if (loading) {
+    console.log('🔍 [DEBUG] Dashboard is in loading state');
     return (
       <div className="p-6">
         <div className="animate-pulse">
@@ -181,6 +190,7 @@ export default function AdminDashboard() {
   }
 
   if (error || !stats) {
+    console.log('🔍 [DEBUG] Dashboard in error state:', { error, hasStats: !!stats });
     return (
       <div className="p-6">
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
@@ -190,13 +200,16 @@ export default function AdminDashboard() {
     );
   }
 
+  console.log('🔍 [DEBUG] Dashboard rendering with stats:', stats);
+
   return (
-    <div className="p-6">
-      <AdminDebug />
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome to your admin dashboard</p>
-      </div>
+    <AuthGuard>
+      <div className="p-6">
+        <AdminDebug />
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-2">Welcome to your admin dashboard</p>
+        </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -377,5 +390,6 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+    </AuthGuard>
   );
 }
