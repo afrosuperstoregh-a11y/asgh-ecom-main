@@ -60,8 +60,9 @@ export default function AdminLogin() {
         const storedToken = tokenManager.getToken();
         if (storedToken) {
           console.log('🔍 [DEBUG] Token verification successful, redirecting...');
-          // Use window.location for hard redirect to ensure layout re-evaluates
-          window.location.href = redirectTo;
+          console.log('Login success → redirecting');
+          // Use Next.js router for proper navigation
+          router.replace(redirectTo);
         } else {
           console.error('🔍 [DEBUG] Failed to store token');
           setError('Login succeeded but failed to store session. Please try again.');

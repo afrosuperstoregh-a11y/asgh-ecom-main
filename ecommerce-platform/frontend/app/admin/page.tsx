@@ -14,7 +14,6 @@ import {
   ArrowDownRight
 } from 'lucide-react';
 import { logger } from '../../lib/logger';
-import AuthGuard from '../../components/admin/AuthGuard';
 import AdminDebug from '../../components/admin/AdminDebug';
 
 interface DashboardStats {
@@ -203,193 +202,191 @@ export default function AdminDashboard() {
   console.log('🔍 [DEBUG] Dashboard rendering with stats:', stats);
 
   return (
-    <AuthGuard>
-      <div className="p-6">
-        <AdminDebug />
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">Welcome to your admin dashboard</p>
-        </div>
+    <div className="p-6">
+      <AdminDebug />
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-600 mt-2">Welcome to your admin dashboard</p>
+      </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title="Total Revenue"
-            value={formatCurrency(stats.overview.totalRevenue)}
-            change={stats.growth.revenue}
-            changeType={stats.growth.revenue >= 0 ? 'increase' : 'decrease'}
-            icon={DollarSign}
-            color="green"
-          />
-          <StatCard
-            title="Total Orders"
-            value={stats.overview.totalOrders.toLocaleString()}
-            change={stats.growth.orders}
-            changeType={stats.growth.orders >= 0 ? 'increase' : 'decrease'}
-            icon={ShoppingCart}
-            color="blue"
-          />
-          <StatCard
-            title="Total Customers"
-            value={stats.overview.totalCustomers.toLocaleString()}
-            icon={Users}
-            color="purple"
-          />
-          <StatCard
-            title="Total Products"
-            value={stats.overview.totalProducts.toLocaleString()}
-            icon={Package}
-            color="yellow"
-          />
-        </div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard
+          title="Total Revenue"
+          value={formatCurrency(stats.overview.totalRevenue)}
+          change={stats.growth.revenue}
+          changeType={stats.growth.revenue >= 0 ? 'increase' : 'decrease'}
+          icon={DollarSign}
+          color="green"
+        />
+        <StatCard
+          title="Total Orders"
+          value={stats.overview.totalOrders.toLocaleString()}
+          change={stats.growth.orders}
+          changeType={stats.growth.orders >= 0 ? 'increase' : 'decrease'}
+          icon={ShoppingCart}
+          color="blue"
+        />
+        <StatCard
+          title="Total Customers"
+          value={stats.overview.totalCustomers.toLocaleString()}
+          icon={Users}
+          color="purple"
+        />
+        <StatCard
+          title="Total Products"
+          value={stats.overview.totalProducts.toLocaleString()}
+          icon={Package}
+          color="yellow"
+        />
+      </div>
 
-        {/* Alert for pending orders */}
-        {stats.overview.pendingOrders > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-8">
-            <div className="flex items-center">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2" />
-              <p className="text-yellow-800">
-                You have <span className="font-semibold">{stats.overview.pendingOrders}</span> pending orders
-                requiring attention.
-              </p>
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Recent Orders */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
-            </div>
-            <div className="overflow-hidden">
-              <div className="max-h-96 overflow-y-auto">
-                {stats.recentOrders.length === 0 ? (
-                  <div className="p-6 text-center text-gray-500">
-                    No recent orders
-                  </div>
-                ) : (
-                  <div className="divide-y divide-gray-200">
-                    {stats.recentOrders.map((order) => (
-                      <div key={order.id} className="p-4 hover:bg-gray-50">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              {order.orderNumber}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {order.user?.name || order.guestEmail}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-medium text-gray-900">
-                              {formatCurrency(Number(order.total))}
-                            </p>
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                              order.status === 'PROCESSING' ? 'bg-blue-100 text-blue-800' :
-                              order.status === 'SHIPPED' ? 'bg-purple-100 text-purple-800' :
-                              order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
-                              order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {order.status}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Top Products */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Top Products</h2>
-            </div>
-            <div className="overflow-hidden">
-              <div className="max-h-96 overflow-y-auto">
-                {stats.topProducts.length === 0 ? (
-                  <div className="p-6 text-center text-gray-500">
-                    No product data available
-                  </div>
-                ) : (
-                  <div className="divide-y divide-gray-200">
-                    {stats.topProducts.map((item, index) => (
-                      <div key={item.productId} className="p-4 hover:bg-gray-50">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                              <span className="text-sm font-medium text-gray-600">
-                                {index + 1}
-                              </span>
-                            </div>
-                            <div className="ml-3">
-                              <p className="text-sm font-medium text-gray-900">
-                                {item.product?.name || 'Unknown Product'}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {item.product?.sku || 'N/A'}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-medium text-gray-900">
-                              {formatCurrency(Number(item._sum.total))}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {item._count.total} sold
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+      {/* Alert for pending orders */}
+      {stats.overview.pendingOrders > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-8">
+          <div className="flex items-center">
+            <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2" />
+            <p className="text-yellow-800">
+              You have <span className="font-semibold">{stats.overview.pendingOrders}</span> pending orders
+              requiring attention.
+            </p>
           </div>
         </div>
+      )}
 
-        {/* Low Stock Alert */}
-        {stats.lowStockProducts.length > 0 && (
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-red-900">Low Stock Alert</h2>
-            </div>
-            <div className="overflow-hidden">
-              <div className="max-h-64 overflow-y-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Recent Orders */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
+          </div>
+          <div className="overflow-hidden">
+            <div className="max-h-96 overflow-y-auto">
+              {stats.recentOrders.length === 0 ? (
+                <div className="p-6 text-center text-gray-500">
+                  No recent orders
+                </div>
+              ) : (
                 <div className="divide-y divide-gray-200">
-                  {stats.lowStockProducts.map((variant) => (
-                    <div key={variant.id} className="p-4 hover:bg-gray-50">
+                  {stats.recentOrders.map((order) => (
+                    <div key={order.id} className="p-4 hover:bg-gray-50">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-medium text-gray-900">
-                            {variant.product?.name || 'Unknown Product'}
+                            {order.orderNumber}
                           </p>
                           <p className="text-sm text-gray-500">
-                            SKU: {variant.sku}
+                            {order.user?.name || order.guestEmail}
                           </p>
                         </div>
                         <div className="text-right">
+                          <p className="text-sm font-medium text-gray-900">
+                            {formatCurrency(Number(order.total))}
+                          </p>
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            variant.stock <= 5 ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                            order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                            order.status === 'PROCESSING' ? 'bg-blue-100 text-blue-800' :
+                            order.status === 'SHIPPED' ? 'bg-purple-100 text-purple-800' :
+                            order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                            order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
                           }`}>
-                            {variant.stock} units
+                            {order.status}
                           </span>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Top Products */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Top Products</h2>
+          </div>
+          <div className="overflow-hidden">
+            <div className="max-h-96 overflow-y-auto">
+              {stats.topProducts.length === 0 ? (
+                <div className="p-6 text-center text-gray-500">
+                  No product data available
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200">
+                  {stats.topProducts.map((item, index) => (
+                    <div key={item.productId} className="p-4 hover:bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-gray-600">
+                              {index + 1}
+                            </span>
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-sm font-medium text-gray-900">
+                              {item.product?.name || 'Unknown Product'}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {item.product?.sku || 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-gray-900">
+                            {formatCurrency(Number(item._sum.total))}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {item._count.total} sold
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Low Stock Alert */}
+      {stats.lowStockProducts.length > 0 && (
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-red-900">Low Stock Alert</h2>
+          </div>
+          <div className="overflow-hidden">
+            <div className="max-h-64 overflow-y-auto">
+              <div className="divide-y divide-gray-200">
+                {stats.lowStockProducts.map((variant) => (
+                  <div key={variant.id} className="p-4 hover:bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {variant.product?.name || 'Unknown Product'}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          SKU: {variant.sku}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          variant.stock <= 5 ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {variant.stock} units
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-        )}
-      </div>
-    </AuthGuard>
+        </div>
+      )}
+    </div>
   );
 }
