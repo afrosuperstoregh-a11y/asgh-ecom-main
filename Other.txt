@@ -1,5 +1,7 @@
 Make sure you create, update, and enhance all required files and codes. Inject all codes into the ecommerce-platform folder as well.
 
+Admin dashboard is still not display after admin login, fix this issue properly.
+
 Audit Admin setup and let me know why dashboard will 
 not display after admin login.
 

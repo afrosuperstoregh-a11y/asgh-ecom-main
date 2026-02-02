@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { logger } from '../../lib/logger';
 import AuthGuard from '../../components/admin/AuthGuard';
+import AdminDebug from '../../components/admin/AdminDebug';
 
 interface DashboardStats {
   overview: {
@@ -193,6 +194,7 @@ export default function AdminDashboard() {
   return (
     <AuthGuard>
       <div className="p-6">
+        <AdminDebug />
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-2">Welcome to your admin dashboard</p>

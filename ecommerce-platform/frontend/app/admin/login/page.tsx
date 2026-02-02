@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, Store, AlertTriangle } from 'lucide-react';
-import { storage } from '../../../lib/auth-utils';
+import { tokenManager } from '../../../lib/token-manager';
 import { LoginResponse } from '../../../types/admin';
 import { logger } from '../../../lib/logger';
+import AdminDebug from '../../../components/admin/AdminDebug';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -48,12 +49,12 @@ export default function AdminLogin() {
         logger.log('Admin login successful, redirecting to:', redirectTo);
         
         // Store JWT token and user data using standardized storage
-        storage.setToken(data.token);
-        storage.setUser(data.user);
+        tokenManager.setToken(data.token);
+        tokenManager.setUser(data.user);
         
         console.log('🔍 [DEBUG] Token stored, redirecting to:', redirectTo);
-        console.log('🔍 [DEBUG] Stored token:', storage.getToken());
-        console.log('🔍 [DEBUG] Stored user:', storage.getUser());
+        console.log('🔍 [DEBUG] Stored token:', tokenManager.getToken());
+        console.log('🔍 [DEBUG] Stored user:', tokenManager.getUser());
         
         // Redirect to intended page or dashboard
         router.replace(redirectTo);
@@ -71,7 +72,9 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <>
+      <AdminDebug />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100">
@@ -221,6 +224,6 @@ export default function AdminLogin() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
