@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { validationResult, ValidationChain, ValidationError } from 'express-validator';
+import { validationResult, ValidationChain } from 'express-validator';
 import { CanadaPostError } from '../types/canadaPost';
 
 interface FieldValidationError {
@@ -8,39 +8,55 @@ interface FieldValidationError {
   value?: any;
 }
 
-export const validate = (req: Request, res: Response, next: NextFunction) => {
-  const errors = validationResult(req);
-  
-  if (!errors.isEmpty()) {
-    const errorMessages: FieldValidationError[] = [];
-    
-    errors.array().forEach((error: ValidationError) => {
-      if ('param' in error) {
-        errorMessages.push({
-          field: error.param as string,
-          message: error.msg as string,
-          value: 'value' in error ? error.value : undefined,
-        });
-      }
-    });
-    
-    if (errorMessages.length > 0) {
-      throw new CanadaPostError(
-        'Validation failed', 
-        'VALIDATION_ERROR', 
-        400, 
-        'https://developer.canadapost.ca/api/errors'
-      );
-    }
+/*
+  Middleware: validate request
+  - sends proper error response
+  - does NOT throw
+  - includes field details
+*/
+export const validate = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const result = validationResult(req);
+
+  if (result.isEmpty()) {
+    return next();
+  }
+
+  const errorMessages: FieldValidationError[] = result.array().map(err => ({
+    field: (err as any).path, // express-validator v7+
+    message: err.msg as string,
+    value: (err as any).value,
+  }));
+
+  if (errorMessages.length > 0) {
+    return next(
+      new CanadaPostError(
+        'Validation failed',
+        'VALIDATION_ERROR',
+        400
+      )
+    );
   }
   
-  next();
+  return next();
 };
 
-// Helper to run validations in sequence
+/*
+  Run validations sequentially
+*/
 export const runValidations = (validations: ValidationChain[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    await Promise.all(validations.map(validation => validation.run(req)));
-    validate(req, res, next);
+    try {
+      for (const validation of validations) {
+        await validation.run(req);
+      }
+
+      validate(req, res, next);
+    } catch (error) {
+      next(error);
+    }
   };
 };

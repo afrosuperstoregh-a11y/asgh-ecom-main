@@ -44,9 +44,32 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable}`}>
       <head>
-        {/* Early suppression script - only in development */}
+        {/* Preconnect to important third-party domains */}
+        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+        
+        {/* Preload critical resources */}
+        <link rel="preload" href="/asca-logo.png" as="image" />
+      </head>
+      <body className={`${inter.variable} font-sans min-h-screen bg-gray-50 antialiased overflow-x-hidden`}
+            suppressHydrationWarning={true}>
+        <AuthProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <div className="flex flex-col min-h-screen">
+                <Header />
+                <main className="flex-1">
+                  {children}
+                </main>
+                <Footer />
+              </div>
+            </CartProvider>
+          </WishlistProvider>
+        </AuthProvider>
+        
+        {/* Development-only suppression script */}
         {process.env.NODE_ENV === 'development' && (
           <script
+            suppressHydrationWarning={true}
             dangerouslySetInnerHTML={{
               __html: `
                 // Development-only suppression of deprecated analytics messages
@@ -92,17 +115,16 @@ export default function RootLayout({
           />
         )}
         
-        {/* Preconnect to important third-party domains */}
-        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
-        
-        {/* Preload critical resources */}
-        <link rel="preload" href="/asca-logo.png" as="image" />
-        
         {/* Google Analytics - Production Only */}
         {process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
           <>
-            <script async src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}`} />
             <script
+              suppressHydrationWarning={true}
+              async
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}`}
+            />
+            <script
+              suppressHydrationWarning={true}
               dangerouslySetInnerHTML={{
                 __html: `
                   window.dataLayer = window.dataLayer || [];
@@ -119,6 +141,7 @@ export default function RootLayout({
         
         {/* Structured Data */}
         <script
+          suppressHydrationWarning={true}
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
@@ -134,21 +157,6 @@ export default function RootLayout({
             }),
           }}
         />
-      </head>
-      <body className={`${inter.variable} font-sans min-h-screen bg-gray-50 antialiased overflow-x-hidden`}>
-        <AuthProvider>
-          <WishlistProvider>
-            <CartProvider>
-              <div className="flex flex-col min-h-screen">
-                <Header />
-                <main className="flex-1">
-                  {children}
-                </main>
-                <Footer />
-              </div>
-            </CartProvider>
-          </WishlistProvider>
-        </AuthProvider>
       </body>
       {process.env.NODE_ENV === 'production' && (
         <>

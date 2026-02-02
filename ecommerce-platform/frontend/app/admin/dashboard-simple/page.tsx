@@ -18,7 +18,8 @@ export default function SimpleDashboard() {
         const status = response.status;
         setApiTest(`API Status: ${status} (${status === 200 ? '✅' : '❌'})`);
       } catch (error) {
-        setApiTest(`API Error: ${error.message} ❌`);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        setApiTest(`API Error: ${errorMessage} ❌`);
       }
     };
     
