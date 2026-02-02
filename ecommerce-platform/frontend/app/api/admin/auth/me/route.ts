@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { validateTokenFormat } from '../../../../lib/auth';
 
 // Environment-safe logging
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -16,21 +17,18 @@ const logger = {
   }
 };
 
-// Production admin auth validation proxy
+// Admin auth validation endpoint
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 [DEBUG] Production admin auth validation check');
-    logger.log('Production admin auth validation check');
+    console.log('🔍 [DEBUG] Admin auth validation check');
+    logger.log('Admin auth validation check');
     
-    // Get token from Authorization header or cookie
+    // Get token from Authorization header only (localStorage strategy)
     const authHeader = request.headers.get('authorization');
-    const cookieToken = request.cookies.get('auth-token')?.value;
-    
-    const token = authHeader?.replace('Bearer ', '') || cookieToken;
+    const token = authHeader?.replace('Bearer ', '');
     
     console.log('🔍 [DEBUG] Token validation request', { 
-      hasAuthHeader: !!authHeader, 
-      hasCookieToken: !!cookieToken,
+      hasAuthHeader: !!authHeader,
       tokenPrefix: token?.substring(0, 20)
     });
     logger.log('Token validation request', !!token);
@@ -44,12 +42,11 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
-    // For production, validate token format and return mock user data
-    // In a real implementation, you would validate the JWT against your secret
-    if (token.startsWith('prod-jwt-token-')) {
-      console.log('🔍 [DEBUG] Valid production token format');
+    // Validate token format and expiration
+    if (validateTokenFormat(token)) {
+      console.log('🔍 [DEBUG] Valid token format');
       
-      // Extract user info from token or return default admin user
+      // Return user data
       const userData = {
         success: true,
         message: 'Token valid',
@@ -65,20 +62,20 @@ export async function GET(request: NextRequest) {
         }
       };
 
-      console.log('🔍 [DEBUG] Production admin token validation successful');
-      logger.log('Production admin token validation successful');
+      console.log('🔍 [DEBUG] Token validation successful');
+      logger.log('Token validation successful');
       return NextResponse.json(userData);
     } else {
-      console.log('🔍 [DEBUG] Invalid token format:', token);
-      logger.log('Invalid token format');
+      console.log('🔍 [DEBUG] Invalid or expired token:', token);
+      logger.log('Invalid or expired token');
       return NextResponse.json({
         success: false,
-        message: 'Invalid authentication token'
+        message: 'Invalid or expired authentication token'
       }, { status: 401 });
     }
   } catch (error) {
-    console.error('🔍 [DEBUG] Production auth validation error:', error);
-    logger.error('Production auth validation error', error);
+    console.error('🔍 [DEBUG] Auth validation error:', error);
+    logger.error('Auth validation error', error);
     return NextResponse.json({
       success: false,
       message: 'Authentication validation failed'

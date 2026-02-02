@@ -1,30 +1,5 @@
-// API configuration for different environments
-const getApiUrl = () => {
-  if (typeof window !== 'undefined') {
-    // Production environment for afrosuperstore.ca
-    if (window.location.hostname.includes('afrosuperstore.ca')) {
-      return 'https://api.afrosuperstore.ca'; // Production API endpoint
-    }
-    
-    // Development environment
-    if (process.env.NODE_ENV === 'development') {
-      return 'http://localhost:3001/api'; // Backend on port 3001
-    }
-    
-    // Fallback URLs for other environments
-    if (window.location.hostname.includes('vercel.app')) {
-      return 'https://asca-backend.onrender.com/api'; // Production backend
-    } else {
-      return '/api'; // Relative path for same deployment
-    }
-  } else {
-    // Server-side
-    return process.env.NEXT_PUBLIC_API_URL || 
-           (process.env.NODE_ENV === 'development' ? 'http://localhost:3001/api' : 'https://api.afrosuperstore.ca');
-  }
-};
-
-export const API_BASE_URL = getApiUrl();
+// API configuration - use local Next.js API routes only
+export const API_BASE_URL = '/api';
 
 // Environment-safe logging
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -48,7 +23,7 @@ export async function apiRequest(endpoint, options = {}) {
     },
   };
 
-  // Add authorization header if token is available
+  // Add authorization header if token is available (from localStorage)
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('adminToken');
     if (token) {
@@ -70,6 +45,15 @@ export async function apiRequest(endpoint, options = {}) {
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      
+      // Handle 401 unauthorized - redirect to login
+      if (response.status === 401 && typeof window !== 'undefined') {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        window.location.href = '/admin/login';
+        return;
+      }
+      
       throw new Error(errorData.error?.message || errorData.message || `HTTP error! status: ${response.status}`);
     }
 
@@ -80,32 +64,30 @@ export async function apiRequest(endpoint, options = {}) {
   }
 }
 
-// Specific API methods
+// Specific API methods - updated for admin routes
 export const api = {
-  // Products
-  getProducts: () => apiRequest('/products'),
-  getProduct: (id) => apiRequest(`/products/${id}`),
-  
-  // Categories
-  getCategories: () => apiRequest('/categories'),
-  
-  // Testimonials
-  getTestimonials: () => apiRequest('/testimonials'),
-  
-  // Auth
-  login: (credentials) => apiRequest('/auth/login', {
+  // Admin Auth
+  login: (credentials) => apiRequest('/admin/auth/login', {
     method: 'POST',
     body: JSON.stringify(credentials),
   }),
   
-  register: (userData) => apiRequest('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify(userData),
-  }),
+  getMe: () => apiRequest('/admin/auth/me'),
   
-  getMe: () => apiRequest('/auth/me'),
-  
-  logout: () => apiRequest('/auth/logout', {
+  logout: () => apiRequest('/admin/auth/logout', {
     method: 'POST',
   }),
+  
+  // Admin Dashboard
+  getDashboard: () => apiRequest('/admin/dashboard'),
+  
+  // Products (if needed)
+  getProducts: () => apiRequest('/admin/products'),
+  getProduct: (id) => apiRequest(`/admin/products/${id}`),
+  
+  // Categories (if needed)
+  getCategories: () => apiRequest('/admin/categories'),
+  
+  // Testimonials (if needed)
+  getTestimonials: () => apiRequest('/admin/testimonials'),
 };

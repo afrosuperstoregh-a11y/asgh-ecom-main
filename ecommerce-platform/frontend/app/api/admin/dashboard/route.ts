@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { validateTokenFormat } from '../../../lib/auth';
 
 // Environment-safe logging
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -16,10 +17,24 @@ const logger = {
   }
 };
 
-// Production admin dashboard proxy
-export async function GET() {
+// Admin dashboard data endpoint
+export async function GET(request: NextRequest) {
   try {
-    // Mock dashboard data for production
+    // Validate authentication
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+
+    if (!token || !validateTokenFormat(token)) {
+      logger.log('Unauthorized dashboard access attempt');
+      return NextResponse.json({
+        success: false,
+        message: 'Unauthorized'
+      }, { status: 401 });
+    }
+
+    logger.log('Admin dashboard data request authenticated');
+
+    // Mock dashboard data
     const mockData = {
       success: true,
       message: 'Dashboard data retrieved successfully',
@@ -49,10 +64,10 @@ export async function GET() {
       }
     };
 
-    logger.log('Production admin dashboard data served');
+    logger.log('Admin dashboard data served successfully');
     return NextResponse.json(mockData);
   } catch (error) {
-    logger.error('Production dashboard proxy error', error);
+    logger.error('Dashboard API error', error);
     return NextResponse.json({
       success: false,
       message: 'Failed to fetch dashboard data'

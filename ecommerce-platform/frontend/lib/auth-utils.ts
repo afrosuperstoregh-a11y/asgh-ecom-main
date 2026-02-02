@@ -1,28 +1,4 @@
-// Shared authentication utilities
-
-export const getApiUrl = (): string => {
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    
-    // Production environment for afrosuperstore.ca
-    if (hostname.includes('afrosuperstore.ca')) {
-      return '/api'; // Use API proxy in production
-    }
-    
-    // Development environment
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'http://localhost:3002'; // Admin backend on port 3002
-    }
-    
-    // Fallback for other environments
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3002`;
-    return baseUrl.replace(/\/api$/, '');
-  }
-  
-  // Server-side fallback
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-  return baseUrl.replace(/\/api$/, '');
-};
+// Shared authentication utilities - simplified for localStorage strategy
 
 export const storage = {
   getToken: (): string | null => {

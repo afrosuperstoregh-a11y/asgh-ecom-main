@@ -73,30 +73,13 @@ export async function POST(request: NextRequest) {
         token: token
       };
 
-      // Set secure cookie with enhanced security for production
-      const isProduction = process.env.NODE_ENV === 'production' || 
-                         request.headers.get('host')?.includes('afrosuperstore.ca');
-      
-      const cookieOptions = {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' as const : 'lax' as const,
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        path: '/',
-        ...(isProduction && {
-          domain: '.afrosuperstore.ca'
-        })
-      };
-
-      const nextResponse = NextResponse.json(response);
-      nextResponse.cookies.set('auth-token', token, cookieOptions);
-
-      logger.log('Production admin login successful', { 
+      logger.log('Admin login successful', { 
         email: user.email, 
         role: user.role,
         ip: clientIP 
       });
-      return nextResponse;
+      
+      return NextResponse.json(response);
     } else {
       logger.log('Invalid credentials for', { email, ip: clientIP });
       return NextResponse.json({
