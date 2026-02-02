@@ -60,6 +60,15 @@ export const isTokenExpired = (token: string): boolean => {
   }
 };
 
+export const getApiUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    // Browser environment - use current origin for API calls
+    return window.location.origin;
+  }
+  // Server environment - fallback to localhost or environment variable
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+};
+
 export const validateToken = (token: string | null): boolean => {
   if (!token) return false;
   
