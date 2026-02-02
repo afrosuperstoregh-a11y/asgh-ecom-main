@@ -224,10 +224,24 @@ export default function AdminLayout({
     return <>{children}</>;
   }
 
-  if (!user) {
-    // This should not happen as checkAuth should redirect, but as a fallback
+  if (!user && !loading) {
+    // Only redirect if we're not loading and there's definitely no user
+    console.log('🔍 [DEBUG] No user found and not loading, redirecting to login');
     router.replace('/admin/login');
     return null;
+  }
+
+  // If still loading or user is being fetched, show loading state
+  if (loading || !user) {
+    console.log('🔍 [DEBUG] Still loading auth or user not ready, showing loading state');
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Authenticating...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
