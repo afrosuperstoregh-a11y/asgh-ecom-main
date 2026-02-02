@@ -17,20 +17,9 @@ export const validate = (req: Request, res: Response, next: NextFunction) => {
     errors.array().forEach((error: ValidationError) => {
       if ('param' in error) {
         errorMessages.push({
-          field: error.param,
-          message: error.msg,
+          field: error.param as string,
+          message: error.msg as string,
           value: 'value' in error ? error.value : undefined,
-        });
-      } else if (error.nestedErrors) {
-        // Handle nested errors if needed
-        (error.nestedErrors as ValidationError[]).forEach(nestedError => {
-          if ('param' in nestedError) {
-            errorMessages.push({
-              field: nestedError.param,
-              message: nestedError.msg,
-              value: 'value' in nestedError ? nestedError.value : undefined,
-            });
-          }
         });
       }
     });
