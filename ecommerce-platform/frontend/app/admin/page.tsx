@@ -53,7 +53,7 @@ export default function AdminDashboard() {
       logger.log('Fetching dashboard data...');
       
       // Use the API configuration from lib/api.js
-      const { api } = await import('../../lib/api');
+      const { api } = await import('../../lib/api.js');
       
       const data = await api.getDashboard();
       logger.log('Dashboard data received successfully');
