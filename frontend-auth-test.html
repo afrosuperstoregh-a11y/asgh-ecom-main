@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Auth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Admin Authentication Frontend Test</h1>
+    
+    <div class="test-section info">
+        <h3>Test Instructions</h3>
+        <p>This test simulates the exact browser behavior for admin authentication.</p>
+        <ol>
+            <li>Click "Test Login" to simulate login process</li>
+            <li>Check localStorage for token storage</li>
+            <li>Click "Test Dashboard Access" to simulate dashboard access</li>
+            <li>Check results for any issues</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h3>Step 1: Test Login Process</h3>
+        <button onclick="testLogin()">Test Login</button>
+        <button onclick="checkLocalStorage()">Check localStorage</button>
+        <button onclick="clearStorage()">Clear Storage</button>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Step 2: Test Dashboard Access</h3>
+        <button onclick="testDashboardAccess()">Test Dashboard Access</button>
+        <button onclick="testAuthValidation()">Test Auth Validation</button>
+        <div id="dashboard-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Step 3: Test Token Validation</h3>
+        <button onclick="testTokenValidation()">Test Token Validation</button>
+        <div id="token-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Live Debug Info</h3>
+        <div id="debug-info"></div>
+        <button onclick="updateDebugInfo()">Update Debug Info</button>
+    </div>
+
+    <script>
+        let currentToken = null;
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`[${timestamp}] ${message}`);
+            return `<div class="${type}">${message}</div>`;
+        }
+
+        function testLogin() {
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.innerHTML = '<p>Testing login...</p>';
+
+            fetch('http://localhost:3000/api/admin/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    email: 'info@afrosuperstore.ca', 
+                    password: 'Iamtech@100' 
+                }),
+            })
+            .then(response => {
+                console.log('Login response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Login response data:', data);
+                
+                if (data.success && data.token) {
+                    // Simulate browser localStorage storage
+                    localStorage.setItem('adminToken', data.token);
+                    localStorage.setItem('adminUser', JSON.stringify(data.user));
+                    currentToken = data.token;
+                    
+                    resultDiv.innerHTML = `
+                        ${log('✅ Login successful!', 'success')}
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                        <p>Token stored in localStorage</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        ${log('❌ Login failed: ' + (data.message || 'Unknown error'), 'error')}
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                resultDiv.innerHTML = log('❌ Login error: ' + error.message, 'error');
+            });
+        }
+
+        function checkLocalStorage() {
+            const resultDiv = document.getElementById('login-result');
+            const token = localStorage.getItem('adminToken');
+            const user = localStorage.getItem('adminUser');
+            
+            resultDiv.innerHTML = `
+                ${log('📋 localStorage Contents:', 'info')}
+                <p><strong>Token:</strong> ${token ? token.substring(0, 50) + '...' : 'None'}</p>
+                <p><strong>User:</strong> ${user || 'None'}</p>
+                <p><strong>Token Valid:</strong> ${token ? validateTokenFormat(token) : 'N/A'}</p>
+            `;
+        }
+
+        function clearStorage() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            currentToken = null;
+            document.getElementById('login-result').innerHTML = log('🗑️ Storage cleared', 'info');
+        }
+
+        function validateTokenFormat(token) {
+            if (!token) return false;
+            if (!token.startsWith('prod-jwt-token-')) return false;
+            
+            const tokenParts = token.split('-');
+            const timestamp = tokenParts[3];
+            
+            if (timestamp) {
+                const tokenTime = parseInt(timestamp);
+                const currentTime = Date.now();
+                const isExpired = (currentTime - tokenTime) > 24 * 60 * 60 * 1000;
+                return !isExpired;
+            }
+            
+            return false;
+        }
+
+        function testDashboardAccess() {
+            const resultDiv = document.getElementById('dashboard-result');
+            const token = localStorage.getItem('adminToken');
+            
+            if (!token) {
+                resultDiv.innerHTML = log('❌ No token found. Please login first.', 'error');
+                return;
+            }
+
+            resultDiv.innerHTML = '<p>Testing dashboard access...</p>';
+
+            fetch('http://localhost:3000/api/admin/dashboard', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                console.log('Dashboard response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Dashboard response data:', data);
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        ${log('✅ Dashboard access successful!', 'success')}
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        ${log('❌ Dashboard access failed: ' + (data.message || 'Unknown error'), 'error')}
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Dashboard error:', error);
+                resultDiv.innerHTML = log('❌ Dashboard error: ' + error.message, 'error');
+            });
+        }
+
+        function testAuthValidation() {
+            const resultDiv = document.getElementById('dashboard-result');
+            const token = localStorage.getItem('adminToken');
+            
+            if (!token) {
+                resultDiv.innerHTML = log('❌ No token found. Please login first.', 'error');
+                return;
+            }
+
+            resultDiv.innerHTML = '<p>Testing auth validation...</p>';
+
+            fetch('http://localhost:3000/api/admin/auth/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                console.log('Auth validation response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Auth validation response data:', data);
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        ${log('✅ Auth validation successful!', 'success')}
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        ${log('❌ Auth validation failed: ' + (data.message || 'Unknown error'), 'error')}
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Auth validation error:', error);
+                resultDiv.innerHTML = log('❌ Auth validation error: ' + error.message, 'error');
+            });
+        }
+
+        function testTokenValidation() {
+            const resultDiv = document.getElementById('token-result');
+            const token = localStorage.getItem('adminToken');
+            
+            if (!token) {
+                resultDiv.innerHTML = log('❌ No token to validate', 'error');
+                return;
+            }
+
+            const isValid = validateTokenFormat(token);
+            const tokenParts = token.split('-');
+            const timestamp = tokenParts[3];
+            const tokenTime = timestamp ? parseInt(timestamp) : null;
+            const currentTime = Date.now();
+            const age = tokenTime ? currentTime - tokenTime : null;
+            
+            resultDiv.innerHTML = `
+                ${log('📋 Token Validation Results:', 'info')}
+                <p><strong>Format Valid:</strong> ${isValid ? '✅' : '❌'}</p>
+                <p><strong>Token Age:</strong> ${age ? Math.floor(age / 1000 / 60) + ' minutes' : 'Unknown'}</p>
+                <p><strong>Expires In:</strong> ${age ? Math.floor((24 * 60 * 60 * 1000 - age) / 1000 / 60) + ' minutes' : 'Unknown'}</p>
+                <p><strong>Token Preview:</strong> ${token.substring(0, 50)}...</p>
+            `;
+        }
+
+        function updateDebugInfo() {
+            const debugDiv = document.getElementById('debug-info');
+            const token = localStorage.getItem('adminToken');
+            const user = localStorage.getItem('adminUser');
+            
+            debugDiv.innerHTML = `
+                <p><strong>Current Time:</strong> ${new Date().toLocaleString()}</p>
+                <p><strong>Token Available:</strong> ${token ? '✅' : '❌'}</p>
+                <p><strong>User Available:</strong> ${user ? '✅' : '❌'}</p>
+                <p><strong>Token Valid:</strong> ${token ? (validateTokenFormat(token) ? '✅' : '❌') : 'N/A'}</p>
+                <p><strong>Browser:</strong> ${navigator.userAgent}</p>
+                <p><strong>Local Storage Size:</strong> ${JSON.stringify(localStorage).length} characters</p>
+            `;
+        }
+
+        // Auto-update debug info
+        updateDebugInfo();
+        setInterval(updateDebugInfo, 5000);
+    </script>
+</body>
+</html>
