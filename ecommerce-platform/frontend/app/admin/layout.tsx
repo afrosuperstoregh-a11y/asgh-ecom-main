@@ -38,7 +38,7 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
 
-  // KEY STEP 1: Single auth initialization effect - handles all auth logic
+  // Single auth initialization effect - handles all auth logic
   useEffect(() => {
     console.log('🚀 [LAYOUT] Layout render →', pathname);
     console.log('🚀 [LAYOUT] Token value →', tokenManager.getToken());
@@ -57,7 +57,7 @@ export default function AdminLayout({
     performAuthCheck();
   }, [pathname]);
 
-  // KEY STEP 2: Auth check function - consolidated auth logic
+  // Auth check function - consolidated auth logic
   const performAuthCheck = async () => {
     try {
       console.log('🚀 [AUTH] Starting authentication check...');
@@ -116,7 +116,7 @@ export default function AdminLayout({
     }
   };
 
-  // KEY STEP 3: Redirect effect - ONLY handles redirects after auth is complete
+  // Redirect effect - ONLY handles redirects after auth is complete
   useEffect(() => {
     // Only redirect if:
     // 1. Auth check is complete
@@ -129,7 +129,7 @@ export default function AdminLayout({
     }
   }, [authChecked, loading, user, pathname, router]);
 
-  // KEY STEP 4: Logout function
+  // Logout function
   const handleLogout = async () => {
     try {
       const token = tokenManager.getToken();
@@ -214,7 +214,7 @@ export default function AdminLayout({
     }
   ];
 
-  // KEY STEP 5: Loading state - shows spinner while auth is being checked
+  // Loading state - shows spinner while auth is being checked
   if (loading || !authChecked) {
     console.log('🚀 [LAYOUT] Showing loading spinner');
     return (
@@ -227,13 +227,13 @@ export default function AdminLayout({
     );
   }
 
-  // KEY STEP 6: Login page - render without admin layout
+  // Login page - render without admin layout
   if (pathname === '/admin/login') {
     console.log('🚀 [LAYOUT] Rendering login page without layout');
     return <>{children}</>;
   }
 
-  // KEY STEP 7: Admin layout - render full dashboard for authenticated users only
+  // Admin layout - render full dashboard for authenticated users only
   if (!user) {
     console.log('🚀 [LAYOUT] No user found, showing loading while redirecting');
     return (
