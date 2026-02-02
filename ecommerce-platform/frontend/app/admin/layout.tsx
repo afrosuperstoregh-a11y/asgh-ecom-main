@@ -38,7 +38,9 @@ export default function AdminLayout({
   const pathname = usePathname();
 
   useEffect(() => {
-    console.log('🔍 [DEBUG] Admin layout useEffect triggered, pathname:', pathname);
+    console.log('Layout mounted →', pathname);
+    console.log('Token →', tokenManager.getToken());
+    
     // Skip auth check for login page
     if (pathname === '/admin/login') {
       console.log('🔍 [DEBUG] Skipping auth check for login page');
@@ -65,20 +67,20 @@ export default function AdminLayout({
       console.log('🔍 [DEBUG] Token value:', token);
       logger.log('Token available:', !!token);
 
-      // If no token, redirect to login immediately
+      // If no token, set loading to false and let useEffect handle redirect
       if (!token) {
-        console.log('🔍 [DEBUG] No token found, redirecting to login');
-        logger.log('No token found, redirecting to login');
-        router.replace('/admin/login');
+        console.log('🔍 [DEBUG] No token found, auth will fail');
+        logger.log('No token found, auth will fail');
+        setLoading(false);
         return;
       }
 
       // Validate token format and expiration
       if (!tokenManager.validateToken(token)) {
-        console.log('🔍 [DEBUG] Token invalid or expired, redirecting to login');
-        logger.log('Token invalid or expired, redirecting to login');
+        console.log('🔍 [DEBUG] Token invalid or expired, clearing token');
+        logger.log('Token invalid or expired, clearing token');
         tokenManager.removeToken();
-        router.replace('/admin/login');
+        setLoading(false);
         return;
       }
 
@@ -113,15 +115,15 @@ export default function AdminLayout({
         console.log('🔍 [DEBUG] Auth validation failed, status:', response.status);
         const errorData = await response.json().catch(() => ({}));
         console.log('🔍 [DEBUG] Error response:', errorData);
-        logger.log('Auth validation failed, redirecting to login');
+        logger.log('Auth validation failed, clearing token');
         tokenManager.removeToken();
-        router.replace('/admin/login');
+        setLoading(false);
       }
     } catch (error: any) {
       console.error('🔍 [DEBUG] Auth check failed:', error);
       logger.auth('Auth check failed', false, error?.message);
       tokenManager.removeToken();
-      router.replace('/admin/login');
+      setLoading(false);
     } finally {
       setLoading(false);
     }
@@ -230,9 +232,9 @@ export default function AdminLayout({
     return <>{children}</>;
   }
 
-  if (!loading && user) {
-    return (
-      <div className="min-h-screen bg-gray-50">
+  // Render children - auth check is handled by useEffect
+  return (
+    <div className="min-h-screen bg-gray-50">
         {/* Mobile sidebar */}
         <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
@@ -354,7 +356,4 @@ export default function AdminLayout({
         </div>
       </div>
     );
-  }
-
-  return null;
 }
