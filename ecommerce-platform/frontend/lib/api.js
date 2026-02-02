@@ -1,3 +1,5 @@
+import { tokenManager } from './token-manager';
+
 // API configuration - use local Next.js API routes only
 export const API_BASE_URL = '/api';
 
@@ -25,7 +27,7 @@ export async function apiRequest(endpoint, options = {}) {
 
   // Add authorization header if token is available (from localStorage)
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('adminToken');
+    const token = tokenManager.getToken();
     if (token) {
       defaultOptions.headers.Authorization = `Bearer ${token}`;
     }
@@ -48,8 +50,7 @@ export async function apiRequest(endpoint, options = {}) {
       
       // Handle 401 unauthorized - redirect to login
       if (response.status === 401 && typeof window !== 'undefined') {
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
+        tokenManager.removeToken();
         window.location.href = '/admin/login';
         return;
       }

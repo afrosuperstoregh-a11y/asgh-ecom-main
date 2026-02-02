@@ -21,7 +21,7 @@ import {
   TrendingUp,
   Database
 } from 'lucide-react';
-import { storage, getApiUrl, validateToken } from '@/lib/auth-utils';
+import { tokenManager } from '@/lib/token-manager';
 import { AdminUser } from '@/types/admin';
 import { logger } from '@/lib/logger';
 
@@ -51,23 +51,23 @@ export default function AdminLayout({
       console.log('🔍 [DEBUG] Checking admin authentication...');
       logger.log('Checking admin authentication...');
       
-      const token = storage.getToken();
+      const token = tokenManager.getToken();
       
       console.log('🔍 [DEBUG] Token available:', !!token);
       console.log('🔍 [DEBUG] Token value:', token);
       logger.log('Token available:', !!token);
 
       // Validate token format and expiration
-      if (!validateToken(token)) {
+      if (!tokenManager.validateToken(token)) {
         console.log('🔍 [DEBUG] Token invalid or expired, redirecting to login');
         logger.log('Token invalid or expired, redirecting to login');
-        storage.removeToken();
+        tokenManager.removeToken();
         router.replace('/admin/login');
         return;
       }
 
       console.log('🔍 [DEBUG] Token validation passed');
-      const apiUrl = getApiUrl();
+      const apiUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
       console.log('🔍 [DEBUG] Auth validation API URL:', apiUrl);
       logger.log('Auth validation API URL:', apiUrl);
 
@@ -92,19 +92,19 @@ export default function AdminLayout({
         console.log('🔍 [DEBUG] Auth validation successful, user data:', userData);
         logger.log('Auth validation successful');
         setUser(userData.user || userData);
-        storage.setUser(userData.user || userData);
+        tokenManager.setUser(userData.user || userData);
       } else {
         console.log('🔍 [DEBUG] Auth validation failed, status:', response.status);
         const errorData = await response.json().catch(() => ({}));
         console.log('🔍 [DEBUG] Error response:', errorData);
         logger.log('Auth validation failed, redirecting to login');
-        storage.removeToken();
+        tokenManager.removeToken();
         router.replace('/admin/login');
       }
     } catch (error: any) {
       console.error('🔍 [DEBUG] Auth check failed:', error);
       logger.auth('Auth check failed', false, error?.message);
-      storage.removeToken();
+      tokenManager.removeToken();
       router.replace('/admin/login');
     } finally {
       setLoading(false);
@@ -113,8 +113,8 @@ export default function AdminLayout({
 
   const handleLogout = async () => {
     try {
-      const apiUrl = getApiUrl();
-      const token = storage.getToken();
+      const apiUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+      const token = tokenManager.getToken();
 
       // Construct the correct API endpoint
       const logoutEndpoint = apiUrl.endsWith('/api') ? `${apiUrl}/admin/auth/logout` : `${apiUrl}/api/admin/auth/logout`;
@@ -130,7 +130,7 @@ export default function AdminLayout({
     } catch (error: any) {
       logger.auth('Logout error', false, error?.message);
     } finally {
-      storage.removeToken();
+      tokenManager.removeToken();
       router.replace('/admin/login');
     }
   };

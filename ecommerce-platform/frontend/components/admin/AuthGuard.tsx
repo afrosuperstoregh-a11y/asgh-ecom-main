@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { storage } from '../../lib/auth-utils';
+import { tokenManager } from '../../lib/token-manager';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -15,7 +15,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   useEffect(() => {
     const checkAuth = () => {
-      const token = storage.getToken();
+      const token = tokenManager.getToken();
       
       if (!token) {
         console.log('🔍 [DEBUG] No token found, redirecting to login');
@@ -23,29 +23,13 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         return;
       }
 
-      // Validate token format and expiration
-      if (token.startsWith('prod-jwt-token-')) {
-        const tokenParts = token.split('-');
-        const timestamp = tokenParts[3];
-        
-        if (timestamp) {
-          const tokenTime = parseInt(timestamp);
-          const currentTime = Date.now();
-          const isExpired = (currentTime - tokenTime) > 24 * 60 * 60 * 1000; // 24 hours
-          
-          if (isExpired) {
-            console.log('🔍 [DEBUG] Token expired, redirecting to login');
-            storage.removeToken();
-            router.replace('/admin/login');
-            return;
-          }
-        }
-        
+      // Use centralized token validation
+      if (tokenManager.validateToken(token)) {
         setIsAuthenticated(true);
         setIsLoading(false);
       } else {
         console.log('🔍 [DEBUG] Invalid token format, redirecting to login');
-        storage.removeToken();
+        tokenManager.removeToken();
         router.replace('/admin/login');
       }
     };

@@ -1,5 +1,8 @@
 Make sure you create, update, and enhance all required files and codes. Inject all codes into the ecommerce-platform folder as well.
 
+Audit Admin setup and let me know why dashboard will 
+not display after admin login.
+
 Ensure the admin login system is now accessible at 
 https://afrosuperstore.ca/admin/login with a complete, 
 secure authentication flow that displays the dashboard 
