@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic';
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap", // Fix font preloading warning
 });
 
 export const metadata: Metadata = {
