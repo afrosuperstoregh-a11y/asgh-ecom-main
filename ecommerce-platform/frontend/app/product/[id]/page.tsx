@@ -208,9 +208,9 @@ export default function ProductPage() {
           <div className="space-y-4">
             {/* Main Media Display */}
             <div className="aspect-square bg-white rounded-lg overflow-hidden">
-              {product.videos && product.videos.length > 0 && currentMediaIndex < product.videos.length ? (
+              {product.videos && product.videos.length > 0 && currentMediaIndex >= product.images.length ? (
                 <ProductVideo
-                  src={product.videos[currentMediaIndex]}
+                  src={product.videos[currentMediaIndex - product.images.length]}
                   poster={product.images[0] || '/placeholder-product.svg'}
                   title={product.name}
                   className="w-full h-full"
@@ -232,7 +232,7 @@ export default function ProductPage() {
                   key={`img-${index}`}
                   onClick={() => setCurrentMediaIndex(index)}
                   className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                    currentMediaIndex === index && !(product.videos && currentMediaIndex < product.videos.length)
+                    currentMediaIndex === index
                       ? 'border-primary-600'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}

@@ -63,12 +63,18 @@ export async function GET(request: NextRequest) {
         const { data: products, error, count } = await query;
 
         if (!error && products) {
+          // Add videos field to products if it doesn't exist
+          const productsWithVideos = products.map(product => ({
+            ...product,
+            videos: product.videos || [] // Ensure videos field exists
+          }));
+
           const totalItems = count || 0;
           const totalPages = Math.ceil(totalItems / limit);
 
           return NextResponse.json({
             success: true,
-            data: products,
+            data: productsWithVideos,
             pagination: {
               current_page: page,
               total_pages: totalPages,

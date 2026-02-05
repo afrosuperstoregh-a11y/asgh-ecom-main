@@ -41,9 +41,15 @@ export async function GET(
           .single();
         
         if (!error && product) {
+          // Ensure videos field exists
+          const productWithVideos = {
+            ...product,
+            videos: product.videos || []
+          };
+
           return NextResponse.json({
             success: true,
-            data: product
+            data: productWithVideos
           });
         }
       } catch (supabaseError) {
