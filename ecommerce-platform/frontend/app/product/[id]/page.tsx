@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, ShoppingCart, Star, Truck, Shield, Plus, Minus, Play } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Star, Truck, Shield, Plus, Minus, X, ZoomIn, ZoomOut, Play } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '../../../context/CartContext';
 import ProductVideo from '../../../components/ProductVideo';
@@ -44,6 +44,8 @@ export default function ProductPage() {
   const [error, setError] = useState('');
   const [addingToCart, setAddingToCart] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomedImageIndex, setZoomedImageIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -207,7 +209,7 @@ export default function ProductPage() {
           {/* Product Media Gallery */}
           <div className="space-y-4">
             {/* Main Media Display */}
-            <div className="aspect-square bg-white rounded-lg overflow-hidden">
+            <div className="aspect-square bg-white rounded-lg overflow-hidden relative">
               {product.videos && product.videos.length > 0 && currentMediaIndex >= product.images.length ? (
                 <ProductVideo
                   src={product.videos[currentMediaIndex - product.images.length]}
@@ -216,11 +218,17 @@ export default function ProductPage() {
                   className="w-full h-full"
                 />
               ) : (
-                <img
-                  src={product.images[currentMediaIndex] || '/placeholder-product.svg'}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
+                <div className="relative group cursor-zoom-in" onClick={() => setIsZoomed(true)}>
+                  <img
+                    src={product.images[currentMediaIndex] || '/placeholder-product.svg'}
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                  />
+                  {/* Zoom Icon Overlay */}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center pointer-events-none">
+                    <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  </div>
+                </div>
               )}
             </div>
 
@@ -359,12 +367,77 @@ export default function ProductPage() {
                 <div className="text-sm text-gray-600">
                   <p><strong>SKU:</strong> {product.sku}</p>
                   <p><strong>Category:</strong> {product.category?.name}</p>
-                </div>
+            </div>
+
+            {/* Product Info */}
+            <div className="border-t pt-6 space-y-4">
+              <div className="flex items-center space-x-2 text-gray-600">
+                <Truck className="h-5 w-5" />
+                <span>Free shipping on orders over $50</span>
+              </div>
+              <div className="flex items-center space-x-2 text-gray-600">
+                <Shield className="h-5 w-5" />
+                <span>1-year warranty included</span>
+              </div>
+              <div className="text-sm text-gray-600">
+                <p><strong>SKU:</strong> {product.sku}</p>
+                <p><strong>Category:</strong> {product.category?.name}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
-}
+  </div>
+
+  {/* Zoom Modal */}
+  {isZoomed && (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+      onClick={() => setIsZoomed(false)}
+    >
+      <div 
+        className="relative max-w-7xl max-h-screen bg-white rounded-lg overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button
+          onClick={() => setIsZoomed(false)}
+          className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors"
+        >
+          <X className="h-5 w-5 text-gray-600" />
+        </button>
+
+        {/* Zoom Controls */}
+        <div className="absolute top-4 left-4 z-10 flex gap-2">
+          <button
+            onClick={() => setZoomedImageIndex(null)}
+            className="bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors"
+            title="Zoom out"
+          >
+            <ZoomOut className="h-5 w-5 text-gray-600" />
+          </button>
+        </div>
+
+        {/* Image Gallery in Zoom */}
+        <div className="flex gap-4 p-4 overflow-x-auto">
+          {product.images.map((image, index) => (
+            <div
+              key={`zoom-img-${index}`}
+              className={`flex-shrink-0 cursor-pointer transition-all duration-200 ${
+                zoomedImageIndex === index ? 'ring-4 ring-primary-600' : ''
+              }`}
+              onClick={() => setZoomedImageIndex(index)}
+            >
+              <img
+                src={image}
+                alt={`${product.name} - Image ${index + 1}`}
+                className="max-w-md max-h-[80vh] object-contain rounded-lg"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )}
+);
