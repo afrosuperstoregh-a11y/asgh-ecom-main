@@ -241,7 +241,7 @@ export default function ProductPage() {
                 {originalPrice && (
                   <span className="text-xl text-gray-500 line-through">${originalPrice}</span>
                 )}
-                {product.discountPrice && (
+                {product.discountPrice && originalPrice && (
                   <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-semibold">
                     Save ${originalPrice - displayPrice}
                   </span>
