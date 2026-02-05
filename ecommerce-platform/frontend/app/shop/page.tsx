@@ -2,14 +2,26 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { products, Product } from '../../data/products';
+import { products as productsAPI, Product } from '../../data/products';
 import { useCart } from "../../context/CartContext";
 import { Loader2, Search, Filter, Grid, List, Star, ShoppingCart, X } from 'lucide-react';
 
+// Extended product type for UI compatibility
+interface UIProduct extends Product {
+  brand: string;
+  category: string;
+  discountPrice?: number;
+  colors: string[];
+  sizes: string[];
+  rating: number;
+  reviewCount: number;
+  inStock: boolean;
+}
+
 function ShopPageContent() {
   const searchParams = useSearchParams();
-  const [productsList, setProductsList] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [productsList, setProductsList] = useState<UIProduct[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<UIProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParams?.get('search') || '');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -33,14 +45,29 @@ function ShopPageContent() {
   const [sort, setSort] = useState(searchParams?.get('sort') || 'featured');
 
   useEffect(() => {
-    // Load products from local data
+    // Load products from API
     const loadProducts = async () => {
       try {
         setLoading(true);
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setProductsList(products);
-        setFilteredProducts(products);
+        // Fetch products from API
+        const productsData = await productsAPI.getAll();
+        
+        // Transform API data to match UI expectations
+        const transformedProducts = productsData.map(product => ({
+          ...product,
+          // Map API fields to UI expected fields
+          brand: product.tags?.[0] || 'Unknown', // Use first tag as brand
+          category: product.category_name || 'Uncategorized',
+          discountPrice: product.compare_price && product.compare_price > product.price ? product.price : undefined,
+          colors: [], // API doesn't have colors, use empty array
+          sizes: [], // API doesn't have sizes, use empty array
+          rating: 0, // API doesn't have rating, use default
+          reviewCount: 0, // API doesn't have review count, use default
+          inStock: product.inventory_quantity > 0 || product.allow_backorder
+        }));
+        
+        setProductsList(transformedProducts);
+        setFilteredProducts(transformedProducts);
       } catch (err) {
         console.error('Error loading products:', err);
         setProductsList([]);
@@ -135,7 +162,7 @@ function ShopPageContent() {
     setFilteredProducts(filtered);
   }, [productsList, searchQuery, filters, sort]);
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: UIProduct) => {
     addToCart({
       id: product.id,
       name: product.name,

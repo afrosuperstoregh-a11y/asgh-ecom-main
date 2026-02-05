@@ -1,26 +1,64 @@
 const express = require('express');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
-const { Pool } = require('pg');
+const { supabase } = require('../config/supabase');
 const router = express.Router();
-
-// Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
 
 // Get all products (public)
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM products WHERE status = $1 ORDER BY created_at DESC',
-      ['active']
-    );
-    
+    const { page = 1, limit = 20, sort = 'created_at', order = 'DESC', category, search } = req.query;
+    const offset = (page - 1) * limit;
+
+    let query = supabase
+      .from('products')
+      .select(`
+        *,
+        categories!inner(name, slug)
+      `);
+
+    // Add status filter
+    query = query.eq('status', 'active');
+
+    // Add category filter
+    if (category) {
+      query = query.or(`categories.slug.eq.${category},categories.name.eq.${category}`);
+    }
+
+    // Add search filter
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,sku.ilike.%${search}%`);
+    }
+
+    // Add ordering
+    query = query.order(sort, { ascending: order === 'ASC' });
+
+    // Add pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: products, error, count } = await query;
+
+    if (error) {
+      console.error('Error fetching products:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to fetch products'
+      });
+    }
+
+    const totalItems = count || 0;
+    const totalPages = Math.ceil(totalItems / limit);
+
     res.json({
       success: true,
-      data: result.rows,
-      count: result.rows.length
+      data: products || [],
+      pagination: {
+        current_page: parseInt(page),
+        total_pages: totalPages,
+        total_items: totalItems,
+        items_per_page: parseInt(limit),
+        has_next: page < totalPages,
+        has_prev: page > 1
+      }
     });
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -31,16 +69,77 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get products by category (public)
+router.get('/category/:categoryId', async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const { page = 1, limit = 20, sort = 'created_at', order = 'DESC' } = req.query;
+    const offset = (page - 1) * limit;
+
+    let query = supabase
+      .from('products')
+      .select(`
+        *,
+        categories!inner(name, slug)
+      `)
+      .eq('status', 'active')
+      .or(`category_id.eq.${categoryId},categories.slug.eq.${categoryId}`);
+
+    // Add ordering
+    query = query.order(sort, { ascending: order === 'ASC' });
+
+    // Add pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: products, error, count } = await query;
+
+    if (error) {
+      console.error('Error fetching products by category:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to fetch products by category'
+      });
+    }
+
+    const totalItems = count || 0;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    res.json({
+      success: true,
+      data: products || [],
+      pagination: {
+        current_page: parseInt(page),
+        total_pages: totalPages,
+        total_items: totalItems,
+        items_per_page: parseInt(limit),
+        has_next: page < totalPages,
+        has_prev: page > 1
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching products by category:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch products by category'
+    });
+  }
+});
+
 // Get single product (public)
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await pool.query(
-      'SELECT * FROM products WHERE id = $1 OR slug = $1',
-      [id]
-    );
     
-    if (result.rows.length === 0) {
+    const { data: product, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        categories!inner(name, slug)
+      `)
+      .or(`id.eq.${id},slug.eq.${id}`)
+      .single();
+    
+    if (error || !product) {
       return res.status(404).json({
         success: false,
         message: 'Product not found'
@@ -49,7 +148,7 @@ router.get('/:id', async (req, res) => {
     
     res.json({
       success: true,
-      data: result.rows[0]
+      data: product
     });
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -92,31 +191,94 @@ router.post('/', async (req, res) => {
       seo_description
     } = req.body;
 
-    const query = `
-      INSERT INTO products (
-        name, slug, description, short_description, sku, price, compare_price,
-        cost_price, weight, dimensions, category_id, images, tags,
-        inventory_quantity, track_inventory, allow_backorder, requires_shipping,
-        is_digital, status, featured, seo_title, seo_description
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-        $14, $15, $16, $17, $18, $19, $20, $21, $22
-      ) RETURNING *
-    `;
+    // Validation
+    if (!name || !sku || price === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, SKU, and price are required'
+      });
+    }
 
-    const values = [
-      name, slug, description, short_description, sku, price, compare_price,
-      cost_price, weight, dimensions, category_id, JSON.stringify(images),
-      JSON.stringify(tags), inventory_quantity, track_inventory, allow_backorder,
-      requires_shipping, is_digital, status, featured, seo_title, seo_description
-    ];
+    if (inventory_quantity < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Stock quantity cannot be negative'
+      });
+    }
 
-    const result = await pool.query(query, values);
+    // Check SKU uniqueness
+    const { data: existingSku } = await supabase
+      .from('products')
+      .select('id')
+      .eq('sku', sku)
+      .single();
+
+    if (existingSku) {
+      return res.status(409).json({
+        success: false,
+        message: 'SKU already exists'
+      });
+    }
+
+    // Validate category exists
+    if (category_id) {
+      const { data: categoryExists } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('id', category_id)
+        .single();
+
+      if (!categoryExists) {
+        return res.status(400).json({
+          success: false,
+          message: 'Category not found'
+        });
+      }
+    }
+
+    const productData = {
+      name,
+      slug,
+      description,
+      short_description,
+      sku,
+      price,
+      compare_price,
+      cost_price,
+      weight,
+      dimensions,
+      category_id,
+      images,
+      tags,
+      inventory_quantity,
+      track_inventory,
+      allow_backorder,
+      requires_shipping,
+      is_digital,
+      status,
+      featured,
+      seo_title,
+      seo_description
+    };
+
+    const { data: result, error } = await supabase
+      .from('products')
+      .insert(productData)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating product:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to create product'
+      });
+    }
     
     res.status(201).json({
       success: true,
       message: 'Product created successfully',
-      data: result.rows[0]
+      data: result
     });
   } catch (error) {
     console.error('Error creating product:', error);
@@ -133,27 +295,14 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     
-    // Convert JSON fields
-    if (updates.images) updates.images = JSON.stringify(updates.images);
-    if (updates.tags) updates.tags = JSON.stringify(updates.tags);
+    const { data: result, error } = await supabase
+      .from('products')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .or(`id.eq.${id},slug.eq.${id}`)
+      .select()
+      .single();
     
-    // Build dynamic update query
-    const setClause = Object.keys(updates)
-      .map((key, index) => `${key} = $${index + 2}`)
-      .join(', ');
-    
-    const query = `
-      UPDATE products 
-      SET ${setClause}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1 OR slug = $1
-      RETURNING *
-    `;
-    
-    const values = [id, ...Object.values(updates)];
-    
-    const result = await pool.query(query, values);
-    
-    if (result.rows.length === 0) {
+    if (error || !result) {
       return res.status(404).json({
         success: false,
         message: 'Product not found'
@@ -163,7 +312,7 @@ router.put('/:id', async (req, res) => {
     res.json({
       success: true,
       message: 'Product updated successfully',
-      data: result.rows[0]
+      data: result
     });
   } catch (error) {
     console.error('Error updating product:', error);
@@ -180,12 +329,17 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     
     // Soft delete by setting status to archived
-    const result = await pool.query(
-      'UPDATE products SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 OR slug = $2 RETURNING *',
-      ['archived', id]
-    );
+    const { data: result, error } = await supabase
+      .from('products')
+      .update({ 
+        status: 'archived', 
+        updated_at: new Date().toISOString() 
+      })
+      .or(`id.eq.${id},slug.eq.${id}`)
+      .select()
+      .single();
     
-    if (result.rows.length === 0) {
+    if (error || !result) {
       return res.status(404).json({
         success: false,
         message: 'Product not found'
@@ -195,7 +349,7 @@ router.delete('/:id', async (req, res) => {
     res.json({
       success: true,
       message: 'Product deleted successfully',
-      data: result.rows[0]
+      data: result
     });
   } catch (error) {
     console.error('Error deleting product:', error);

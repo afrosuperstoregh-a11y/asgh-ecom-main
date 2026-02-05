@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -5,7 +7,6 @@ const compression = require('compression');
 const morgan = require('morgan');
 const { generalLimiter } = require('./middleware/rateLimiter');
 const { testConnection } = require('./config/supabase');
-require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
