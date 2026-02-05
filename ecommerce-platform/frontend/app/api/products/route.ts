@@ -105,9 +105,9 @@ export async function GET(request: NextRequest) {
         cost_price: null,
         weight: null,
         dimensions: null,
-        category_id: "1", 
-        vendor_id: null,
-        images: ["https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/girls-dashiki.jpg"],
+        category_id: "1",  
+        vendor_id: null, 
+        images: ["https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/Dashiki%20ladies.jpg"],
         videos: ["/sample-product-video.mp4"], // Add sample video
         tags: ["dashiki", "women", "traditional", "african"],
         inventory_quantity: 50,
@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
         dimensions: null,
         category_id: "2",
         vendor_id: null,
-        images: ["https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/boys-dashiki.jpg"],
+        images: ["https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/Dashiki%20Shirt.jpeg"],
         videos: [], // Add videos field - empty for now
         tags: ["dashiki", "men", "traditional", "african"],
         inventory_quantity: 50,
@@ -175,7 +175,7 @@ export async function GET(request: NextRequest) {
         dimensions: null,
         category_id: "3",
         vendor_id: null,
-        images: ["https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku-flour.jpg"],
+        images: ["https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku%20Flour.jpg"],
         videos: [], // Add videos field - empty for now
         tags: ["banku", "flour", "fermented", "ghanaian", "food"],
         inventory_quantity: 100,
