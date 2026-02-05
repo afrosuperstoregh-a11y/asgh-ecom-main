@@ -31,7 +31,7 @@ const realProducts = [
     short_description: 'Latest style ladies Dashiki dress.',
     sku: '100206',
     price: 30.00,
-    category_name: 'Women Fashion',
+    category_name: "Women's Fashion",
     inventory_quantity: 50,
     status: 'active',
     images: ['https://your-supabase-project.supabase.co/storage/v1/object/public/product-images/girls-dashiki.jpg'],
@@ -45,7 +45,7 @@ const realProducts = [
     short_description: 'Latest style boys Dashiki dress.',
     sku: '100207',
     price: 30.00,
-    category_name: 'Men Fashion',
+    category_name: "Men's Fashion",
     inventory_quantity: 50,
     status: 'active',
     images: ['https://your-supabase-project.supabase.co/storage/v1/object/public/product-images/boys-dashiki.jpg'],
@@ -59,7 +59,7 @@ const realProducts = [
     short_description: 'Premium quality fermented banku flour.',
     sku: '100201',
     price: 50.00,
-    category_name: 'Food',
+    category_name: 'Food & Beverages',
     inventory_quantity: 100,
     status: 'active',
     images: ['https://your-supabase-project.supabase.co/storage/v1/object/public/product-images/banku-flour.jpg'],
@@ -73,7 +73,7 @@ const realProducts = [
     short_description: 'High Quality Banku Mix Powder.',
     sku: '100202',
     price: 40.00,
-    category_name: 'Food',
+    category_name: 'Food & Beverages',
     inventory_quantity: 100,
     status: 'active',
     images: ['https://your-supabase-project.supabase.co/storage/v1/object/public/product-images/banku-mix.jpg'],
@@ -87,7 +87,7 @@ const realProducts = [
     short_description: 'Delicious grilled barbeque skewers.',
     sku: '100203',
     price: 3.00,
-    category_name: 'Food',
+    category_name: 'Food & Beverages',
     inventory_quantity: 200,
     status: 'active',
     images: ['https://your-supabase-project.supabase.co/storage/v1/object/public/product-images/barbeque.jpg'],
@@ -113,9 +113,9 @@ async function setupRealProducts() {
     // 2. Setup required categories
     console.log('📂 Setting up required categories...');
     const categories = [
-      { name: 'Women Fashion', slug: 'women-fashion', description: 'Latest women\'s fashion and clothing', sort_order: 1 },
-      { name: 'Men Fashion', slug: 'men-fashion', description: 'Latest men\'s fashion and clothing', sort_order: 2 },
-      { name: 'Food', slug: 'food', description: 'Authentic African food products', sort_order: 3 }
+      { name: "Women's Fashion", slug: 'women', description: 'Trendy fashion for modern women', sort_order: 1 },
+      { name: "Men's Fashion", slug: 'men', description: 'Stylish clothing and accessories for men', sort_order: 2 },
+      { name: 'Food & Beverages', slug: 'food-beverages', description: 'Premium quality food and beverages', sort_order: 3 }
     ];
 
     for (const category of categories) {
@@ -136,7 +136,7 @@ async function setupRealProducts() {
     const { data: categoryData } = await supabase
       .from('categories')
       .select('id, name')
-      .in('name', ['Women Fashion', 'Men Fashion', 'Food']);
+      .in('name', ["Women's Fashion", "Men's Fashion", 'Food & Beverages']);
 
     const categoryMap = {};
     categoryData?.forEach(cat => {

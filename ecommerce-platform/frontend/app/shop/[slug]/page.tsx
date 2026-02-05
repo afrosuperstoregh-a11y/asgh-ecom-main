@@ -31,6 +31,9 @@ const categories: Category[] = [
   { id: 4, name: 'Home & Living', slug: 'home-living', description: 'Everything to make your house a home' },
   { id: 5, name: 'Beauty & Health', slug: 'beauty-health', description: 'Skincare, makeup, and wellness products' },
   { id: 6, name: 'Sports & Fitness', slug: 'sports-fitness', description: 'Gear for active lifestyles' },
+  { id: 7, name: 'Food & Beverages', slug: 'food-beverages', description: 'Premium quality food and beverages' },
+  { id: 8, name: 'Jewelry & Accessories', slug: 'jewelry-accessories', description: 'Premium quality jewelry and accessories' },
+  { id: 9, name: 'Books & Media', slug: 'books-media', description: 'Premium quality books and media' },
 ];
 
 export default function CategoryPage() {
