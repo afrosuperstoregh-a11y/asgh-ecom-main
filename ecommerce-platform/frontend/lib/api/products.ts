@@ -19,6 +19,7 @@ export interface Product {
   category_name?: string;
   category_slug?: string;
   images: string[];
+  videos?: string[]; // New field for product videos
   tags: string[];
   inventory_quantity: number;
   track_inventory: boolean;

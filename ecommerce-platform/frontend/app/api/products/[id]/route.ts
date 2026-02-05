@@ -71,6 +71,7 @@ export async function GET(
         category_id: "1",
         vendor_id: null,
         images: ["/placeholder-product.svg"],
+        videos: ["/sample-product-video.mp4"], // Add sample video
         tags: ["dashiki", "women", "traditional", "african"],
         inventory_quantity: 50,
         track_inventory: true,
@@ -104,6 +105,7 @@ export async function GET(
         category_id: "2",
         vendor_id: null,
         images: ["/placeholder-product.svg"],
+        videos: [], // Add videos field - empty for now
         tags: ["dashiki", "men", "traditional", "african"],
         inventory_quantity: 50,
         track_inventory: true,
@@ -137,6 +139,7 @@ export async function GET(
         category_id: "3",
         vendor_id: null,
         images: ["/placeholder-product.svg"],
+        videos: [], // Add videos field - empty for now
         tags: ["banku", "flour", "fermented", "ghanaian", "food"],
         inventory_quantity: 100,
         track_inventory: true,

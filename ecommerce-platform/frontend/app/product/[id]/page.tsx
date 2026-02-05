@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, ShoppingCart, Star, Truck, Shield, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Star, Truck, Shield, Plus, Minus, Play } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '../../../context/CartContext';
+import ProductVideo from '../../../components/ProductVideo';
 
 interface Product {
   id: string;
@@ -17,6 +18,7 @@ interface Product {
   featured: boolean;
   stock: number;
   images: string[];
+  videos?: string[]; // Add videos field
   category: {
     id: string;
     name: string;
@@ -41,6 +43,7 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [addingToCart, setAddingToCart] = useState(false);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -201,14 +204,63 @@ export default function ProductPage() {
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Product Images */}
+          {/* Product Media Gallery */}
           <div className="space-y-4">
+            {/* Main Media Display */}
             <div className="aspect-square bg-white rounded-lg overflow-hidden">
-              <img
-                src={product.images[0] || '/placeholder-product.jpg'}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+              {product.videos && product.videos.length > 0 && currentMediaIndex < product.videos.length ? (
+                <ProductVideo
+                  src={product.videos[currentMediaIndex]}
+                  poster={product.images[0] || '/placeholder-product.svg'}
+                  title={product.name}
+                  className="w-full h-full"
+                />
+              ) : (
+                <img
+                  src={product.images[currentMediaIndex] || '/placeholder-product.svg'}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              )}
+            </div>
+
+            {/* Media Thumbnails */}
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {/* Images */}
+              {product.images.map((image, index) => (
+                <button
+                  key={`img-${index}`}
+                  onClick={() => setCurrentMediaIndex(index)}
+                  className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                    currentMediaIndex === index && !(product.videos && currentMediaIndex < product.videos.length)
+                      ? 'border-primary-600'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <img
+                    src={image}
+                    alt={`${product.name} - Image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+              
+              {/* Videos */}
+              {product.videos && product.videos.map((video, index) => (
+                <button
+                  key={`video-${index}`}
+                  onClick={() => setCurrentMediaIndex(product.images.length + index)}
+                  className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                    currentMediaIndex === product.images.length + index
+                      ? 'border-primary-600'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <Play className="h-6 w-6 text-gray-600" />
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
 
