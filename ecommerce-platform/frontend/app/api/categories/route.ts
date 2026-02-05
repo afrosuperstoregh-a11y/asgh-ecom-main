@@ -1,8 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+// Supabase configuration - use anon key for public read operations
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// Create Supabase client with fallback to mock data
+const createSupabaseClient = () => {
+  if (supabaseUrl && supabaseAnonKey) {
+    return createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+  }
+  return null;
+};
 
 export async function GET(request: NextRequest) {
   try {
-    // Mock categories data for now
+    // Try to get data from Supabase first
+    const supabase = createSupabaseClient();
+    
+    if (supabase) {
+      try {
+        const { data: categories, error } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('is_active', true)
+          .order('sort_order', { ascending: true });
+
+        if (!error && categories) {
+          // Get product counts for each category
+          const categoriesWithCounts = await Promise.all(
+            categories.map(async (category) => {
+              const { count } = await supabase
+                .from('products')
+                .select('*', { count: 'exact', head: true })
+                .eq('category_id', category.id)
+                .eq('status', 'active');
+
+              return {
+                ...category,
+                product_count: count || 0
+              };
+            })
+          );
+
+          return NextResponse.json({
+            success: true,
+            data: categoriesWithCounts,
+            count: categoriesWithCounts.length
+          });
+        }
+      } catch (supabaseError) {
+        console.warn('Supabase query failed, falling back to mock data:', supabaseError);
+      }
+    }
+
+    // Fallback to mock data if Supabase fails or isn't configured
+    console.log('Using mock data for categories');
     const mockCategories = [
       {
         id: "1",
