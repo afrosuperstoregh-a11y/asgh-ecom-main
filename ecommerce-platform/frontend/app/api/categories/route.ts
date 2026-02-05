@@ -2,28 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing Supabase configuration');
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+// Create Supabase client only if credentials are available
+const supabase = supabaseUrl && supabaseServiceKey 
+  ? createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+  : null;
 
 export async function GET(request: NextRequest) {
   try {
+    if (!supabase) {
+      return NextResponse.json({
+        success: false,
+        message: 'Database not configured'
+      }, { status: 500 });
+    }
+
     const { data: categories, error } = await supabase
       .from('categories')
-      .select(`
-        *,
-        products!inner(count)
-      `)
+      .select('*')
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
 
@@ -35,17 +38,26 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Transform data to include product count
-    const transformedCategories = categories?.map(cat => ({
-      ...cat,
-      product_count: cat.products?.length || 0,
-      products: undefined // Remove the nested products array
-    })) || [];
+    // Get product counts for each category
+    const categoriesWithCounts = await Promise.all(
+      (categories || []).map(async (category) => {
+        const { count } = await supabase
+          .from('products')
+          .select('*', { count: 'exact', head: true })
+          .eq('category_id', category.id)
+          .eq('status', 'active');
+
+        return {
+          ...category,
+          product_count: count || 0
+        };
+      })
+    );
 
     return NextResponse.json({
       success: true,
-      data: transformedCategories,
-      count: transformedCategories.length
+      data: categoriesWithCounts,
+      count: categoriesWithCounts.length
     });
   } catch (error) {
     console.error('Error in categories API:', error);
