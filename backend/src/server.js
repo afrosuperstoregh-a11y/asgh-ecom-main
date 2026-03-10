@@ -5,7 +5,7 @@ const compression = require('compression');
 const morgan = require('morgan');
 const path = require('path');
 
-// Use absolute paths based on the current file location
+// Production deployment fix - v2 - Use absolute paths based on the current file location
 const configPath = path.join(__dirname, 'config', 'env');
 const config = require(configPath);
 
