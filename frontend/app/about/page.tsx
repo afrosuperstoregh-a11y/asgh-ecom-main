@@ -29,7 +29,7 @@ export default function AboutPage() {
         
         // Load categories
         const categoriesResponse = await api.getCategories();
-        const categoriesData = categoriesResponse.data;
+        const categoriesData = categoriesResponse.data || [];
         setCategoriesList(categoriesData);
         
         setFilteredProducts(productsData);
