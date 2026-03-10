@@ -3,13 +3,29 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
-const config = require('./config/env');
-const { generalLimiter } = require('./middleware/rateLimiter');
-const { rateLimiters } = require('./middleware/redisRateLimiter');
-const { testConnection } = require('./config/supabase');
-const { testConnection: testRedisConnection } = require('./config/redis');
-const { sessionMiddleware } = require('./config/session');
-const logger = require('./utils/logger');
+const path = require('path');
+
+// Use absolute paths based on the current file location
+const configPath = path.join(__dirname, 'config', 'env');
+const config = require(configPath);
+
+const rateLimiterPath = path.join(__dirname, 'middleware', 'rateLimiter');
+const { generalLimiter } = require(rateLimiterPath);
+
+const redisRateLimiterPath = path.join(__dirname, 'middleware', 'redisRateLimiter');
+const { rateLimiters } = require(redisRateLimiterPath);
+
+const supabasePath = path.join(__dirname, 'config', 'supabase');
+const { testConnection } = require(supabasePath);
+
+const redisPath = path.join(__dirname, 'config', 'redis');
+const { testConnection: testRedisConnection } = require(redisPath);
+
+const sessionPath = path.join(__dirname, 'config', 'session');
+const { sessionMiddleware } = require(sessionPath);
+
+const loggerPath = path.join(__dirname, 'utils', 'logger');
+const logger = require(loggerPath);
 
 const app = express();
 const PORT = config.port;
@@ -194,17 +210,17 @@ app.use(express.static('public'));
 // API Routes
 // Note: /api/auth routes are now handled by Supabase directly in the frontend
 // We'll keep the health check endpoint but disable the old auth routes
-// app.use('/api/auth', require('./routes/auth')); // Disabled - using Supabase Auth
-app.use('/api/admin', require('./routes/admin'));
-// app.use('/api/analytics', require('./routes/analytics'));
-app.use('/api/products', require('./routes/products'));
-app.use('/api/orders', require('./routes/orders'));
-// app.use('/api/payments', require('./routes/payments'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/categories', require('./routes/categories'));
-app.use('/api/settings', require('./routes/settings'));
-app.use('/api/crm', require('./routes/crm'));
-app.use('/api/cache', require('./routes/cache'));
+// app.use('/api/auth', require(path.join(__dirname, 'routes', 'auth'))); // Disabled - using Supabase Auth
+app.use('/api/admin', require(path.join(__dirname, 'routes', 'admin')));
+// app.use('/api/analytics', require(path.join(__dirname, 'routes', 'analytics')));
+app.use('/api/products', require(path.join(__dirname, 'routes', 'products')));
+app.use('/api/orders', require(path.join(__dirname, 'routes', 'orders')));
+// app.use('/api/payments', require(path.join(__dirname, 'routes', 'payments')));
+app.use('/api/users', require(path.join(__dirname, 'routes', 'users')));
+app.use('/api/categories', require(path.join(__dirname, 'routes', 'categories')));
+app.use('/api/settings', require(path.join(__dirname, 'routes', 'settings')));
+app.use('/api/crm', require(path.join(__dirname, 'routes', 'crm')));
+app.use('/api/cache', require(path.join(__dirname, 'routes', 'cache')));
 
 // 404 handler
 app.use('*', (req, res) => {
