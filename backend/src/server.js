@@ -1,15 +1,18 @@
-require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
+const config = require('./config/env');
 const { generalLimiter } = require('./middleware/rateLimiter');
+const { rateLimiters } = require('./middleware/redisRateLimiter');
 const { testConnection } = require('./config/supabase');
+const { testConnection: testRedisConnection } = require('./config/redis');
+const { sessionMiddleware } = require('./config/session');
+const logger = require('./utils/logger');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = config.port;
 
 // Security middleware with proper configuration
 app.use(helmet({
@@ -41,14 +44,7 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'https://www.afrosuperstore.ca',
-    'https://afrosuperstore.ca',
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'chrome-extension://*', // Allow browser extensions
-    'moz-extension://*' // Allow Firefox extensions
-  ],
+  origin: config.cors.origins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Extension-ID'],
@@ -57,6 +53,15 @@ app.use(cors({
 
 // Rate limiting
 app.use(generalLimiter);
+
+// Session middleware
+app.use(sessionMiddleware);
+
+// Redis-based rate limiting for sensitive endpoints
+app.use('/api/auth/login', rateLimiters.login);
+app.use('/api/auth/register', rateLimiters.register);
+app.use('/api/orders', rateLimiters.orders);
+app.use('/api/payments', rateLimiters.payments);
 
 // Browser extension validation middleware - secure approach
 app.use((req, res, next) => {
@@ -187,16 +192,19 @@ app.use((req, res, next) => {
 app.use(express.static('public'));
 
 // API Routes
-app.use('/api/auth', require('./routes/auth'));
+// Note: /api/auth routes are now handled by Supabase directly in the frontend
+// We'll keep the health check endpoint but disable the old auth routes
+// app.use('/api/auth', require('./routes/auth')); // Disabled - using Supabase Auth
 app.use('/api/admin', require('./routes/admin'));
-app.use('/api/analytics', require('./routes/analytics'));
+// app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
-app.use('/api/payments', require('./routes/payments'));
+// app.use('/api/payments', require('./routes/payments'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/crm', require('./routes/crm'));
+app.use('/api/cache', require('./routes/cache'));
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -275,6 +283,14 @@ app.listen(PORT, '0.0.0.0', async () => {
     console.log('🔐 Supabase connection established');
   } else {
     console.log('❌ Supabase connection failed');
+  }
+  
+  // Test Redis connection
+  const redisConnected = await testRedisConnection();
+  if (redisConnected) {
+    console.log('🔥 Redis connection established');
+  } else {
+    console.log('❌ Redis connection failed - caching disabled');
   }
 });
 
