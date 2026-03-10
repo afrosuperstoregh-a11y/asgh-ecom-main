@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-require('dotenv').config({ path: '.env.local' });
 
 // Supabase configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+// Don't throw error during build time
 if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing Supabase configuration');
-  throw new Error('Missing Supabase configuration');
+  if (process.env.NODE_ENV === 'development') {
+    console.error('Missing Supabase configuration');
+  }
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 // Type definitions
 interface ImageFile {
@@ -111,6 +112,14 @@ async function syncProductsFromStorage(): Promise<{
   error?: string;
 }> {
   try {
+    if (!supabase) {
+      return {
+        success: false,
+        message: 'Supabase configuration missing',
+        error: 'Missing Supabase configuration'
+      };
+    }
+    
     console.log('🚀 Starting product sync from Supabase Storage...');
     
     // Get all folders

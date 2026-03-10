@@ -112,4 +112,34 @@ export const categoriesApi = {
   deleteCategory: (id: string) => api.delete(`/categories/${id}`),
 }
 
+// Generic API request function
+export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
+  const { data: { session } } = await supabase.auth.getSession()
+  
+  const config: RequestInit = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(session?.access_token && { Authorization: `Bearer ${session.access_token}` }),
+      ...options.headers,
+    },
+    ...options,
+  }
+
+  const url = `${API_BASE_URL}${endpoint}`
+  
+  try {
+    const response = await fetch(url, config)
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('API request failed:', error)
+    throw error
+  }
+}
+
 export default api
