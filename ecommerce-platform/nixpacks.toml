@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["nodejs_20", "npm"]
-
-[phases.build]
-cmds = ["rm -rf node_modules package-lock.json", "npm install", "cd backend && npm install"]
-
-[start]
-cmd = "cd backend && node src/server.js"

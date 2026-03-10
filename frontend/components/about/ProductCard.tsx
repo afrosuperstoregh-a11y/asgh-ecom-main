@@ -12,7 +12,7 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) => {
   const hasDiscount = product.compare_price && product.compare_price > product.price;
   const discountPercentage = hasDiscount 
-    ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
+    ? Math.round(((product.compare_price! - product.price) / product.compare_price!) * 100)
     : 0;
 
   const inStock = product.inventory_quantity > 0 || product.allow_backorder;

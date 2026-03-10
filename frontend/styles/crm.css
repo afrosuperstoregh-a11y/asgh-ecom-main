@@ -1,0 +1,533 @@
+/**
+ * CRM Styles
+ * Styling for CRM components and interfaces
+ */
+
+/* CRM Dashboard Styles */
+.crm-dashboard {
+  @apply space-y-6;
+}
+
+.crm-stats-card {
+  @apply bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow;
+}
+
+.crm-stats-card .stat-icon {
+  @apply w-12 h-12 rounded-full flex items-center justify-center;
+}
+
+.crm-stats-card .stat-value {
+  @apply text-2xl font-bold text-gray-900;
+}
+
+.crm-stats-card .stat-label {
+  @apply text-sm text-gray-600;
+}
+
+.crm-stats-card .stat-change {
+  @apply flex items-center text-sm mt-1;
+}
+
+.crm-stats-card .stat-change.positive {
+  @apply text-green-600;
+}
+
+.crm-stats-card .stat-change.negative {
+  @apply text-red-600;
+}
+
+/* Customer Management Styles */
+.crm-customer-table {
+  @apply bg-white shadow rounded-lg overflow-hidden;
+}
+
+.crm-customer-row {
+  @apply hover:bg-gray-50 transition-colors;
+}
+
+.crm-customer-row td {
+  @apply px-6 py-4 whitespace-nowrap;
+}
+
+.crm-lifecycle-badge {
+  @apply px-2 py-1 text-xs font-medium rounded-full;
+}
+
+.crm-lifecycle-badge.lead {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.crm-lifecycle-badge.active {
+  @apply bg-green-100 text-green-800;
+}
+
+.crm-lifecycle-badge.inactive {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.crm-lifecycle-badge.vip {
+  @apply bg-purple-100 text-purple-800;
+}
+
+.crm-lifecycle-badge.churned {
+  @apply bg-red-100 text-red-800;
+}
+
+.crm-action-buttons {
+  @apply flex space-x-2;
+}
+
+.crm-action-button {
+  @apply p-1 rounded hover:bg-gray-100 transition-colors;
+}
+
+.crm-action-button.view {
+  @apply text-blue-600 hover:text-blue-800;
+}
+
+.crm-action-button.edit {
+  @apply text-yellow-600 hover:text-yellow-800;
+}
+
+.crm-action-button.delete {
+  @apply text-red-600 hover:text-red-800;
+}
+
+.crm-action-button.note {
+  @apply text-green-600 hover:text-green-800;
+}
+
+.crm-action-button.tag {
+  @apply text-purple-600 hover:text-purple-800;
+}
+
+/* Modal Styles */
+.crm-modal {
+  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+}
+
+.crm-modal-content {
+  @apply bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto;
+}
+
+.crm-modal-header {
+  @apply flex justify-between items-center mb-6;
+}
+
+.crm-modal-title {
+  @apply text-xl font-bold text-gray-900;
+}
+
+.crm-modal-close {
+  @apply text-gray-400 hover:text-gray-600 text-2xl;
+}
+
+.crm-form-group {
+  @apply space-y-4;
+}
+
+.crm-form-label {
+  @apply block text-sm font-medium text-gray-700 mb-1;
+}
+
+.crm-form-input {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+.crm-form-select {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+.crm-form-textarea {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none;
+}
+
+.crm-form-checkbox {
+  @apply flex items-center;
+}
+
+.crm-form-checkbox input {
+  @apply mr-2;
+}
+
+.crm-form-actions {
+  @apply flex justify-end space-x-3 mt-6;
+}
+
+.crm-button {
+  @apply px-4 py-2 rounded-lg font-medium transition-colors;
+}
+
+.crm-button.primary {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+
+.crm-button.secondary {
+  @apply border border-gray-300 text-gray-700 hover:bg-gray-50;
+}
+
+.crm-button.success {
+  @apply bg-green-600 text-white hover:bg-green-700;
+}
+
+.crm-button.danger {
+  @apply bg-red-600 text-white hover:bg-red-700;
+}
+
+.crm-button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Email Templates Styles */
+.crm-template-card {
+  @apply bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6;
+}
+
+.crm-template-header {
+  @apply flex items-center justify-between mb-4;
+}
+
+.crm-template-type-badge {
+  @apply px-2 py-1 text-xs font-medium rounded-full;
+}
+
+.crm-template-type-badge.transactional {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.crm-template-type-badge.marketing {
+  @apply bg-green-100 text-green-800;
+}
+
+.crm-template-type-badge.notification {
+  @apply bg-purple-100 text-purple-800;
+}
+
+.crm-template-actions {
+  @apply flex space-x-1;
+}
+
+.crm-template-action {
+  @apply p-1 rounded hover:bg-gray-100 transition-colors;
+}
+
+/* Automation Engine Styles */
+.crm-automation-card {
+  @apply bg-white rounded-lg shadow hover:shadow-lg transition-shadow;
+}
+
+.crm-automation-header {
+  @apply flex items-center justify-between mb-4;
+}
+
+.crm-automation-trigger-badge {
+  @apply px-2 py-1 text-xs font-medium rounded-full;
+}
+
+.crm-automation-trigger-badge.order_placed {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.crm-automation-trigger-badge.order_shipped {
+  @apply bg-green-100 text-green-800;
+}
+
+.crm-automation-trigger-badge.customer_inactive {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.crm-automation-trigger-badge.customer_signup {
+  @apply bg-purple-100 text-purple-800;
+}
+
+.crm-automation-trigger-badge.segment_changed {
+  @apply bg-indigo-100 text-indigo-800;
+}
+
+.crm-automation-trigger-badge.custom {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.crm-automation-actions {
+  @apply flex space-x-2;
+}
+
+.crm-automation-action {
+  @apply p-2 rounded-lg transition-colors;
+}
+
+.crm-automation-action.toggle {
+  @apply bg-green-100 text-green-700 hover:bg-green-200;
+}
+
+.crm-automation-action.toggle.inactive {
+  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+}
+
+.crm-automation-action.trigger {
+  @apply bg-blue-100 text-blue-700 hover:bg-blue-200;
+}
+
+.crm-automation-action.logs {
+  @apply bg-purple-100 text-purple-700 hover:bg-purple-200;
+}
+
+.crm-automation-action.edit {
+  @apply bg-yellow-100 text-yellow-700 hover:bg-yellow-200;
+}
+
+.crm-automation-action.delete {
+  @apply bg-red-100 text-red-700 hover:bg-red-200;
+}
+
+/* Action Configuration */
+.crm-action-config {
+  @apply bg-gray-50 p-4 rounded-lg space-y-3;
+}
+
+.crm-action-header {
+  @apply flex justify-between items-center mb-3;
+}
+
+.crm-action-type-select {
+  @apply px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+/* Customer Tags */
+.crm-tag {
+  @apply inline-block px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.crm-tag-list {
+  @apply flex flex-wrap gap-2;
+}
+
+.crm-tag-item {
+  @apply flex items-center space-x-2 bg-gray-50 p-2 border rounded-lg hover:bg-gray-100;
+}
+
+.crm-tag-color {
+  @apply w-4 h-4 rounded-full;
+}
+
+.crm-tag-actions {
+  @apply flex space-x-2;
+}
+
+/* Customer Notes */
+.crm-note-item {
+  @apply bg-gray-50 p-4 rounded-lg;
+}
+
+.crm-note-header {
+  @apply flex justify-between items-start mb-2;
+}
+
+.crm-note-type {
+  @apply text-sm font-medium text-gray-900 capitalize;
+}
+
+.crm-note-date {
+  @apply text-xs text-gray-500;
+}
+
+.crm-note-content {
+  @apply text-sm text-gray-700;
+}
+
+/* Analytics Charts */
+.crm-chart-container {
+  @apply bg-white p-6 rounded-lg shadow;
+}
+
+.crm-chart-header {
+  @apply flex items-center justify-between mb-4;
+}
+
+.crm-chart-title {
+  @apply text-lg font-semibold text-gray-900;
+}
+
+.crm-chart-icon {
+  @apply h-5 w-5 text-gray-400;
+}
+
+.crm-progress-bar {
+  @apply w-full bg-gray-200 rounded-full h-2;
+}
+
+.crm-progress-fill {
+  @apply h-2 rounded-full transition-all duration-300;
+}
+
+.crm-progress-fill.blue {
+  @apply bg-blue-500;
+}
+
+.crm-progress-fill.green {
+  @apply bg-green-500;
+}
+
+.crm-progress-fill.yellow {
+  @apply bg-yellow-500;
+}
+
+.crm-progress-fill.red {
+  @apply bg-red-500;
+}
+
+.crm-progress-fill.purple {
+  @apply bg-purple-500;
+}
+
+/* Loading States */
+.crm-loading {
+  @apply flex items-center justify-center h-64;
+}
+
+.crm-spinner {
+  @apply animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600;
+}
+
+/* Empty States */
+.crm-empty-state {
+  @apply text-center py-8;
+}
+
+.crm-empty-state-icon {
+  @apply mx-auto h-12 w-12 text-gray-400 mb-4;
+}
+
+.crm-empty-state-title {
+  @apply text-lg font-medium text-gray-900 mb-2;
+}
+
+.crm-empty-state-description {
+  @apply text-gray-500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .crm-modal-content {
+    @apply mx-4 max-w-full;
+  }
+  
+  .crm-stats-grid {
+    @apply grid-cols-1 gap-4;
+  }
+  
+  .crm-customer-table {
+    @apply overflow-x-auto;
+  }
+  
+  .crm-template-grid {
+    @apply grid-cols-1 gap-4;
+  }
+  
+  .crm-automation-actions {
+    @apply flex-wrap gap-1;
+  }
+}
+
+/* Animation Classes */
+.crm-fade-in {
+  @apply animate-fade-in;
+}
+
+.crm-slide-up {
+  @apply animate-slide-up;
+}
+
+.crm-scale-in {
+  @apply animate-scale-in;
+}
+
+/* Custom Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+/* Dark Mode Support (if needed) */
+@media (prefers-color-scheme: dark) {
+  .crm-dashboard {
+    @apply bg-gray-900 text-white;
+  }
+  
+  .crm-stats-card {
+    @apply bg-gray-800 text-white;
+  }
+  
+  .crm-customer-table {
+    @apply bg-gray-800 text-white;
+  }
+  
+  .crm-customer-row {
+    @apply hover:bg-gray-700;
+  }
+  
+  .crm-modal-content {
+    @apply bg-gray-800 text-white;
+  }
+  
+  .crm-form-input,
+  .crm-form-select,
+  .crm-form-textarea {
+    @apply bg-gray-700 border-gray-600 text-white;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .crm-action-buttons,
+  .crm-modal,
+  .crm-button {
+    @apply hidden;
+  }
+  
+  .crm-customer-table {
+    @apply shadow-none border;
+  }
+  
+  .crm-stats-card {
+    @apply shadow-none border;
+  }
+}

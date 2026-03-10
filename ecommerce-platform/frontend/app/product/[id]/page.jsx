@@ -1,8 +1,0 @@
-// DUPLICATE FILE - DELETED
-// This file was a duplicate of page.tsx and has been removed to fix Next.js conflicts
-// Please use page.tsx instead
-
-// Empty export to prevent Next.js errors
-export default function DuplicatePage() {
-  return null;
-}

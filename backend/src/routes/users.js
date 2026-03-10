@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { verifySupabaseUser, requireAdmin } = require('../middleware/supabaseAuth');
 const { Pool } = require('pg');
 const router = express.Router();
 
@@ -10,10 +10,10 @@ const pool = new Pool({
 });
 
 // Get all users (admin only)
-router.get('/', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/', verifySupabaseUser, requireAdmin, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, email, first_name, last_name, phone, role, email_verified, created_at FROM users ORDER BY created_at DESC'
+      'SELECT id, user_id, first_name, last_name, phone, role, email_verified, created_at FROM profiles ORDER BY created_at DESC'
     );
     res.json({
       success: true,
@@ -30,12 +30,12 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
 });
 
 // Get user profile (authenticated user or admin)
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', verifySupabaseUser, async (req, res) => {
   try {
     const { id } = req.params;
     
     // Check if user can access this profile
-    const canAccess = req.user.id === parseInt(id) || 
+    const canAccess = req.user.id === id || 
                     req.user.role === 'admin' || 
                     req.user.role === 'super_admin';
     
@@ -47,7 +47,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     }
     
     const result = await pool.query(
-      'SELECT id, email, first_name, last_name, phone, role, email_verified, created_at FROM users WHERE id = $1',
+      'SELECT id, user_id, first_name, last_name, phone, role, email_verified, created_at FROM profiles WHERE user_id = $1',
       [id]
     );
     
@@ -72,13 +72,13 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // Update user (self or admin only)
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', verifySupabaseUser, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
     
     // Check if user can update this profile
-    const canUpdate = req.user.id === parseInt(id) || 
+    const canUpdate = req.user.id === id || 
                     req.user.role === 'admin' || 
                     req.user.role === 'super_admin';
     
@@ -90,13 +90,14 @@ router.put('/:id', authenticateToken, async (req, res) => {
     }
     
     // Remove sensitive fields that shouldn't be updated directly
-    delete updates.password_hash;
-    delete updates.role; // Only admins can change roles
-    delete updates.email_verified; // Only admins can change this
+    delete updates.id;
+    delete updates.user_id;
+    delete updates.created_at;
     
-    // Allow admins to update role and email_verified
-    if (req.user.role === 'admin' || req.user.role === 'super_admin') {
-      // Allow role and email_verified updates for admins
+    // Only admins can change role
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      delete updates.role;
+      delete updates.email_verified;
     }
     
     // Build dynamic update query
@@ -112,10 +113,10 @@ router.put('/:id', authenticateToken, async (req, res) => {
     }
     
     const query = `
-      UPDATE users 
+      UPDATE profiles 
       SET ${setClause}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1
-      RETURNING id, email, first_name, last_name, phone, role, email_verified, updated_at
+      WHERE user_id = $1
+      RETURNING id, user_id, first_name, last_name, phone, role, email_verified, updated_at
     `;
     
     const values = [id, ...Object.values(updates)];
@@ -143,13 +144,13 @@ router.put('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Delete user (admin only)
-router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
+// Delete user (admin only) - this will delete from Supabase auth
+router.delete('/:id', verifySupabaseUser, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     
     // Prevent self-deletion
-    if (req.user.id === parseInt(id)) {
+    if (req.user.id === id) {
       return res.status(400).json({
         success: false,
         message: 'Cannot delete your own account'
@@ -157,7 +158,7 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
     }
     
     // Check if user exists
-    const existingUser = await pool.query('SELECT id, email FROM users WHERE id = $1', [id]);
+    const existingUser = await pool.query('SELECT id, user_id FROM profiles WHERE user_id = $1', [id]);
     
     if (existingUser.rows.length === 0) {
       return res.status(404).json({
@@ -166,22 +167,120 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
       });
     }
     
-    // Soft delete by updating email to prevent login
-    const result = await pool.query(
-      'UPDATE users SET email = $1 || ".deleted." || EXTRACT(EPOCH FROM NOW()), updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, email',
-      [existingUser.rows[0].email, id]
-    );
+    // Delete from Supabase auth (this will cascade delete from profiles due to ON DELETE CASCADE)
+    const { createClient } = require('@supabase/supabase-js');
+    const config = require('../config/env');
+    
+    const supabaseAdmin = createClient(config.supabase.url, config.supabase.serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+    
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
+    
+    if (error) {
+      console.error('Error deleting user from Supabase:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to delete user from authentication system'
+      });
+    }
     
     res.json({
       success: true,
-      message: 'User deleted successfully',
-      data: result.rows[0]
+      message: 'User deleted successfully'
     });
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to delete user'
+    });
+  }
+});
+
+// Get current user profile
+router.get('/me/profile', verifySupabaseUser, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, user_id, first_name, last_name, phone, role, email_verified, created_at FROM profiles WHERE user_id = $1',
+      [req.user.id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Profile not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch profile'
+    });
+  }
+});
+
+// Update current user profile
+router.put('/me/profile', verifySupabaseUser, async (req, res) => {
+  try {
+    const updates = req.body;
+    
+    // Remove sensitive fields
+    delete updates.id;
+    delete updates.user_id;
+    delete updates.role;
+    delete updates.email_verified;
+    delete updates.created_at;
+    
+    // Build dynamic update query
+    const setClause = Object.keys(updates)
+      .map((key, index) => `${key} = $${index + 2}`)
+      .join(', ');
+    
+    if (!setClause) {
+      return res.status(400).json({
+        success: false,
+        message: 'No valid fields to update'
+      });
+    }
+    
+    const query = `
+      UPDATE profiles 
+      SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = $1
+      RETURNING id, user_id, first_name, last_name, phone, role, email_verified, updated_at
+    `;
+    
+    const values = [req.user.id, ...Object.values(updates)];
+    
+    const result = await pool.query(query);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Profile not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update profile'
     });
   }
 });

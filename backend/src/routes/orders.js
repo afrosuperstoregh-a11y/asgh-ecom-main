@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { verifySupabaseUser, requireAdmin } = require('../middleware/supabaseAuth');
 const { Pool } = require('pg');
 const router = express.Router();
 
@@ -39,7 +39,7 @@ async function updateOrderPayment(orderId, paymentData) {
 }
 
 // Get all orders (admin only)
-router.get('/', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/', verifySupabaseUser, requireAdmin, async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
     res.json(result.rows);
@@ -50,7 +50,7 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
 });
 
 // Get order by ID (admin only or own order)
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', verifySupabaseUser, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -80,7 +80,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // Create new order (authenticated users)
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', verifySupabaseUser, async (req, res) => {
   try {
     const {
       customer_id,
@@ -135,7 +135,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Update order (admin only)
-router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.put('/:id', verifySupabaseUser, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -191,7 +191,7 @@ router.patch('/:id/payment', async (req, res) => {
 });
 
 // Delete/cancel order (admin only)
-router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/:id', verifySupabaseUser, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     

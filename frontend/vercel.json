@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "name": "asca-ecommerce-platform",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "build": {
+    "env": {
+      "NEXT_TELEMETRY_DISABLED": "1"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
+  ],
+  "functions": {
+    "app/api/**/*.js": {
+      "runtime": "@vercel/node@3.0.0"
+    }
+  }
+}

@@ -24,7 +24,7 @@ export default function AboutPage() {
         
         // Load products
         const productsResponse = await api.getProducts();
-        const productsData = productsResponse.data?.products || [];
+        const productsData = productsResponse.data || [];
         setProductsList(productsData);
         
         // Load categories
