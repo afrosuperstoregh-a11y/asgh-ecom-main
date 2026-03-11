@@ -10,8 +10,10 @@ interface Category {
   id: string;
   name: string;
   slug: string;
+  description?: string;
   image_url?: string;
   image?: string;
+  product_count?: number;
   productCount?: number;
   count?: number;
 }
@@ -53,7 +55,7 @@ export default function CategoriesPage() {
         setLoading(true);
         setError(null);
         
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`);
+        const response = await fetch("/api/categories");
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -61,8 +63,8 @@ export default function CategoriesPage() {
         
         const data = await response.json();
         
-        if (data.success && data.categories) {
-          setCategories(data.categories);
+        if (data.success && data.data) {
+          setCategories(data.data);
         } else {
           throw new Error(data.message || 'Failed to fetch categories');
         }
@@ -168,7 +170,7 @@ export default function CategoriesPage() {
                     {category.name}
                   </h2>
                   <p className="mt-1 text-sm text-gray-500">
-                    {category.productCount || category.count || 0} items
+                    {category.product_count || category.productCount || category.count || 0} items
                   </p>
                   <span className="inline-block mt-4 text-sm font-medium text-red-600 group-hover:underline">
                     Shop Now →

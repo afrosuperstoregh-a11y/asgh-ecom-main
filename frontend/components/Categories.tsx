@@ -11,6 +11,7 @@ interface Category {
   description?: string;
   image_url?: string;
   image?: string;
+  product_count?: number;
   productCount?: number;
   count?: number;
 }
@@ -54,7 +55,7 @@ export default function Categories({ categories: propCategories }: CategoriesPro
         setLoading(true);
         setError(null);
         
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`);
+        const response = await fetch("/api/categories");
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -62,8 +63,8 @@ export default function Categories({ categories: propCategories }: CategoriesPro
         
         const data = await response.json();
         
-        if (data.success && data.categories) {
-          setCategories(data.categories);
+        if (data.success && data.data) {
+          setCategories(data.data);
         } else {
           throw new Error(data.message || 'Failed to fetch categories');
         }
@@ -148,7 +149,7 @@ export default function Categories({ categories: propCategories }: CategoriesPro
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                   <h3 className="text-xl font-semibold mb-1">{category.name}</h3>
                   <p className="text-sm opacity-90">
-                    {category.productCount || category.count || 0} products
+                    {category.product_count || category.productCount || category.count || 0} products
                   </p>
                 </div>
               </div>
