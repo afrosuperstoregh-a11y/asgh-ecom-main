@@ -14,7 +14,7 @@ export default function Footer() {
           {/* Company Info */}
           <div className="md:col-span-1">
             <Image 
-              src="/asca-logo.png" 
+              src="/logo.png" 
               alt="AfroSuperstore" 
               width={160}
               height={160}
@@ -25,7 +25,7 @@ export default function Footer() {
                 // Fallback to regular img if Next.js Image fails
                 const target = e.target as HTMLImageElement;
                 const fallbackImg = document.createElement('img');
-                fallbackImg.src = '/asca-logo.png';
+                fallbackImg.src = '/logo.png';
                 fallbackImg.alt = 'AfroSuperstore';
                 fallbackImg.className = 'h-24 sm:h-32 md:h-40 w-auto';
                 target.parentNode?.replaceChild(fallbackImg, target);

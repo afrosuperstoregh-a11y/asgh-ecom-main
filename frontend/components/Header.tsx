@@ -33,7 +33,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
             <Image 
-              src="/asca-logo.png" 
+              src="/logo.png" 
               alt="AfroSuperstore" 
               width={96}
               height={96}
@@ -44,7 +44,7 @@ export default function Header() {
                 // Fallback to regular img if Next.js Image fails
                 const target = e.target as HTMLImageElement;
                 const fallbackImg = document.createElement('img');
-                fallbackImg.src = '/asca-logo.png';
+                fallbackImg.src = '/logo.png';
                 fallbackImg.alt = 'AfroSuperstore';
                 fallbackImg.className = 'h-12 w-auto md:h-16 lg:h-24';
                 target.parentNode?.replaceChild(fallbackImg, target);

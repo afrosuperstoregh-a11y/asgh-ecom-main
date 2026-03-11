@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, Star, Truck, Shield } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import ShopByCategory from '@/components/ShopByCategory';
 
 export default function HomePage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -97,6 +98,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Shop by Category Section */}
+      <ShopByCategory />
 
       {/* Featured Products */}
       {!loading && products.length > 0 && (
