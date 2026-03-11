@@ -120,10 +120,10 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="text-xs text-gray-600">
           {inStock ? (
             <span className="text-green-600">
-              {product.inventory_quantity > 10 ? `${product.inventory_quantity} in stock` : 'Available'}
+              {product.inventory_quantity >= 10 ? `${product.inventory_quantity} in stock` : 'Available'}
             </span>
           ) : (
-            <span className="text-red-600">In Stock</span>
+            <span className="text-red-600">Out of Stock</span>
           )}
         </div>
       </div>
