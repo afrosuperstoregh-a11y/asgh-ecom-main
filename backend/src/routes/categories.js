@@ -1,11 +1,12 @@
 const express = require('express');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { supabase } = require('../config/supabase');
 // const { auditLog } = require('../middleware/auditLog');
 // const { cacheConfigs, invalidateCache } = require('../middleware/cache');
 const { Pool } = require('pg');
 const router = express.Router();
 
-// Database connection
+// Database connection (fallback)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
@@ -48,15 +49,44 @@ async function ensureUniqueSlug(slug, excludeId = null) {
 // Get all categories (public)
 router.get('/', async (req, res) => {
   try {
-    // Fallback response when database is not properly set up
-    console.log('⚠️ Categories table not found - returning empty data');
-    
-    return res.json({
-      success: true,
-      data: [],
-      count: 0
-    });
+    // Try Supabase first
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
+        .order('name', { ascending: true });
 
+      if (error) {
+        console.error('Supabase error fetching categories:', error);
+        throw error;
+      }
+
+      // Get product counts for each category
+      const categoriesWithCounts = await Promise.all(
+        data.map(async (category) => {
+          const { count, error: countError } = await supabase
+            .from('products')
+            .select('*', { count: 'exact', head: true })
+            .eq('category_id', category.id)
+            .eq('status', 'active');
+
+          return {
+            ...category,
+            productCount: countError ? 0 : count || 0
+          };
+        })
+      );
+
+      return res.json({
+        success: true,
+        categories: categoriesWithCounts,
+        count: categoriesWithCounts.length
+      });
+    }
+
+    // Fallback to PostgreSQL if Supabase is not available
     const result = await pool.query(`
       SELECT 
         c.*,
@@ -68,10 +98,15 @@ router.get('/', async (req, res) => {
       ORDER BY c.sort_order ASC, c.name ASC
     `);
     
+    const categoriesWithCounts = result.rows.map(row => ({
+      ...row,
+      productCount: parseInt(row.product_count) || 0
+    }));
+
     res.json({
       success: true,
-      data: result.rows,
-      count: result.rows.length
+      categories: categoriesWithCounts,
+      count: categoriesWithCounts.length
     });
   } catch (error) {
     console.error('Error fetching categories:', error);
