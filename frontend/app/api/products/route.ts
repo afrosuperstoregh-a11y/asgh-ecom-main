@@ -3,7 +3,11 @@ import { supabaseAdmin } from '../../../lib/supabase-server'
 export async function GET(request: Request) {
   try {
     if (!supabaseAdmin) {
-      return new Response(JSON.stringify({ error: 'Database not configured' }), { 
+      console.error('SupabaseAdmin client is null - environment variables missing');
+      return new Response(JSON.stringify({ 
+        error: 'Database not configured - missing environment variables',
+        details: 'SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL not set'
+      }), { 
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       })
