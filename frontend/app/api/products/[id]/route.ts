@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '../../../../lib/supabase-server';
+import { createClient } from '@supabase/supabase-js';
+
+// Validate environment variables
+function validateEnvironment() {
+  const required = [
+    'NEXT_PUBLIC_SUPABASE_URL',
+    'SUPABASE_SERVICE_ROLE_KEY'
+  ]
+  
+  const missing = required.filter(key => !process.env[key])
+  
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}. Please configure these in your hosting platform.`)
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -8,13 +22,19 @@ export async function GET(
   try {
     const { id } = params;
     
-    if (!supabase) {
-      console.error('Supabase client not configured');
-      return NextResponse.json({
-        success: false,
-        message: 'Database not configured'
-      }, { status: 500 });
-    }
+    // Validate environment variables first
+    validateEnvironment();
+    
+    // Create Supabase client inside the function to avoid build-time issues
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
 
     const { data: productData, error } = await supabase
       .from('products')
