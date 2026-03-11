@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '../../../lib/supabase-client';
+import { supabaseAdmin } from '../../../lib/supabase-server';
 
 console.log('🔍 [API] API route called, starting execution...');
     
