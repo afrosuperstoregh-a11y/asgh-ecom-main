@@ -1,12 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '../../../lib/supabase-server';
+import { supabaseAdmin } from '../../../lib/supabase-server'
 
-console.log('🔍 [API] API route called, starting execution...');
-    
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    console.log('🔍 [API] Fetching products...');
-    
+    if (!supabaseAdmin) {
+      return new Response(JSON.stringify({ error: 'Database not configured' }), { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limitParam = searchParams.get('limit');
@@ -19,21 +21,8 @@ export async function GET(request: NextRequest) {
     const shouldLimit = limitParam !== null;
     const limit = shouldLimit ? parseInt(limitParam) : null;
     const offset = shouldLimit && page > 1 && limit ? (page - 1) * limit : null;
-
-    // Get data from Supabase
-    const supabase = supabaseAdmin;
     
-    if (!supabase) {
-      console.error('Supabase client not configured');
-      return NextResponse.json({
-        success: false,
-        message: 'Database not configured'
-      }, { status: 500 });
-    }
-
-    console.log('🔍 [API] Initial query setup:', { sort, order });
-    
-    let query = supabase
+    let query = supabaseAdmin
       .from('products')
       .select(`
         *,
@@ -41,13 +30,9 @@ export async function GET(request: NextRequest) {
       `, { count: 'exact' })
       .eq('status', 'active');
 
-    console.log('🔍 [API] Query built with status filter');
-
     // Add category filter
     if (category && category !== 'all') {
-      console.log('🔍 [API] Applying category filter:', category);
       query = query.eq('categories.slug', category);
-      console.log('🔍 [API] Category filter applied:', category);
     }
 
     // Add search filter
@@ -62,37 +47,27 @@ export async function GET(request: NextRequest) {
     if (shouldLimit && limit) {
       query = query.range(offset || 0, (offset || 0) + limit - 1);
     }
-
-    console.log('🔍 [API] Query params:', { category, search, shouldLimit, limit, offset });
     
     const { data: products, error, count } = await query;
 
-    console.log('🔍 [API] Query result:', { 
-      productsLength: products?.length || 0, 
-      error: error?.message, 
-      count: count,
-      products: products?.slice(0, 2) // Show first 2 products for debugging
-    });
-
     if (error) {
       console.error('Supabase query error:', error);
-      return NextResponse.json({
-        success: false,
-        message: 'Database query failed',
-        error: error.message
-      }, { status: 500 });
+      return new Response(JSON.stringify({ error: error.message }), { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
     }
 
     // Get unique categories for filter dropdown
-    const { data: categoriesData } = await supabase
+    const { data: categoriesData } = await supabaseAdmin
       .from('categories')
       .select('slug')
-      .eq('status', 'active');
+      .eq('is_active', true);
 
     const uniqueCategories = [...new Set(categoriesData?.map((c: any) => c.slug) || [])];
 
     if (!products || products.length === 0) {
-      return NextResponse.json({
+      return new Response(JSON.stringify({
         success: true,
         data: {
           products: [],
@@ -106,16 +81,17 @@ export async function GET(request: NextRequest) {
             has_prev: shouldLimit ? page > 1 : false
           }
         }
-      });
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
     }
 
     const totalItems = count || 0;
     const totalPages = shouldLimit && limit ? Math.ceil(totalItems / limit) : 1;
     const itemsPerPage = shouldLimit ? limit : totalItems;
 
-    console.log(`✅ [API] Found ${products.length} products`);
-
-    return NextResponse.json({
+    return new Response(JSON.stringify({
       success: true,
       data: {
         products,
@@ -129,13 +105,16 @@ export async function GET(request: NextRequest) {
           has_prev: shouldLimit ? page > 1 : false
         }
       }
-    });
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    })
 
   } catch (error) {
     console.error('Error in products API:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Internal server error'
-    }, { status: 500 });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
   }
 }
