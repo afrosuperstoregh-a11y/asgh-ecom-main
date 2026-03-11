@@ -23,7 +23,7 @@ export async function GET() {
       })
     }
 
-    // Get product counts for each category
+    // Get product counts for each category and process image URLs
     const categoriesWithCounts = await Promise.all(
       (categories || []).map(async (category: any) => {
         try {
@@ -44,8 +44,25 @@ export async function GET() {
             console.warn('Error getting product count for category', category.id, countError);
           }
 
+          // Process image URL for production
+          let imageUrl = category.image_url;
+          if (imageUrl) {
+            // If it's already a full URL, return as is
+            if (!imageUrl.startsWith('http')) {
+              // If it's a Supabase storage path, construct full URL
+              const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+              if (supabaseUrl && (imageUrl.startsWith('category-images/') || imageUrl.startsWith('/'))) {
+                const cleanPath = imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl;
+                imageUrl = `${supabaseUrl}/storage/v1/object/public/categories/${cleanPath}`;
+              }
+            }
+          } else {
+            imageUrl = '/placeholder-category.svg';
+          }
+
           return {
             ...category,
+            image_url: imageUrl,
             product_count: count || 0
           };
         } catch (error) {

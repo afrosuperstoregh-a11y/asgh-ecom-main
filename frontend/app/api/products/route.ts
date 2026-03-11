@@ -58,6 +58,53 @@ export async function GET(request: Request) {
       })
     }
 
+    // Process products to ensure images are arrays and handle URLs properly
+    const processedProducts = (products || []).map((product: any) => {
+      // Handle images field - convert string to array if needed
+      let images = [];
+      if (product.images) {
+        if (typeof product.images === 'string') {
+          // If it's a JSON string, try to parse it
+          try {
+            const parsed = JSON.parse(product.images);
+            images = Array.isArray(parsed) ? parsed : [product.images];
+          } catch {
+            // If parsing fails, treat as single image URL
+            images = [product.images];
+          }
+        } else if (Array.isArray(product.images)) {
+          images = product.images;
+        } else {
+          images = [product.images];
+        }
+      }
+
+      // Ensure all image URLs are properly formatted for production
+      images = images.map((img: string) => {
+        if (!img) return '/placeholder-product.jpg';
+        
+        // If it's already a full URL, return as is
+        if (img.startsWith('http')) {
+          return img;
+        }
+        
+        // If it's a Supabase storage path, construct full URL
+        if (img.startsWith('/') || !img.includes('://')) {
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+          if (supabaseUrl && img.startsWith('product-images/')) {
+            return `${supabaseUrl}/storage/v1/object/public/products/${img}`;
+          }
+        }
+        
+        return img;
+      });
+
+      return {
+        ...product,
+        images: images.length > 0 ? images : ['/placeholder-product.jpg']
+      };
+    });
+
     // Get unique categories for filter dropdown
     const { data: categoriesData } = await supabaseAdmin
       .from('categories')
@@ -66,7 +113,7 @@ export async function GET(request: Request) {
 
     const uniqueCategories = [...new Set(categoriesData?.map((c: any) => c.slug) || [])];
 
-    if (!products || products.length === 0) {
+    if (!processedProducts || processedProducts.length === 0) {
       return new Response(JSON.stringify({
         success: true,
         data: {
@@ -94,7 +141,7 @@ export async function GET(request: Request) {
     return new Response(JSON.stringify({
       success: true,
       data: {
-        products,
+        products: processedProducts,
         categories: uniqueCategories,
         pagination: {
           current_page: page,
