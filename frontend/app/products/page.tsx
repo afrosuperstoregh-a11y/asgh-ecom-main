@@ -15,6 +15,9 @@ interface Product {
   status: string;
   featured: boolean;
   stock: number;
+  inventory_quantity: number;
+  track_inventory: boolean;
+  allow_backorder: boolean;
   images: string[];
   category: {
     id: string;
@@ -63,7 +66,18 @@ export default function ProductsPage() {
         
         // Handle different response formats
         const products = data.data?.products || data.products || data;
-        setProductsList(Array.isArray(products) ? products : []);
+        
+        // Transform products to include inStock calculation
+        const transformedProducts = Array.isArray(products) ? products.map((product: any) => ({
+          ...product,
+          stock: product.inventory_quantity || 0,
+          inStock: (product.inventory_quantity > 0 || product.allow_backorder),
+          discountPrice: product.compare_price ? parseFloat(product.compare_price) : undefined,
+          comparePrice: product.compare_price ? parseFloat(product.compare_price) : undefined,
+          category: product.categories || { id: '1', name: 'Uncategorized' }
+        })) : [];
+        
+        setProductsList(transformedProducts);
       } catch (err) {
         console.error('Error loading products:', err);
         setError(err instanceof Error ? err.message : 'Failed to load products');

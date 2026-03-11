@@ -160,6 +160,16 @@ export default function HomePage() {
                             </span>
                           )}
                         </div>
+                        {/* Stock Status */}
+                        <div className="text-xs text-gray-600 mt-2">
+                          {(product.inventory_quantity > 0 || product.allow_backorder) ? (
+                            <span className="text-green-600">
+                              {product.inventory_quantity >= 10 ? `${product.inventory_quantity} in stock` : 'Available'}
+                            </span>
+                          ) : (
+                            <span className="text-red-600">Out of Stock</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Link>
