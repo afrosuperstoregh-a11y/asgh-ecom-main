@@ -1,5 +1,19 @@
 import { createClient } from '@supabase/supabase-js'
 
+// Validate required environment variables
+function validateEnvironment() {
+  const required = [
+    'NEXT_PUBLIC_SUPABASE_URL',
+    'SUPABASE_SERVICE_ROLE_KEY'
+  ]
+  
+  const missing = required.filter(key => !process.env[key])
+  
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}. Please configure these in your hosting platform.`)
+  }
+}
+
 // Mock products for fallback when database is not available
 function getMockProducts() {
   return [
@@ -59,47 +73,12 @@ function getMockProducts() {
 
 export async function GET(request: Request) {
   try {
+    // Validate environment variables first
+    validateEnvironment()
+    
     // Create Supabase client inside the function to avoid build-time issues
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Missing required environment variables:', {
-        hasSupabaseUrl: !!supabaseUrl,
-        hasServiceKey: !!supabaseServiceKey,
-        nodeEnv: process.env.NODE_ENV
-      });
-      
-      // Return mock data in production if environment is not configured
-      if (process.env.NODE_ENV === 'production') {
-        return new Response(JSON.stringify({
-          success: true,
-          data: {
-            products: getMockProducts(),
-            categories: ['women-fashion', 'men-fashion', 'food'],
-            pagination: {
-              current_page: 1,
-              total_pages: 1,
-              total_items: 3,
-              items_per_page: 3,
-              has_next: false,
-              has_prev: false
-            }
-          }
-        }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
-
-      return new Response(JSON.stringify({ 
-        error: 'Database not configured',
-        details: 'Required environment variables are missing'
-      }), { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
