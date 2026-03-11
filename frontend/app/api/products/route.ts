@@ -1,22 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// Supabase configuration - use service role key for server-side operations
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-// Create Supabase client
-const createSupabaseClient = () => {
-  if (supabaseUrl && supabaseKey) {
-    return createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-  }
-  return null;
-};
+import { supabaseAdmin } from '../../../lib/supabase';
 
 console.log('🔍 [API] API route called, starting execution...');
     
@@ -38,7 +21,7 @@ export async function GET(request: NextRequest) {
     const offset = shouldLimit && page > 1 && limit ? (page - 1) * limit : null;
 
     // Get data from Supabase
-    const supabase = createSupabaseClient();
+    const supabase = supabaseAdmin;
     
     if (!supabase) {
       console.error('Supabase client not configured');
@@ -52,7 +35,10 @@ export async function GET(request: NextRequest) {
     
     let query = supabase
       .from('products')
-      .select('*', { count: 'exact' })
+      .select(`
+        *,
+        categories!inner(name, slug)
+      `, { count: 'exact' })
       .eq('status', 'active');
 
     console.log('🔍 [API] Query built with status filter');
@@ -60,22 +46,13 @@ export async function GET(request: NextRequest) {
     // Add category filter
     if (category && category !== 'all') {
       console.log('🔍 [API] Applying category filter:', category);
-      // First get category ID from slug
-      const { data: categoryData } = await supabase
-        .from('categories')
-        .select('id')
-        .eq('slug', category)
-        .single();
-      
-      if (categoryData) {
-        query = query.eq('category_id', categoryData.id);
-        console.log('🔍 [API] Category filter applied:', category, '→', categoryData.id);
-      }
+      query = query.eq('categories.slug', category);
+      console.log('🔍 [API] Category filter applied:', category);
     }
 
     // Add search filter
     if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,sku.ilike.%${search}%`);
     }
 
     // Add ordering
@@ -110,9 +87,9 @@ export async function GET(request: NextRequest) {
     const { data: categoriesData } = await supabase
       .from('categories')
       .select('slug')
-      .eq('is_active', true);
+      .eq('status', 'active');
 
-    const uniqueCategories = [...new Set(categoriesData?.map(c => c.slug) || [])];
+    const uniqueCategories = [...new Set(categoriesData?.map((c: any) => c.slug) || [])];
 
     if (!products || products.length === 0) {
       return NextResponse.json({

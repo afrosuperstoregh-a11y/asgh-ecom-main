@@ -15,8 +15,20 @@ export default function HomePage() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('/api/products?limit=6');
+      console.log('Fetching products from: /api/products');
+      const response = await fetch('/api/products?limit=6', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch products: ${response.status}`);
+      }
+
       const data = await response.json();
+      console.log('Products API response:', data);
       
       if (data.success && data.data?.products) {
         const transformedProducts = data.data.products.map((product: any) => ({
@@ -31,6 +43,7 @@ export default function HomePage() {
         }));
         setProducts(transformedProducts);
       } else {
+        console.warn('Unexpected API response format:', data);
         // Fallback to mock data
         const mockProducts = [
           { id: 1, name: 'Girls Dashiki', price: 39.99, image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/girls-dashiki.svg', category: 'Women Fashion' },

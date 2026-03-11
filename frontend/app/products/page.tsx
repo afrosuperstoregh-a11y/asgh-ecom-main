@@ -45,24 +45,9 @@ export default function ProductsPage() {
         setLoading(true);
         setError('');
         
-        // Determine API URL
-        const getApiUrl = () => {
-          if (typeof window !== 'undefined') {
-            const hostname = window.location.hostname;
-            if (hostname === 'localhost' || hostname === '127.0.0.1') {
-              return 'http://localhost:3002';
-            }
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3002`;
-            return baseUrl.replace(/\/api$/, '');
-          }
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-          return baseUrl.replace(/\/api$/, '');
-        };
+        console.log('Fetching products from: /api/products');
 
-        const apiUrl = getApiUrl();
-        console.log('Fetching products from:', `${apiUrl}/api/products`);
-
-        const response = await fetch(`${apiUrl}/api/products`, {
+        const response = await fetch('/api/products', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
