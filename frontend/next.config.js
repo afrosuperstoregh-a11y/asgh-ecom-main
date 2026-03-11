@@ -11,11 +11,11 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: 'azpgqsmgyorjbqsgxuxw.supabase.co',
       },
       {
-        protocol: 'http',
-        hostname: '**',
+        protocol: 'https',
+        hostname: '*.supabase.co',
       },
     ],
     // Disable image optimization in development for faster builds

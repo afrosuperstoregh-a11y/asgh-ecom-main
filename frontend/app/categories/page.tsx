@@ -1,69 +1,79 @@
 // app/categories/page.tsx
 import Image from "next/image";
 import Link from "next/link";
+import { supabase } from "../../lib/supabase";
+
+const getSupabaseImageUrl = (imageName: string) => {
+  const { data } = supabase
+    .storage
+    .from('categories')
+    .getPublicUrl(imageName);
+  
+  return data.publicUrl;
+};
 
 const categories = [
   {
     id: 1,
     name: "Men's Fashion",
     slug: "men",
-    image: "/images/categories/men.png",
+    image: "men.png",
     count: 120,
   },
   {
     id: 2,
     name: "Women's Fashion",
     slug: "women",
-    image: "/images/categories/women.png",
+    image: "women.png",
     count: 180,
   },
   {
     id: 3,
     name: "Electronics",
     slug: "electronics",
-    image: "/images/categories/electronics.png",
+    image: "electronics.png",
     count: 95,
   },
   {
     id: 4,
     name: "Home & Living",
     slug: "home-living",
-    image: "/images/categories/home.png",
+    image: "home.png",
     count: 140,
   },
   {
     id: 5,
     name: "Beauty & Health",
     slug: "beauty-health",
-    image: "/images/categories/beauty.png",
+    image: "beauty.png",
     count: 75,
   },
   {
     id: 6,
     name: "Sports & Fitness",
     slug: "sports-fitness",
-    image: "/images/categories/sports.png",
+    image: "sports.png",
     count: 60,
   },
   {
     id: 7,
     name: "Food & Beverages",
     slug: "food-beverages",
-    image: "/images/categories/food.png",
+    image: "food.png",
     count: 75,
   },
   {
     id: 8,
     name: "Jewelry & Accessories",
     slug: "jewelry-accessories",
-    image: "/images/categories/Jewelry.png",
+    image: "Jewelry.png",
     count: 60,
   },
   {
     id: 9,
     name: "Books & Media",
     slug: "books-media",
-    image: "/images/categories/books.png",
+    image: "books.png",
     count: 60,
   },
 ];
@@ -92,10 +102,15 @@ export default function CategoriesPage() {
             >
               <div className="relative h-56 w-full">
                 <Image
-                  src={category.image}
+                  src={getSupabaseImageUrl(category.image)}
                   alt={category.name}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    // Fallback to placeholder if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder-category.svg';
+                  }}
                 />
               </div>
 

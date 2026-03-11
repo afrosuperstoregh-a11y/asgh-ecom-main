@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { supabase } from '../lib/supabase';
 
 interface Category {
   id: number;
@@ -9,6 +11,15 @@ interface Category {
   image: string;
   productCount: number;
 }
+
+const getSupabaseImageUrl = (imageName: string) => {
+  const { data } = supabase
+    .storage
+    .from('categories')
+    .getPublicUrl(imageName);
+  
+  return data.publicUrl;
+};
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -55,10 +66,17 @@ export default function Categories() {
           {categories.map((category) => (
             <div key={category.id} className="group cursor-pointer">
               <div className="relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow">
-                <img
-                  src={category.image}
+                <Image
+                  src={getSupabaseImageUrl(category.image)}
                   alt={category.name}
+                  width={400}
+                  height={300}
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    // Fallback to placeholder if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder-category.svg';
+                  }}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-30 transition-opacity"></div>
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
