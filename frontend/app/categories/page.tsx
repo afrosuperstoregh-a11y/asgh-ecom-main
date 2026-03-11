@@ -1,7 +1,7 @@
 // app/categories/page.tsx
 import Image from "next/image";
 import Link from "next/link";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../lib/supabase-client";
 
 const getSupabaseImageUrl = (imageName: string) => {
   const { data } = supabase

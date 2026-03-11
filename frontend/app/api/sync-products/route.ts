@@ -1,18 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// Supabase configuration
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-// Don't throw error during build time
-if (!supabaseUrl || !supabaseKey) {
-  if (process.env.NODE_ENV === 'development') {
-    console.error('Missing Supabase configuration');
-  }
-}
-
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+import { supabaseAdmin } from '../../../lib/supabase-client';
 
 // Type definitions
 interface ImageFile {
@@ -112,7 +99,7 @@ async function syncProductsFromStorage(): Promise<{
   error?: string;
 }> {
   try {
-    if (!supabase) {
+    if (!supabaseAdmin) {
       return {
         success: false,
         message: 'Supabase configuration missing',
@@ -123,7 +110,7 @@ async function syncProductsFromStorage(): Promise<{
     console.log('🚀 Starting product sync from Supabase Storage...');
     
     // Get all folders
-    const { data: folders, error: folderError } = await supabase.storage
+    const { data: folders, error: folderError } = await supabaseAdmin.storage
       .from('product-images')
       .list('', { limit: 100 });
 
@@ -136,7 +123,7 @@ async function syncProductsFromStorage(): Promise<{
     
     if (folderList.length === 0) {
       // No folders, look for files in root
-      const { data: rootFiles, error: rootError } = await supabase.storage
+      const { data: rootFiles, error: rootError } = await supabaseAdmin.storage
         .from('product-images')
         .list('', { limit: 1000 });
 
@@ -159,7 +146,7 @@ async function syncProductsFromStorage(): Promise<{
     } else {
       // Process each folder
       for (const folder of folderList) {
-        const { data: folderFiles, error: filesError } = await supabase.storage
+        const { data: folderFiles, error: filesError } = await supabaseAdmin.storage
           .from('product-images')
           .list(folder.name, { limit: 1000 });
 
@@ -209,7 +196,7 @@ async function syncProductsFromStorage(): Promise<{
       usedSlugs.add(slug);
 
       // Get public URL for the image
-      const { data: { publicUrl } } = supabase.storage
+      const { data: { publicUrl } } = supabaseAdmin.storage
         .from('product-images')
         .getPublicUrl(file.path);
 
@@ -229,7 +216,7 @@ async function syncProductsFromStorage(): Promise<{
     }
 
     // Batch insert products
-    const { data: insertedProducts, error: insertError } = await supabase
+    const { data: insertedProducts, error: insertError } = await supabaseAdmin
       .from('products')
       .upsert(products, {
         onConflict: 'slug',

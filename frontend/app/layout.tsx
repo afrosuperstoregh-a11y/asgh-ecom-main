@@ -49,7 +49,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         
         {/* Preload critical resources */}
-        <link rel="preload" href="/asca-logo.png" as="image" />
+        <link rel="preload" href="/logo.png" as="image" />
       </head>
       <body className={`${inter.variable} font-sans min-h-screen bg-gray-50 antialiased overflow-x-hidden`}
             suppressHydrationWarning={true}>

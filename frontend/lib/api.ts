@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { supabase } from './supabase'
+import { supabase } from './supabase-client';
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api'
 

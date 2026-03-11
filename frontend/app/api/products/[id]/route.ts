@@ -1,22 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// Supabase configuration - use anon key for public read operations
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-// Create Supabase client with fallback to mock data
-const createSupabaseClient = () => {
-  if (supabaseUrl && supabaseAnonKey) {
-    return createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-  }
-  return null;
-};
+import { supabase } from '../../../../lib/supabase-client';
 
 export async function GET(
   request: NextRequest,
@@ -25,36 +8,39 @@ export async function GET(
   try {
     const { id } = params;
     
-    // Try to get data from Supabase first
-    const supabase = createSupabaseClient();
-    
-    if (supabase) {
-      try {
-        const { data: product, error } = await supabase
-          .from('products')
-          .select(`
-            *,
-            categories!inner(name, slug)
-          `)
-          .or(`id.eq.${id},slug.eq.${id}`)
-          .eq('status', 'active')
-          .single();
-        
-        if (!error && product) {
-          // Ensure videos field exists
-          const productWithVideos = {
-            ...product,
-            videos: product.videos || []
-          };
+    if (!supabase) {
+      console.error('Supabase client not configured');
+      return NextResponse.json({
+        success: false,
+        message: 'Database not configured'
+      }, { status: 500 });
+    }
 
-          return NextResponse.json({
-            success: true,
-            data: productWithVideos
-          });
-        }
-      } catch (supabaseError) {
-        console.warn('Supabase query failed, falling back to mock data:', supabaseError);
-      }
+    const { data: productData, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        categories!inner(name, slug)
+      `)
+      .or(`id.eq.${id},slug.eq.${id}`)
+      .eq('status', 'active')
+      .single();
+    
+    if (error) {
+      console.error('Supabase query error:', error);
+      // Fallback to mock data
+      console.log('Using mock data for product:', id);
+    } else if (productData) {
+      // Ensure videos field exists
+      const productWithVideos: any = {
+        ...(productData as any),
+        videos: (productData as any).videos || []
+      };
+
+      return NextResponse.json({
+        success: true,
+        data: productWithVideos
+      });
     }
 
     // Fallback to mock data if Supabase fails or isn't configured
