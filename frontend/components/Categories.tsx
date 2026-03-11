@@ -42,6 +42,9 @@ const getSupabaseImageUrl = (imageName?: string) => {
   
   // Try Supabase storage as last resort
   try {
+    if (!supabase) {
+      return '/placeholder-category.svg';
+    }
     const { data } = supabase
       .storage
       .from('categories')
