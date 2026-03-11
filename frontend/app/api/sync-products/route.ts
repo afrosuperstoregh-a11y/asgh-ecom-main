@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '../../../lib/supabase-server';
+import { createClient } from '@supabase/supabase-js';
+
+// Validate environment variables
+function validateEnvironment() {
+  const required = [
+    'NEXT_PUBLIC_SUPABASE_URL',
+    'SUPABASE_SERVICE_ROLE_KEY'
+  ]
+  
+  const missing = required.filter(key => !process.env[key])
+  
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}. Please configure these in your hosting platform.`)
+  }
+}
 
 // Type definitions
 interface ImageFile {
@@ -99,13 +113,19 @@ async function syncProductsFromStorage(): Promise<{
   error?: string;
 }> {
   try {
-    if (!supabaseAdmin) {
-      return {
-        success: false,
-        message: 'Supabase configuration missing',
-        error: 'Missing Supabase configuration'
-      };
-    }
+    // Validate environment variables first
+    validateEnvironment();
+    
+    // Create Supabase client inside the function to avoid build-time issues
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
     
     console.log('🚀 Starting product sync from Supabase Storage...');
     
