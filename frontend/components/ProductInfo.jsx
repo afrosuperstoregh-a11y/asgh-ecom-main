@@ -87,12 +87,12 @@ export default function ProductInfo({ product }) {
 
       {/* Stock Status */}
       <div className="flex items-center space-x-2">
-        <div className={`h-2 w-2 rounded-full ${product.stockStatus === 'In Stock' ? 'bg-green-500' : 'bg-red-500'}`} />
-        <span className={`text-sm font-medium ${product.stockStatus === 'In Stock' ? 'text-green-700' : 'text-red-700'}`}>
-          {product.stockStatus}
+        <div className={`h-2 w-2 rounded-full ${product.inventory_quantity > 0 || product.allow_backorder ? 'bg-green-500' : 'bg-red-500'}`} />
+        <span className={`text-sm font-medium ${product.inventory_quantity > 0 || product.allow_backorder ? 'text-green-700' : 'text-red-700'}`}>
+          {product.inventory_quantity > 0 ? 'In Stock' : product.allow_backorder ? 'Backorder Available' : 'Out of Stock'}
         </span>
-        {product.stock && (
-          <span className="text-sm text-gray-500">({product.stock} available)</span>
+        {product.inventory_quantity > 0 && (
+          <span className="text-sm text-gray-500">({product.inventory_quantity} available)</span>
         )}
       </div>
 

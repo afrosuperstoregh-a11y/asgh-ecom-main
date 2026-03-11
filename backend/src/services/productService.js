@@ -107,7 +107,7 @@ class ProductService {
         category_id,
         status = 'active',
         featured = false,
-        stock = 0,
+        inventory_quantity = 0,
         track_inventory = true,
         weight = 0,
         tags = []
@@ -127,7 +127,7 @@ class ProductService {
           category_id,
           status,
           featured,
-          stock: parseInt(stock),
+          inventory_quantity: parseInt(inventory_quantity),
           track_inventory,
           weight: parseFloat(weight),
           created_by: userId,
@@ -163,7 +163,7 @@ class ProductService {
       if (updateData.price) updateData.price = parseFloat(updateData.price);
       if (updateData.compare_price) updateData.compare_price = parseFloat(updateData.compare_price);
       if (updateData.cost) updateData.cost = parseFloat(updateData.cost);
-      if (updateData.stock) updateData.stock = parseInt(updateData.stock);
+      if (updateData.inventory_quantity) updateData.inventory_quantity = parseInt(updateData.inventory_quantity);
       if (updateData.weight) updateData.weight = parseFloat(updateData.weight);
 
       const { data, error } = await supabase
@@ -215,7 +215,7 @@ class ProductService {
       if (operation === 'set') {
         query = supabase
           .from('products')
-          .update({ stock: quantity, updated_at: new Date().toISOString() })
+          .update({ inventory_quantity: quantity, updated_at: new Date().toISOString() })
           .eq('id', id);
       } else if (operation === 'add') {
         query = supabase.rpc('increment_stock', { product_id: id, amount: quantity });
