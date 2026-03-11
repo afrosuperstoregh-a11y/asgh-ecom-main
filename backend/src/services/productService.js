@@ -107,7 +107,7 @@ class ProductService {
         category_id,
         status = 'active',
         featured = false,
-        inventory_quantity = 0,
+        inventory_quantity = 5,
         track_inventory = true,
         weight = 0,
         tags = []
