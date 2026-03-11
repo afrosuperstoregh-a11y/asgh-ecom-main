@@ -67,55 +67,6 @@ export default function RootLayout({
           </WishlistProvider>
         </AuthProvider>
         
-        {/* Development-only suppression script */}
-        {process.env.NODE_ENV === 'development' && (
-          <script
-            suppressHydrationWarning={true}
-            dangerouslySetInnerHTML={{
-              __html: `
-                // Development-only suppression of deprecated analytics messages
-                (function() {
-                  const originalConsole = {
-                    log: console.log,
-                    warn: console.warn,
-                    error: console.error,
-                    info: console.info,
-                    debug: console.debug
-                  };
-                  
-                  function shouldSuppress(args) {
-                    const message = args[0];
-                    if (typeof message === 'string') {
-                      return message.includes('feature_collector.js') || 
-                             (message.includes('deprecated') && message.includes('parameters'));
-                    }
-                    return false;
-                  }
-                  
-                  Object.keys(originalConsole).forEach(method => {
-                    console[method] = function(...args) {
-                      if (shouldSuppress(args)) {
-                        // Silently suppress
-                        return;
-                      }
-                      return originalConsole[method].apply(console, args);
-                    };
-                  });
-                  
-                  // Override window.onerror for script errors
-                  const originalOnError = window.onerror;
-                  window.onerror = function(message, source, lineno, colno, error) {
-                    if (typeof message === 'string' && message.includes('feature_collector.js')) {
-                      return true; // Suppress the error
-                    }
-                    return originalOnError ? originalOnError.call(window, message, source, lineno, colno, error) : false;
-                  };
-                })();
-              `,
-            }}
-          />
-        )}
-        
         {/* Google Analytics - Production Only */}
         {process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
           <>
@@ -133,7 +84,8 @@ export default function RootLayout({
                   gtag('js', new Date());
                   gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}', {
                     page_path: window.location.pathname,
-                    send_page_view: true
+                    send_page_view: true,
+                    debug_mode: false
                   });
                 `,
               }}
@@ -162,8 +114,13 @@ export default function RootLayout({
       </body>
       {process.env.NODE_ENV === 'production' && (
         <>
-          <Analytics />
-          <SpeedInsights />
+          <Analytics 
+            mode="production"
+            debug={false}
+          />
+          <SpeedInsights 
+            debug={false}
+          />
         </>
       )}
     </html>
