@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '../lib/supabase-client';
 
 interface Category {
   id: string | number;
   name: string;
   image_url: string;
+  slug?: string;
+  product_count?: number;
   created_at?: string;
 }
 
@@ -22,18 +23,19 @@ export default function ShopByCategory() {
         setLoading(true);
         setError(null);
 
-        // Fetch categories from Supabase
-        const { data, error } = await supabase
-          .from('categories')
-          .select('id, name, image_url, created_at')
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          throw error;
+        // Fetch categories from API
+        const response = await fetch('/api/categories');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-
-        if (data) {
-          setCategories(data);
+        
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+          setCategories(data.data);
+        } else {
+          throw new Error(data.message || 'Failed to fetch categories');
         }
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -117,7 +119,7 @@ export default function ShopByCategory() {
           {categories.map((category) => (
             <Link 
               key={category.id} 
-              href={`/category/${category.id}`}
+              href={`/products?category=${category.slug || category.id}`}
               className="group block"
             >
               <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
@@ -140,6 +142,11 @@ export default function ShopByCategory() {
                   <h3 className="text-base md:text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
                     {category.name}
                   </h3>
+                  {category.product_count !== undefined && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      {category.product_count} products
+                    </p>
+                  )}
                 </div>
               </div>
             </Link>

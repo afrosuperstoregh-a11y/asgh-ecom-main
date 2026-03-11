@@ -17,7 +17,7 @@ export default function HomePage() {
   const fetchProducts = async () => {
     try {
       console.log('Fetching products from: /api/products');
-      const response = await fetch('/api/products?limit=6', {
+      const response = await fetch('/api/products', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
