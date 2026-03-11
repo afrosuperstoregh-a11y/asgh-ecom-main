@@ -2,6 +2,13 @@ import { supabase } from '../../../lib/supabase-server'
 
 export async function GET() {
   try {
+    if (!supabase) {
+      return new Response(JSON.stringify({ error: 'Database not configured' }), { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
     const { data, error } = await supabase
       .from('categories')
       .select('id, name, image_url, created_at, is_active, sort_order')
