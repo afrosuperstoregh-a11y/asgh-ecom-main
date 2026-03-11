@@ -22,7 +22,16 @@ const getSupabaseImageUrl = (imageName?: string) => {
   if (!imageName) return '/placeholder-category.svg';
   
   // If it's already a full URL (like Unsplash), return as is
-  if (imageName.startsWith('http')) return imageName;
+  if (imageName.startsWith('http')) {
+    // For external URLs, bypass Next.js optimization by adding a cache-busting parameter
+    const separator = imageName.includes('?') ? '&' : '?';
+    return `${imageName}${separator}cache=${Date.now()}`;
+  }
+  
+  // For Supabase URLs, return as is (they should work with Next.js optimization)
+  if (imageName.startsWith('https://azpgqsmgyorjbqsgxuxw.supabase.co')) {
+    return imageName;
+  }
   
   // For local files that don't exist in Supabase storage, return placeholder
   if (imageName.endsWith('.png') || imageName.endsWith('.jpg') || imageName.endsWith('.jpeg')) {
