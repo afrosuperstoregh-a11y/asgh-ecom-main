@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Search, ShoppingCart, Heart, Menu, X, User } from 'lucide-react';
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
@@ -31,7 +32,24 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
-            <img src="/asca-logo.png" alt="AfroSuperstore" className="h-12 w-auto md:h-16 lg:h-24" />
+            <Image 
+              src="/asca-logo.png" 
+              alt="AfroSuperstore" 
+              width={96}
+              height={96}
+              className="h-12 w-auto md:h-16 lg:h-24"
+              priority
+              unoptimized={process.env.NODE_ENV === 'production'}
+              onError={(e) => {
+                // Fallback to regular img if Next.js Image fails
+                const target = e.target as HTMLImageElement;
+                const fallbackImg = document.createElement('img');
+                fallbackImg.src = '/asca-logo.png';
+                fallbackImg.alt = 'AfroSuperstore';
+                fallbackImg.className = 'h-12 w-auto md:h-16 lg:h-24';
+                target.parentNode?.replaceChild(fallbackImg, target);
+              }}
+            />
             {/* <h1 className="text-2xl font-bold text-red-600">AfroSuperstore</h1> */}
           </Link>
 

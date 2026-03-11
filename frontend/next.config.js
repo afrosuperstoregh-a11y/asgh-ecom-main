@@ -20,6 +20,15 @@ const nextConfig = {
     ],
     // Disable image optimization in development for faster builds
     unoptimized: process.env.NODE_ENV === 'development',
+    // Add local image patterns
+    domains: [],
+    // Enable image formats
+    formats: ['image/webp', 'image/avif'],
+    // Minimum cache TTL
+    minimumCacheTTL: 60,
+    // Disable optimization for specific images
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   
   // Configure environment variables

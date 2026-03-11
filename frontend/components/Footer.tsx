@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 
 export default function Footer() {
@@ -12,7 +13,24 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="md:col-span-1">
-            <img src="/asca-logo.png" alt="AfroSuperstore" className="h-24 sm:h-32 md:h-40 w-auto" />
+            <Image 
+              src="/asca-logo.png" 
+              alt="AfroSuperstore" 
+              width={160}
+              height={160}
+              className="h-24 sm:h-32 md:h-40 w-auto"
+              priority
+              unoptimized={process.env.NODE_ENV === 'production'}
+              onError={(e) => {
+                // Fallback to regular img if Next.js Image fails
+                const target = e.target as HTMLImageElement;
+                const fallbackImg = document.createElement('img');
+                fallbackImg.src = '/asca-logo.png';
+                fallbackImg.alt = 'AfroSuperstore';
+                fallbackImg.className = 'h-24 sm:h-32 md:h-40 w-auto';
+                target.parentNode?.replaceChild(fallbackImg, target);
+              }}
+            />
             <p className="text-white/80 mb-4 text-sm sm:text-base">
               Your trusted online marketplace for quality products and exceptional service.
             </p>
