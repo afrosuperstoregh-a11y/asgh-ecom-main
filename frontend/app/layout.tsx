@@ -133,6 +133,7 @@ export default function RootLayout({
                   gtag('js', new Date());
                   gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}', {
                     page_path: window.location.pathname,
+                    send_page_view: true
                   });
                 `,
               }}

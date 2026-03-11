@@ -25,7 +25,13 @@ export default function HomePage() {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch products: ${response.status}`);
+        const errorText = await response.text();
+        console.error('API Response Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`Failed to fetch products: ${response.status} - ${response.statusText}`);
       }
 
       const data = await response.json();

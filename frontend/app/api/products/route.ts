@@ -1,12 +1,31 @@
-import { supabaseAdmin } from '../../../lib/supabase-server'
+import { createClient } from '@supabase/supabase-js'
+
+// Create Supabase client for API routes
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
 
 export async function GET(request: Request) {
   try {
-    if (!supabaseAdmin) {
-      console.error('SupabaseAdmin client is null - environment variables missing');
+    // Log environment variables for debugging (without exposing sensitive data)
+    console.log('Environment check:', {
+      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      supabaseUrlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 10) + '...'
+    });
+
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('Missing required environment variables');
       return new Response(JSON.stringify({ 
         error: 'Database not configured - missing environment variables',
-        details: 'SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL not set'
+        details: 'NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set'
       }), { 
         status: 500,
         headers: { 'Content-Type': 'application/json' }
@@ -55,8 +74,17 @@ export async function GET(request: Request) {
     const { data: products, error, count } = await query;
 
     if (error) {
-      console.error('Supabase query error:', error);
-      return new Response(JSON.stringify({ error: error.message }), { 
+      console.error('Supabase query error:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      return new Response(JSON.stringify({ 
+        error: error.message,
+        details: error.details,
+        code: error.code
+      }), { 
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       })
@@ -162,8 +190,15 @@ export async function GET(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error in products API:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { 
+    console.error('Error in products API:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      error
+    });
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error occurred'
+    }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     })
