@@ -1,0 +1,15 @@
+<svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="300" height="300" fill="#f9fafb"/>
+  <rect width="300" height="300" fill="url(#grid)"/>
+  <rect x="75" y="75" width="150" height="150" fill="#e5e7eb" rx="8"/>
+  <circle cx="150" cy="120" r="20" fill="#9ca3af"/>
+  <rect x="110" y="150" width="80" height="8" fill="#9ca3af" rx="4"/>
+  <rect x="120" y="165" width="60" height="6" fill="#9ca3af" rx="3"/>
+  <rect x="130" y="175" width="40" height="6" fill="#9ca3af" rx="3"/>
+  <text x="150" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#6b7280">Product Image</text>
+</svg>
