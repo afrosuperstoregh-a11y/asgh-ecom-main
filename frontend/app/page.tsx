@@ -41,15 +41,18 @@ export default function HomePage() {
           category: product.categories?.name || 'Premium',
           rating: Math.floor(Math.random() * 2) + 3, // Mock rating
           reviews: Math.floor(Math.random() * 100) + 10, // Mock reviews
+          inventory_quantity: product.inventory_quantity || 0,
+          track_inventory: product.track_inventory || false,
+          allow_backorder: product.allow_backorder || false,
         }));
         setProducts(transformedProducts);
       } else {
         console.warn('Unexpected API response format:', data);
         // Fallback to mock data
         const mockProducts = [
-          { id: 1, name: 'Girls Dashiki', price: 39.99, image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/girls-dashiki.svg', category: 'Women Fashion' },
-          { id: 2, name: 'Boys Dashiki', price: 35.99, image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/boys-dashiki.svg', category: 'Men Fashion' },
-          { id: 3, name: 'Banku Flour', price: 25.99, image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku-flour.svg', category: 'Food' },
+          { id: 1, name: 'Girls Dashiki', price: 39.99, image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/girls-dashiki.svg', category: 'Women Fashion', inventory_quantity: 15, track_inventory: true, allow_backorder: false },
+          { id: 2, name: 'Boys Dashiki', price: 35.99, image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/boys-dashiki.svg', category: 'Men Fashion', inventory_quantity: 8, track_inventory: true, allow_backorder: false },
+          { id: 3, name: 'Banku Flour', price: 25.99, image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku-flour.svg', category: 'Food', inventory_quantity: 25, track_inventory: true, allow_backorder: true },
         ];
         setProducts(mockProducts);
       }
@@ -57,9 +60,9 @@ export default function HomePage() {
       console.error('Error fetching products:', error);
       // Fallback to mock data
       const mockProducts = [
-        { id: 1, name: 'Girls Dashiki', price: 39.99, image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/girls-dashiki.svg', category: 'Women Fashion' },
-        { id: 2, name: 'Boys Dashiki', price: 35.99, image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/boys-dashiki.svg', category: 'Men Fashion' },
-        { id: 3, name: 'Banku Flour', price: 25.99, image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku-flour.svg', category: 'Food' },
+        { id: 1, name: 'Girls Dashiki', price: 39.99, image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/girls-dashiki.svg', category: 'Women Fashion', inventory_quantity: 15, track_inventory: true, allow_backorder: false },
+        { id: 2, name: 'Boys Dashiki', price: 35.99, image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/boys-dashiki.svg', category: 'Men Fashion', inventory_quantity: 8, track_inventory: true, allow_backorder: false },
+        { id: 3, name: 'Banku Flour', price: 25.99, image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku-flour.svg', category: 'Food', inventory_quantity: 25, track_inventory: true, allow_backorder: true },
       ];
       setProducts(mockProducts);
     } finally {
