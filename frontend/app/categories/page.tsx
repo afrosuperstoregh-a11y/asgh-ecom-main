@@ -92,8 +92,8 @@ export default function CategoriesPage() {
         </section>
 
         <section className="max-w-7xl mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[...Array(6)].map((_, index) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[...Array(20)].map((_, index) => (
               <CategorySkeleton key={index} />
             ))}
           </div>
@@ -145,7 +145,7 @@ export default function CategoriesPage() {
             <p className="text-gray-500 text-lg">No categories available at the moment.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {categories.map((category) => (
               <Link
                 key={category.id}
