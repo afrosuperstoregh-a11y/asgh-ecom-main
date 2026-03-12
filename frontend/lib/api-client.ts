@@ -5,7 +5,7 @@ class ApiClient {
   private baseUrl: string
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'
   }
 
   // Generic fetch wrapper
@@ -83,76 +83,70 @@ class ApiClient {
     search?: string
     featured?: boolean
   } = {}) {
-    try {
-      if (!supabase) {
-        throw new Error('Supabase client not initialized')
-      }
+    if (!supabase) {
+      console.warn('Supabase client not initialized, returning empty result')
+      return { success: false, data: [], error: 'Supabase client not initialized' }
+    }
 
-      let query = supabase
-        .from('products')
-        .select(`
-          *,
-          categories!inner(name, slug)
-        `, { count: 'exact' })
+    let query = supabase
+      .from('products')
+      .select(`
+        *,
+        categories!inner(name, slug)
+      `, { count: 'exact' })
 
-      // Apply filters
-      if (params.category) {
-        query = query.eq('categories.slug', params.category)
-      }
+    // Apply filters
+    if (params.category) {
+      query = query.eq('categories.slug', params.category)
+    }
 
-      if (params.search) {
-        query = query.or(`name.ilike.%${params.search}%,description.ilike.%${params.search}%,sku.ilike.%${params.search}%`)
-      }
+    if (params.search) {
+      query = query.or(`name.ilike.%${params.search}%,description.ilike.%${params.search}%,sku.ilike.%${params.search}%`)
+    }
 
-      if (params.featured !== undefined) {
-        query = query.eq('featured', params.featured)
-      }
+    if (params.featured !== undefined) {
+      query = query.eq('featured', params.featured)
+    }
 
-      // Default to active products
-      query = query.eq('status', 'active')
+    // Default to active products
+    query = query.eq('status', 'active')
 
-      // Apply pagination
-      const page = params.page || 1
-      const limit = params.limit || 20
-      const offset = (page - 1) * limit
+    // Apply pagination
+    const page = params.page || 1
+    const limit = params.limit || 20
+    const offset = (page - 1) * limit
 
-      query = query
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1)
+    query = query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
 
-      const { data, error, count } = await query
+    const { data, error, count } = await query
 
-      if (error) throw error
+    if (error) throw error
 
-      return {
-        success: true,
-        data: {
-          products: data || [],
-          pagination: {
-            current_page: page,
-            total_pages: Math.ceil((count || 0) / limit),
-            total_items: count || 0,
-            items_per_page: limit,
-            has_next: offset + limit < (count || 0),
-            has_prev: page > 1
-          }
+    return {
+      success: true,
+      data: {
+        products: data || [],
+        pagination: {
+          current_page: page,
+          total_pages: Math.ceil((count || 0) / limit),
+          total_items: count || 0,
+          items_per_page: limit,
+          has_next: offset + limit < (count || 0),
+          has_prev: page > 1
         }
-      }
-    } catch (error) {
-      console.error('Supabase products error:', error)
-      return {
-        success: false,
-        error: 'Failed to fetch products'
       }
     }
   }
 
   async getCategoriesFromSupabase() {
-    try {
-      if (!supabase) {
-        throw new Error('Supabase client not initialized')
-      }
+    if (!supabase) {
+      console.warn('Supabase client not initialized, returning empty result')
+      return { success: false, data: [], error: 'Supabase client not initialized' }
+    }
 
+    try {
       const { data, error } = await supabase
         .from('categories')
         .select('*')

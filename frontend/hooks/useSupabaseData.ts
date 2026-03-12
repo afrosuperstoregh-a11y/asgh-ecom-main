@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '../lib/supabase'
-import apiClient from '../lib/api-client'
+import apiClient from '@/lib/api-client'
 
 // Custom hook for fetching products with caching and real-time updates
 export function useProducts(params: {
@@ -24,17 +23,27 @@ export function useProducts(params: {
       let result
       
       try {
+        // Try API first
         result = await apiClient.getProducts(params)
       } catch (apiError) {
         console.warn('API failed, trying direct Supabase:', apiError)
-        result = await apiClient.getProductsFromSupabase(params)
+        try {
+          result = await apiClient.getProductsFromSupabase(params)
+        } catch (supabaseError) {
+          console.warn('Supabase also failed:', supabaseError)
+          throw new Error('Both API and Supabase failed to fetch products')
+        }
       }
 
-      if (result.success && result.data) {
-        setProducts(result.data.products || [])
-        setPagination(result.data.pagination)
+      if (result && (result.success || result.data)) {
+        if (result.data?.products) {
+          setProducts(result.data.products)
+          setPagination(result.data.pagination)
+        } else {
+          setProducts(Array.isArray(result.data) ? result.data : [])
+        }
       } else {
-        throw new Error(result.error || 'Failed to fetch products')
+        throw new Error(result?.error || 'Failed to fetch products')
       }
     } catch (err) {
       console.error('Error fetching products:', err)
@@ -43,36 +52,31 @@ export function useProducts(params: {
       // Fallback to mock data for development
       if (process.env.NODE_ENV === 'development') {
         const mockProducts = [
-          { 
-            id: 1, 
-            name: 'Girls Dashiki', 
-            price: 39.99, 
-            image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/girls-dashiki.svg', 
-            category: 'Women Fashion', 
-            inventory_quantity: 15, 
-            track_inventory: true, 
-            allow_backorder: false 
+          {
+            id: '1',
+            name: 'Premium African Headwrap',
+            price: 29.99,
+            compare_price: 39.99,
+            image: 'https://images.unsplash.com/photo-1572564203219-8d5e4b3bb5f?w=800',
+            category: { name: 'Fashion', slug: 'fashion' },
+            inventory_quantity: 15,
+            allow_backorder: true,
+            featured: true,
+            rating: 4.5,
+            reviews: 128
           },
-          { 
-            id: 2, 
-            name: 'Boys Dashiki', 
-            price: 35.99, 
-            image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/boys-dashiki.svg', 
-            category: 'Men Fashion', 
-            inventory_quantity: 8, 
-            track_inventory: true, 
-            allow_backorder: false 
-          },
-          { 
-            id: 3, 
-            name: 'Banku Flour', 
-            price: 25.99, 
-            image: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku-flour.svg', 
-            category: 'Food', 
-            inventory_quantity: 25, 
-            track_inventory: true, 
-            allow_backorder: true 
-          },
+          {
+            id: '2', 
+            name: 'Handcrafted Leather Bag',
+            price: 89.99,
+            image: 'https://images.unsplash.com/photo-1553062407-98eeb64b631?w=800',
+            category: { name: 'Accessories', slug: 'accessories' },
+            inventory_quantity: 8,
+            allow_backorder: false,
+            featured: true,
+            rating: 4.8,
+            reviews: 89
+          }
         ]
         setProducts(mockProducts)
       }
@@ -85,20 +89,28 @@ export function useProducts(params: {
     fetchProducts()
   }, [fetchProducts])
 
-  // Set up real-time subscription
+  // Set up real-time subscriptions
   useEffect(() => {
-    if (!supabase) return
+    if (!products.length) return
 
-    const subscription = apiClient.subscribeToProducts((payload) => {
+    const subscription = apiClient.subscribeToProducts((payload: any) => {
       console.log('Product update:', payload)
-      // Refetch products on any change
-      fetchProducts()
+      
+      if (payload.eventType === 'INSERT') {
+        setProducts((prev: any[]) => [...prev, payload.new])
+      } else if (payload.eventType === 'UPDATE') {
+        setProducts((prev: any[]) => 
+          prev.map(p => p.id === payload.new.id ? { ...p, ...payload.new } : p)
+        )
+      } else if (payload.eventType === 'DELETE') {
+        setProducts((prev: any[]) => prev.filter(p => p.id !== payload.old.id))
+      }
     })
 
     return () => {
-      subscription.unsubscribe()
+      subscription?.unsubscribe?.()
     }
-  }, [fetchProducts])
+  }, [products.length])
 
   return { products, loading, error, pagination, refetch: fetchProducts }
 }
@@ -118,16 +130,22 @@ export function useCategories() {
       let result
       
       try {
+        // Try API first
         result = await apiClient.getCategories()
       } catch (apiError) {
         console.warn('API failed, trying direct Supabase:', apiError)
-        result = await apiClient.getCategoriesFromSupabase()
+        try {
+          result = await apiClient.getCategoriesFromSupabase()
+        } catch (supabaseError) {
+          console.warn('Supabase also failed:', supabaseError)
+          throw new Error('Both API and Supabase failed to fetch categories')
+        }
       }
 
-      if (result.success && result.data) {
+      if (result && (result.success || result.data)) {
         setCategories(Array.isArray(result.data) ? result.data : result.data.categories || [])
       } else {
-        throw new Error(result.error || 'Failed to fetch categories')
+        throw new Error(result?.error || 'Failed to fetch categories')
       }
     } catch (err) {
       console.error('Error fetching categories:', err)
@@ -176,55 +194,72 @@ export function useCategories() {
     fetchCategories()
   }, [fetchCategories])
 
-  // Set up real-time subscription
+  // Set up real-time subscriptions for categories
   useEffect(() => {
-    if (!supabase) return
+    if (!categories.length) return
 
-    const subscription = apiClient.subscribeToCategories((payload) => {
+    const subscription = apiClient.subscribeToCategories((payload: any) => {
       console.log('Category update:', payload)
-      // Refetch categories on any change
-      fetchCategories()
+      
+      if (payload.eventType === 'INSERT') {
+        setCategories((prev: any[]) => [...prev, payload.new])
+      } else if (payload.eventType === 'UPDATE') {
+        setCategories((prev: any[]) => 
+          prev.map(c => c.id === payload.new.id ? { ...c, ...payload.new } : c)
+        )
+      } else if (payload.eventType === 'DELETE') {
+        setCategories((prev: any[]) => prev.filter(c => c.id !== payload.old.id))
+      }
     })
 
     return () => {
-      subscription.unsubscribe()
+      subscription?.unsubscribe?.()
     }
-  }, [fetchCategories])
+  }, [categories.length])
 
   return { categories, loading, error, refetch: fetchCategories }
 }
 
-// Hook for single product
+// Custom hook for fetching a single product
 export function useProduct(id: string | number) {
   const [product, setProduct] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Try API first, fallback to direct Supabase
+      let result
+      
       try {
-        setLoading(true)
-        setError(null)
-
-        const result = await apiClient.getProductById(id)
-        
-        if (result.success && result.data) {
-          setProduct(result.data)
-        } else {
-          throw new Error(result.error || 'Failed to fetch product')
-        }
-      } catch (err) {
-        console.error('Error fetching product:', err)
-        setError(err instanceof Error ? err.message : 'Failed to fetch product')
-      } finally {
-        setLoading(false)
+        // Try API first
+        result = await apiClient.getProductById(id)
+      } catch (apiError) {
+        console.warn('API failed:', apiError)
+        throw new Error('Failed to fetch product')
       }
-    }
 
-    if (id) {
-      fetchProduct()
+      if (result && (result.success || result.data)) {
+        setProduct(result.data)
+      } else {
+        throw new Error(result?.error || 'Failed to fetch product')
+      }
+    } catch (err) {
+      console.error('Error fetching product:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch product')
+    } finally {
+      setLoading(false)
     }
   }, [id])
 
-  return { product, loading, error }
+  useEffect(() => {
+    if (id) {
+      fetchProduct()
+    }
+  }, [fetchProduct])
+
+  return { product, loading, error, refetch: fetchProduct }
 }
