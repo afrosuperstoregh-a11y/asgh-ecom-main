@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, ShoppingCart, Star, Truck, Shield, Plus, Minus, X, ZoomIn, ZoomOut, Play } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '../../../context/CartContext';
+import { useProduct, useProducts } from '@/hooks/useSupabaseData';
 import ProductVideo from '../../../components/ProductVideo';
 
 interface Product {
@@ -38,78 +39,15 @@ export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
   const { addToCart } = useCart();
-  const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [addingToCart, setAddingToCart] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomedImageIndex, setZoomedImageIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      if (!params?.id) return;
-      
-      try {
-        setLoading(true);
-        setError('');
-        
-        // Determine API URL
-        const getApiUrl = () => {
-          if (typeof window !== 'undefined') {
-            const hostname = window.location.hostname;
-            if (hostname === 'localhost' || hostname === '127.0.0.1') {
-              return 'http://localhost:3002';
-            }
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${hostname}:3002`;
-            return baseUrl.replace(/\/api$/, '');
-          }
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-          return baseUrl.replace(/\/api$/, '');
-        };
-
-        const apiUrl = getApiUrl();
-        const productId = Array.isArray(params.id) ? params.id[0] : params.id;
-        
-        console.log('Fetching product from:', `${apiUrl}/api/products/${productId}`);
-
-        const response = await fetch(`${apiUrl}/api/products/${productId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error('Product not found');
-          }
-          throw new Error(`Failed to fetch product: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('Product data:', data);
-        
-        // Handle different response formats
-        const productData = data.data?.product || data.product || data;
-        
-        if (!productData) {
-          throw new Error('Product data not found');
-        }
-        
-        setProduct(productData);
-      } catch (error) {
-        console.error('Error fetching product:', error);
-        setError(error instanceof Error ? error.message : 'Failed to load product');
-        setProduct(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
-  }, [params.id]);
+  const productId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const { product, loading, error } = useProduct(productId as string);
+  const { products: relatedProducts } = useProducts({ limit: 4 });
 
   const handleAddToCart = async () => {
     if (!product || addingToCart) return;
@@ -120,9 +58,9 @@ export default function ProductPage() {
       await addToCart({
         id: product.id,
         name: product.name,
-        price: product.discountPrice || product.price,
-        image: product.images[0] || '/placeholder-product.svg',
-        category: product.category?.name || 'Uncategorized'
+        price: product.compare_price || product.price,
+        image: product.image || '/placeholder-product.svg',
+        category: product.categories?.name || 'Uncategorized'
       });
       
       setTimeout(() => setAddingToCart(false), 1000);
@@ -133,7 +71,7 @@ export default function ProductPage() {
   };
 
   const increaseQuantity = () => {
-    if (product && quantity < product.stock) {
+    if (product && quantity < (product.inventory_quantity || 0)) {
       setQuantity(quantity + 1);
     }
   };
@@ -173,9 +111,10 @@ export default function ProductPage() {
     );
   }
 
-  const isInStock = product.stock > 0;
-  const displayPrice = product.discountPrice || product.price;
-  const originalPrice = product.discountPrice ? product.price : null;
+  const isInStock = product.inventory_quantity > 0 || product.allow_backorder;
+  const displayPrice = product.compare_price || product.price;
+  const originalPrice = product.compare_price ? product.price : null;
+  const images = Array.isArray(product.images) ? product.images : [product.image];
 
   return (
     <>
@@ -211,17 +150,17 @@ export default function ProductPage() {
             <div className="space-y-4">
               {/* Main Media Display */}
               <div className="aspect-square bg-white rounded-lg overflow-hidden relative">
-                {product.videos && product.videos.length > 0 && currentMediaIndex >= product.images.length ? (
+                {product.videos && product.videos.length > 0 && currentMediaIndex >= images.length ? (
                   <ProductVideo
-                    src={product.videos[currentMediaIndex - product.images.length]}
-                    poster={product.images[0] || '/placeholder-product.svg'}
+                    src={product.videos[currentMediaIndex - images.length]}
+                    poster={images[0] || '/placeholder-product.svg'}
                     title={product.name}
                     className="w-full h-full"
                   />
                 ) : (
                   <div className="relative group cursor-zoom-in" onClick={() => setIsZoomed(true)}>
                     <img
-                      src={product.images[currentMediaIndex] || '/placeholder-product.svg'}
+                      src={images[currentMediaIndex] || '/placeholder-product.svg'}
                       alt={product.name}
                       className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                     />
@@ -236,7 +175,7 @@ export default function ProductPage() {
               {/* Media Thumbnails */}
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {/* Images */}
-                {product.images.map((image, index) => (
+                {images.map((image: any, index: number) => (
                   <button
                     key={`img-${index}`}
                     onClick={() => setCurrentMediaIndex(index)}
@@ -255,12 +194,12 @@ export default function ProductPage() {
                 ))}
                 
                 {/* Videos */}
-                {product.videos && product.videos.map((video, index) => (
+                {product.videos && product.videos.map((video: any, index: number) => (
                   <button
                     key={`video-${index}`}
-                    onClick={() => setCurrentMediaIndex(product.images.length + index)}
+                    onClick={() => setCurrentMediaIndex(images.length + index)}
                     className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                      currentMediaIndex === product.images.length + index
+                      currentMediaIndex === images.length + index
                         ? 'border-primary-600'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
@@ -313,7 +252,7 @@ export default function ProductPage() {
                 <div className="mb-6">
                   {isInStock ? (
                     <span className="text-green-600 font-medium">
-                      ✓ In Stock ({product.stock} available)
+                      ✓ In Stock ({product.inventory_quantity} available)
                     </span>
                   ) : (
                     <span className="text-red-600 font-medium">
@@ -337,7 +276,7 @@ export default function ProductPage() {
                       <span className="px-4 py-2 border-x">{quantity}</span>
                       <button
                         onClick={increaseQuantity}
-                        disabled={quantity >= product.stock}
+                        disabled={quantity >= (product.inventory_quantity || 0)}
                         className="p-2 hover:bg-gray-100 disabled:opacity-50"
                       >
                         <Plus className="h-4 w-4" />
@@ -367,7 +306,7 @@ export default function ProductPage() {
                   </div>
                   <div className="text-sm text-gray-600">
                     <p><strong>SKU:</strong> {product.sku}</p>
-                    <p><strong>Category:</strong> {product.category?.name}</p>
+                    <p><strong>Category:</strong> {product.categories?.name}</p>
                   </div>
                 </div>
               </div>
@@ -407,7 +346,7 @@ export default function ProductPage() {
 
             {/* Image Gallery in Zoom */}
             <div className="flex gap-4 p-4 overflow-x-auto">
-              {product.images.map((image, index) => (
+              {images.map((image: any, index: number) => (
                 <div
                   key={`zoom-img-${index}`}
                   className={`flex-shrink-0 cursor-pointer transition-all duration-200 ${

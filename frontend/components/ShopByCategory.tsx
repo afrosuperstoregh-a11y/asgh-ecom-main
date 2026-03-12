@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCategories } from '@/hooks/useSupabaseData';
 import Link from 'next/link';
 
 interface Category {
@@ -13,40 +13,7 @@ interface Category {
 }
 
 export default function ShopByCategory() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch categories from API
-        const response = await fetch('/api/categories');
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.success && data.data) {
-          setCategories(data.data);
-        } else {
-          throw new Error(data.message || 'Failed to fetch categories');
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-        setError('Failed to load categories');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
+  const { categories, loading, error } = useCategories();
 
   if (loading) {
     return (
@@ -76,15 +43,11 @@ export default function ShopByCategory() {
           <div className="text-center mb-8 md:mb-12">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Shop by Category</h2>
             <p className="text-base md:text-lg text-gray-600">Browse our wide range of categories</p>
-          </div>
-          <div className="text-center py-12">
-            <p className="text-red-600 mb-4">{error}</p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Try Again
-            </button>
+            {error && (
+              <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
+                <p className="text-sm">Using cached data: {error}</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

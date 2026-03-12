@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from "../../context/CartContext";
 import { Loader2, Search, Filter, Grid, List, Star, ShoppingCart } from 'lucide-react';
+import { useProducts, useCategories } from '@/hooks/useSupabaseData';
 
 interface Product {
   id: string;
@@ -35,76 +36,54 @@ interface Product {
 }
 
 export default function ProductsPage() {
-  const [productsList, setProductsList] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [sortBy, setSortBy] = useState('created_at');
+  const [currentPage, setCurrentPage] = useState(1);
   const { addToCart } = useCart();
 
+  // Use our custom hook for products with real-time updates
+  const { products, loading, error, pagination, refetch } = useProducts({
+    page: currentPage,
+    limit: 20,
+    category: selectedCategory,
+    search: searchQuery
+  });
+
+  const { categories } = useCategories();
+
+  // Debounced search
   useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        
-        console.log('Fetching products from: /api/products');
+    const timer = setTimeout(() => {
+      setCurrentPage(1); // Reset to first page on search
+    }, 500);
 
-        const response = await fetch('/api/products', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch products: ${response.status}`);
-        }
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    setCurrentPage(1);
+  };
 
-        const data = await response.json();
-        console.log('Products data:', data);
-        
-        // Handle different response formats
-        const products = data.data?.products || data.products || data;
-        
-        // Transform products to include inStock calculation
-        const transformedProducts = Array.isArray(products) ? products.map((product: any) => ({
-          ...product,
-          stock: product.inventory_quantity || 0,
-          inStock: (product.inventory_quantity > 0 || product.allow_backorder),
-          discountPrice: product.compare_price ? parseFloat(product.compare_price) : undefined,
-          comparePrice: product.compare_price ? parseFloat(product.compare_price) : undefined,
-          category: product.categories || { id: '1', name: 'Uncategorized' }
-        })) : [];
-        
-        setProductsList(transformedProducts);
-      } catch (err) {
-        console.error('Error loading products:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load products');
-        setProductsList([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleSortChange = (newSort: string) => {
+    setSortBy(newSort);
+    setCurrentPage(1);
+  };
 
-    loadProducts();
-  }, []);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-  // Filter products based on search query
-  const filteredProducts = productsList.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.category?.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: any) => {
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.comparePrice || product.price,
-      image: product.images[0] || '/placeholder-product.svg',
-      category: product.category?.name || 'Uncategorized'
+      price: product.compare_price || product.price,
+      image: product.image || '/placeholder-product.svg',
+      category: product.categories?.name || 'Uncategorized'
     });
   };
 
@@ -198,30 +177,35 @@ export default function ProductsPage() {
         {/* Results count */}
         <div className="mb-6">
           <p className="text-gray-600 text-sm sm:text-base">
-            Showing {filteredProducts.length} of {productsList.length} products
+            Showing {products.length} of {pagination?.total_items || 0} products
           </p>
+          {error && (
+            <span className="ml-4 text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded">
+              Using cached data
+            </span>
+          )}
         </div>
 
         {/* Products Grid */}
-        {filteredProducts.length > 0 ? (
+        {products.length > 0 ? (
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6' : 'space-y-4'}>
-            {filteredProducts.map((product) => (
+            {products.map((product) => (
               <div key={product.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
                 {viewMode === 'grid' ? (
                   <>
                     <Link href={`/product/${product.id}`}>
                       <div className="relative">
                         <img
-                          src={product.images[0] || '/placeholder-product.jpg'}
+                          src={product.image || '/placeholder-product.jpg'}
                           alt={product.name}
                           className="w-full h-48 sm:h-56 object-cover rounded-t-lg"
                         />
-                        {product.discountPrice && (
+                        {product.compare_price && (
                           <span className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">
                             SALE
                           </span>
                         )}
-                        {!product.inStock && (
+                        {!(product.inventory_quantity > 0 || product.allow_backorder) && (
                           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-t-lg">
                             <span className="text-white font-semibold">Out of Stock</span>
                           </div>
@@ -232,7 +216,7 @@ export default function ProductsPage() {
                       <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base line-clamp-2">{product.name}</h3>
                       <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">{product.description}</p>
                       <div className="flex items-center mb-2">
-                        <div className="flex items-center">
+                        <div>
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
@@ -244,13 +228,13 @@ export default function ProductsPage() {
                             />
                           ))}
                         </div>
-                        <span className="text-xs sm:text-sm text-gray-500 ml-2">({product.reviewCount || 0})</span>
+                        <span className="text-xs sm:text-sm text-gray-500 ml-2">({product.reviews || 0})</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <div>
-                          {product.discountPrice ? (
+                          {product.compare_price ? (
                             <div className="flex items-center gap-2">
-                              <span className="text-lg font-bold text-gray-900">${product.discountPrice}</span>
+                              <span className="text-lg font-bold text-gray-900">${product.compare_price}</span>
                               <span className="text-sm text-gray-500 line-through">${product.price}</span>
                             </div>
                           ) : (
@@ -259,7 +243,7 @@ export default function ProductsPage() {
                         </div>
                         <button
                           onClick={() => handleAddToCart(product)}
-                          disabled={!product.inStock}
+                          disabled={!(product.inventory_quantity > 0 || product.allow_backorder)}
                           className="bg-primary-600 text-white p-2 rounded-lg hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors touch-target"
                           aria-label="Add to cart"
                         >
@@ -273,11 +257,11 @@ export default function ProductsPage() {
                     <Link href={`/product/${product.id}`} className="flex-shrink-0">
                       <div className="relative">
                         <img
-                          src={product.images[0] || '/placeholder-product.jpg'}
+                          src={product.image || '/placeholder-product.jpg'}
                           alt={product.name}
                           className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg"
                         />
-                        {!product.inStock && (
+                        {!(product.inventory_quantity > 0 || product.allow_backorder) && (
                           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
                             <span className="text-white text-xs font-semibold">Out of Stock</span>
                           </div>
@@ -289,9 +273,9 @@ export default function ProductsPage() {
                       <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">{product.description}</p>
                       <div className="flex items-center justify-between">
                         <div>
-                          {product.discountPrice ? (
+                          {product.compare_price ? (
                             <div className="flex items-center gap-2">
-                              <span className="text-lg font-bold text-gray-900">${product.discountPrice}</span>
+                              <span className="text-lg font-bold text-gray-900">${product.compare_price}</span>
                               <span className="text-sm text-gray-500 line-through">${product.price}</span>
                             </div>
                           ) : (
@@ -300,7 +284,7 @@ export default function ProductsPage() {
                         </div>
                         <button
                           onClick={() => handleAddToCart(product)}
-                          disabled={!product.inStock}
+                          disabled={!(product.inventory_quantity > 0 || product.allow_backorder)}
                           className="bg-primary-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm touch-target"
                         >
                           Add to Cart
@@ -334,6 +318,57 @@ export default function ProductsPage() {
             <Link href="/" className="block mt-4 text-primary-600 hover:text-primary-700">
               Continue shopping
             </Link>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && pagination && pagination.total_pages > 1 && (
+          <div className="mt-8 flex justify-center">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage <= 1}
+                className="px-3 py-2 rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Previous
+              </button>
+              
+              {[...Array(pagination.total_pages)].map((_, index) => {
+                const page = index + 1;
+                const isCurrentPage = page === currentPage;
+                const isNearCurrent = Math.abs(page - currentPage) <= 2;
+                const showEllipsis = page === 3 && currentPage > 5;
+                const showEllipsisEnd = page === pagination.total_pages - 2 && currentPage < pagination.total_pages - 4;
+
+                if (!isNearCurrent && !showEllipsis && !showEllipsisEnd) return null;
+
+                if (showEllipsis || showEllipsisEnd) {
+                  return <span key={page} className="px-2">...</span>;
+                }
+
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-3 py-2 rounded-md ${
+                      isCurrentPage
+                        ? 'bg-blue-600 text-white'
+                        : 'border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+              
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage >= pagination.total_pages}
+                className="px-3 py-2 rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </main>
