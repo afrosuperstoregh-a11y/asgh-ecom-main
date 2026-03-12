@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Product } from '@/lib/api/products';
 import { Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -49,10 +50,15 @@ export default function ProductCard({ product }: ProductCardProps) {
     >
       {/* Product Image */}
       <div className="relative aspect-square overflow-hidden bg-gray-100">
-        <img
+        <Image
           src={product.images && product.images.length > 0 ? product.images[0] : '/placeholder-product.jpg'}
           alt={product.name}
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = '/placeholder-product.jpg';
+          }}
         />
         
         {/* Discount Badge */}

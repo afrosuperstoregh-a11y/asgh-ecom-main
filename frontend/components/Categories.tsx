@@ -23,15 +23,8 @@ interface CategoriesProps {
 const getSupabaseImageUrl = (imageName?: string) => {
   if (!imageName) return '/placeholder-category.svg';
   
-  // If it's already a full URL (like Unsplash), return as is
+  // If it's already a full URL (like Unsplash or Supabase), return as is
   if (imageName.startsWith('http')) {
-    // For external URLs, bypass Next.js optimization by adding a cache-busting parameter
-    const separator = imageName.includes('?') ? '&' : '?';
-    return `${imageName}${separator}cache=${Date.now()}`;
-  }
-  
-  // For Supabase URLs, return as is (they should work with Next.js optimization)
-  if (imageName.startsWith('https://azpgqsmgyorjbqsgxuxw.supabase.co')) {
     return imageName;
   }
   
@@ -40,14 +33,14 @@ const getSupabaseImageUrl = (imageName?: string) => {
     return '/placeholder-category.svg';
   }
   
-  // Try Supabase storage as last resort
+  // Try Supabase storage as last resort - use category-images bucket
   try {
     if (!supabase) {
       return '/placeholder-category.svg';
     }
     const { data } = supabase
       .storage
-      .from('categories')
+      .from('category-images')
       .getPublicUrl(imageName);
     
     return data.publicUrl;
