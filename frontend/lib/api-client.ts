@@ -5,9 +5,7 @@ class ApiClient {
   private baseUrl: string
 
   constructor() {
-    this.baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://your-production-api.com' 
-      : 'http://localhost:3001'
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
   }
 
   // Generic fetch wrapper
@@ -86,6 +84,10 @@ class ApiClient {
     featured?: boolean
   } = {}) {
     try {
+      if (!supabase) {
+        throw new Error('Supabase client not initialized')
+      }
+
       let query = supabase
         .from('products')
         .select(`
@@ -147,6 +149,10 @@ class ApiClient {
 
   async getCategoriesFromSupabase() {
     try {
+      if (!supabase) {
+        throw new Error('Supabase client not initialized')
+      }
+
       const { data, error } = await supabase
         .from('categories')
         .select('*')
@@ -187,6 +193,11 @@ class ApiClient {
 
   // Real-time subscriptions
   subscribeToProducts(callback: (payload: any) => void) {
+    if (!supabase) {
+      console.error('Supabase client not initialized')
+      return { unsubscribe: () => {} }
+    }
+
     return supabase
       .channel('products_changes')
       .on('postgres_changes', 
@@ -201,6 +212,11 @@ class ApiClient {
   }
 
   subscribeToCategories(callback: (payload: any) => void) {
+    if (!supabase) {
+      console.error('Supabase client not initialized')
+      return { unsubscribe: () => {} }
+    }
+
     return supabase
       .channel('categories_changes')
       .on('postgres_changes', 
