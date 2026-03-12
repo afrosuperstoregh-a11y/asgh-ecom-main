@@ -1,6 +1,11 @@
 import { supabase } from '../lib/supabase/server'
 import cacheService, { CACHE_CONFIG, CACHE_PATTERNS } from '../lib/cache/redis'
 import { createError } from '../middleware/errorHandler'
+import type { Database } from '../types/database'
+
+type Product = Database['public']['Tables']['products']['Row']
+type ProductInsert = Database['public']['Tables']['products']['Insert']
+type ProductUpdate = Database['public']['Tables']['products']['Update']
 
 interface ProductOptions {
   page?: number
@@ -16,13 +21,13 @@ interface ProductOptions {
 interface ProductData {
   name: string
   description?: string
-  short_desc?: string
+  short_description?: string
   sku?: string
   price: number
   compare_price?: number | null
-  cost?: number | null
-  category_id: number
-  status?: string
+  cost_price?: number | null
+  category_id: string | null
+  status?: 'active' | 'draft' | 'archived'
   featured?: boolean
   inventory_quantity?: number
   track_inventory?: boolean
@@ -108,7 +113,8 @@ class ProductService {
 
       return result
     } catch (error) {
-      throw createError(`Failed to fetch products: ${error.message}`, 500, 'PRODUCT_FETCH_ERROR')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to fetch products: ${errorMessage}`, 500, 'PRODUCT_FETCH_ERROR')
     }
   }
 
@@ -133,8 +139,11 @@ class ProductService {
 
       return data
     } catch (error) {
-      if (error.statusCode) throw error
-      throw createError(`Failed to fetch product: ${error.message}`, 500, 'PRODUCT_FETCH_ERROR')
+      if (error && typeof error === 'object' && 'statusCode' in error) {
+        throw error
+      }
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to fetch product: ${errorMessage}`, 500, 'PRODUCT_FETCH_ERROR')
     }
   }
 
@@ -144,11 +153,11 @@ class ProductService {
       const {
         name,
         description,
-        short_desc,
+        short_description,
         sku,
         price,
         compare_price,
-        cost,
+        cost_price,
         category_id,
         status = 'active',
         featured = false,
@@ -158,29 +167,34 @@ class ProductService {
         tags = []
       } = productData
 
+      // Generate slug from name
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now()
+
       // Insert product
-      const { data, error } = await supabase()
+      const insertData: any = {
+        name,
+        slug,
+        description: description || null,
+        short_description: short_description || null,
+        sku: sku || '',
+        price: parseFloat(price.toString()),
+        compare_price: compare_price ? parseFloat(compare_price.toString()) : null,
+        cost_price: cost_price ? parseFloat(cost_price.toString()) : null,
+        category_id: category_id || null,
+        status: status as 'active' | 'draft' | 'archived',
+        featured,
+        inventory_quantity: parseInt(inventory_quantity.toString()),
+        track_inventory,
+        weight: parseFloat(weight.toString()),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+
+      const { data, error } = await (supabase()
         .from('products')
-        .insert({
-          name,
-          description,
-          short_desc,
-          sku,
-          price: parseFloat(price.toString()),
-          compare_price: compare_price ? parseFloat(compare_price.toString()) : null,
-          cost: cost ? parseFloat(cost.toString()) : null,
-          category_id,
-          status,
-          featured,
-          inventory_quantity: parseInt(inventory_quantity.toString()),
-          track_inventory,
-          weight: parseFloat(weight.toString()),
-          created_by: userId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .insert(insertData)
         .select()
-        .single()
+        .single() as any)
 
       if (error) throw error
 
@@ -194,28 +208,38 @@ class ProductService {
 
       return data
     } catch (error) {
-      if (error.statusCode) throw error
-      throw createError(`Failed to create product: ${error.message}`, 500, 'PRODUCT_CREATE_ERROR')
+      if (error && typeof error === 'object' && 'statusCode' in error) {
+        throw error
+      }
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to create product: ${errorMessage}`, 500, 'PRODUCT_CREATE_ERROR')
     }
   }
 
   // Update product
   async updateProduct(id: string | number, productData: Partial<ProductData>, userId: string) {
     try {
-      const updateData: any = {
-        ...productData,
-        updated_at: new Date().toISOString(),
-        updated_by: userId
+      // Create a properly typed update object
+      const updateData: Database['public']['Tables']['products']['Update'] = {
+        updated_at: new Date().toISOString()
       }
 
-      // Convert numeric fields
-      if (updateData.price) updateData.price = parseFloat(updateData.price.toString())
-      if (updateData.compare_price) updateData.compare_price = parseFloat(updateData.compare_price.toString())
-      if (updateData.cost) updateData.cost = parseFloat(updateData.cost.toString())
-      if (updateData.inventory_quantity) updateData.inventory_quantity = parseInt(updateData.inventory_quantity.toString())
-      if (updateData.weight) updateData.weight = parseFloat(updateData.weight.toString())
+      // Map only the fields that exist in both types
+      if (productData.name !== undefined) updateData.name = productData.name
+      if (productData.description !== undefined) updateData.description = productData.description
+      if (productData.short_description !== undefined) updateData.short_description = productData.short_description
+      if (productData.sku !== undefined) updateData.sku = productData.sku
+      if (productData.price !== undefined) updateData.price = parseFloat(productData.price.toString())
+      if (productData.compare_price !== undefined) updateData.compare_price = productData.compare_price ? parseFloat(productData.compare_price.toString()) : null
+      if (productData.cost_price !== undefined) updateData.cost_price = productData.cost_price ? parseFloat(productData.cost_price.toString()) : null
+      if (productData.category_id !== undefined) updateData.category_id = productData.category_id
+      if (productData.status !== undefined) updateData.status = productData.status
+      if (productData.featured !== undefined) updateData.featured = productData.featured
+      if (productData.inventory_quantity !== undefined) updateData.inventory_quantity = parseInt(productData.inventory_quantity.toString())
+      if (productData.track_inventory !== undefined) updateData.track_inventory = productData.track_inventory
+      if (productData.weight !== undefined) updateData.weight = parseFloat(productData.weight.toString())
 
-      const { data, error } = await supabase()
+      const { data, error } = await (supabase() as any)
         .from('products')
         .update(updateData)
         .eq('id', id)
@@ -234,8 +258,11 @@ class ProductService {
 
       return data
     } catch (error) {
-      if (error.statusCode) throw error
-      throw createError(`Failed to update product: ${error.message}`, 500, 'PRODUCT_UPDATE_ERROR')
+      if (error && typeof error === 'object' && 'statusCode' in error) {
+        throw error
+      }
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to update product: ${errorMessage}`, 500, 'PRODUCT_UPDATE_ERROR')
     }
   }
 
@@ -259,31 +286,65 @@ class ProductService {
 
       return { success: true }
     } catch (error) {
-      if (error.statusCode) throw error
-      throw createError(`Failed to delete product: ${error.message}`, 500, 'PRODUCT_DELETE_ERROR')
+      if (error && typeof error === 'object' && 'statusCode' in error) {
+        throw error
+      }
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to delete product: ${errorMessage}`, 500, 'PRODUCT_DELETE_ERROR')
     }
   }
 
   // Update product stock
   async updateStock(id: string | number, quantity: number, operation: 'set' | 'add' | 'subtract' = 'set') {
     try {
-      let query: any
+      let data: any
+      let error: any
 
       if (operation === 'set') {
-        query = supabase()
+        const result = await (supabase() as any)
           .from('products')
           .update({ 
             inventory_quantity: quantity, 
             updated_at: new Date().toISOString() 
           })
           .eq('id', id)
+        data = result.data
+        error = result.error
       } else if (operation === 'add') {
-        query = supabase().rpc('increment_stock', { product_id: id, amount: quantity })
+        const { data: currentProduct } = await supabase()
+          .from('products')
+          .select('inventory_quantity')
+          .eq('id', id)
+          .single() as any
+        
+        const newQuantity = (currentProduct?.inventory_quantity || 0) + quantity
+        const result = await (supabase() as any)
+          .from('products')
+          .update({ 
+            inventory_quantity: Math.max(newQuantity, 0),
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', id)
+        data = result.data
+        error = result.error
       } else if (operation === 'subtract') {
-        query = supabase().rpc('decrement_stock', { product_id: id, amount: quantity })
+        const { data: currentProduct } = await supabase()
+          .from('products')
+          .select('inventory_quantity')
+          .eq('id', id)
+          .single() as any
+        
+        const newQuantity = (currentProduct?.inventory_quantity || 0) - quantity
+        const result = await (supabase() as any)
+          .from('products')
+          .update({ 
+            inventory_quantity: Math.max(newQuantity, 0),
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', id)
+        data = result.data
+        error = result.error
       }
-
-      const { data, error } = await query
 
       if (error) throw error
 
@@ -292,27 +353,28 @@ class ProductService {
 
       return data
     } catch (error) {
-      throw createError(`Failed to update stock: ${error.message}`, 500, 'STOCK_UPDATE_ERROR')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to update stock: ${errorMessage}`, 500, 'STOCK_UPDATE_ERROR')
     }
   }
 
   // Attach tags to product
   async attachProductTags(productId: string | number, tags: string[]) {
     try {
-      const tagRelations = tags.map(tag => ({
-        product_id: productId,
-        tag_id: typeof tag === 'string' ? tag : tag
-      }))
-
-      const { error } = await supabase()
-        .from('product_tags')
-        .insert(tagRelations)
+      const supabaseClient = supabase()
+      const { error } = await (supabaseClient as any)
+        .from('products')
+        .update({ 
+          tags: tags
+        })
+        .eq('id', productId)
 
       if (error) throw error
 
       return { success: true }
     } catch (error) {
-      throw createError(`Failed to attach tags: ${error.message}`, 500, 'TAG_ATTACH_ERROR')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to attach tags: ${errorMessage}`, 500, 'TAG_ATTACH_ERROR')
     }
   }
 
@@ -342,7 +404,8 @@ class ProductService {
 
       return result
     } catch (error) {
-      throw createError(`Failed to fetch categories: ${error.message}`, 500, 'CATEGORIES_FETCH_ERROR')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to fetch categories: ${errorMessage}`, 500, 'CATEGORIES_FETCH_ERROR')
     }
   }
 }

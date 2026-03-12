@@ -1,3 +1,4 @@
+/// <reference path="../types/express.d.ts" />
 import rateLimit from 'express-rate-limit'
 import { Request, Response } from 'express'
 
@@ -23,7 +24,7 @@ export const catalogRateLimiter = rateLimit({
       error: {
         message: 'Too many requests, please try again later.',
         code: 'RATE_LIMIT_EXCEEDED',
-        retryAfter: Math.round((req.rateLimit?.resetTime || 0) - Date.now()) / 1000
+        retryAfter: Math.round(((req.rateLimit?.resetTime as Date)?.getTime() || 0) - Date.now()) / 1000
       }
     })
   }
@@ -51,7 +52,7 @@ export const adminRateLimiter = rateLimit({
       error: {
         message: 'Too many admin requests, please try again later.',
         code: 'ADMIN_RATE_LIMIT_EXCEEDED',
-        retryAfter: Math.round((req.rateLimit?.resetTime || 0) - Date.now()) / 1000
+        retryAfter: Math.round(((req.rateLimit?.resetTime as Date)?.getTime() || 0) - Date.now()) / 1000
       }
     })
   }

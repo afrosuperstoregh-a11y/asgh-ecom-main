@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { Database } from '../../types/database'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -8,11 +9,11 @@ if (!supabaseUrl || !supabaseServiceKey) {
 }
 
 // Singleton Supabase client for server-side operations
-let supabaseServer: ReturnType<typeof createClient> | null = null
+let supabaseServer: ReturnType<typeof createClient<Database>> | null = null
 
 export function getSupabaseServer() {
   if (!supabaseServer) {
-    supabaseServer = createClient(supabaseUrl, supabaseServiceKey, {
+    supabaseServer = createClient<Database>(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false

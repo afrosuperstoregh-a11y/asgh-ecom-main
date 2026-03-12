@@ -1,5 +1,6 @@
+/// <reference path="../types/express.d.ts" />
 import { Request, Response, NextFunction } from 'express'
-import { supabase } from '../lib/supabase/server'
+import { getSupabaseServer } from '../lib/supabase/server'
 
 interface AuditLogData {
   user_id: string
@@ -13,8 +14,8 @@ interface AuditLogData {
   new_data?: any
 }
 
-export async function auditLog(action: string, entityType: string) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+export function auditLog(action: string, entityType: string) {
+  return (req: Request, res: Response, next: NextFunction) => {
     // Store original response methods
     const originalSend = res.send
     const originalJson = res.json
@@ -35,30 +36,32 @@ export async function auditLog(action: string, entityType: string) {
     }
 
     // Continue with the request
-    res.on('finish', async () => {
+    res.on('finish', () => {
       if (isSuccess && req.user?.userId) {
-        try {
-          const auditData: AuditLogData = {
-            user_id: req.user.userId,
-            action,
-            entity_type: entityType,
-            entity_id: req.params.id || 'unknown',
-            timestamp: new Date().toISOString(),
-            ip_address: req.ip || req.connection.remoteAddress || 'unknown',
-            user_agent: req.get('User-Agent'),
-            old_data: req.oldData,
-            new_data: req.body
-          }
-
-          await supabase
-            .from('audit_logs')
-            .insert(auditData)
-
-          console.log(`📝 Audit log: ${action} ${entityType} by user ${req.user.userId}`)
-        } catch (error) {
-          console.error('Audit log error:', error)
-          // Don't fail the request if audit logging fails
+        const auditData: AuditLogData = {
+          user_id: req.user.userId,
+          action,
+          entity_type: entityType,
+          entity_id: typeof req.params.id === 'string' ? req.params.id : req.params.id?.[0] || 'unknown',
+          timestamp: new Date().toISOString(),
+          ip_address: req.ip || req.connection.remoteAddress || 'unknown',
+          user_agent: req.get('User-Agent'),
+          old_data: (req as any).oldData,
+          new_data: req.body
         }
+
+        // Fire and forget - don't await to avoid blocking
+        ;(async () => {
+          try {
+            await getSupabaseServer()
+              .from('audit_logs')
+              .insert(auditData as any)
+            console.log(`📝 Audit log: ${action} ${entityType} by user ${req.user?.userId}`)
+          } catch (error: any) {
+            console.error('Audit log error:', error)
+            // Don't fail the request if audit logging fails
+          }
+        })()
       }
     })
 

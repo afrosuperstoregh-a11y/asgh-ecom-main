@@ -1,3 +1,4 @@
+/// <reference path="../types/express.d.ts" />
 import { Request, Response } from 'express'
 import categoryService from '../services/categoryService'
 import { asyncHandler, createError } from '../middleware/errorHandler'
@@ -12,7 +13,7 @@ class CategoryController {
   // GET /api/categories/:id - Get single category (public)
   getCategoryById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params
-    const category = await categoryService.getCategoryById(id)
+    const category = await categoryService.getCategoryById(Array.isArray(id) ? id[0] : id)
     
     res.json({
       success: true,
@@ -50,14 +51,14 @@ class CategoryController {
       throw createError('User authentication required', 401, 'AUTH_REQUIRED')
     }
 
-    const result = await categoryService.updateCategory(id, categoryData, userId)
+    const result = await categoryService.updateCategory(Array.isArray(id) ? id[0] : id, categoryData, userId)
     res.json(result)
   })
 
   // DELETE /api/categories/:id - Delete category (admin only)
   deleteCategory = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params
-    const result = await categoryService.deleteCategory(id)
+    const result = await categoryService.deleteCategory(Array.isArray(id) ? id[0] : id)
     res.json(result)
   })
 

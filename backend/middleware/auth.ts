@@ -1,18 +1,11 @@
+/// <reference path="../types/express.d.ts" />
 import { Request, Response, NextFunction } from 'express'
 import { supabase } from '../lib/supabase/server'
 import { createError } from './errorHandler'
 
-// Extend Request interface to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: string
-        email: string
-        role: string
-      }
-    }
-  }
+// Define types for the database responses
+interface Profile {
+  role: string
 }
 
 // JWT verification middleware
@@ -26,18 +19,18 @@ export async function authenticateToken(req: Request, res: Response, next: NextF
     }
 
     // Verify JWT with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token)
+    const { data: { user }, error } = await supabase().auth.getUser(token)
 
     if (error || !user) {
       throw createError('Invalid or expired token', 401, 'INVALID_TOKEN')
     }
 
     // Get user role from profiles table
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await supabase()
       .from('profiles')
       .select('role')
-      .eq('id', user.id)
-      .single()
+      .eq('user_id', user.id)
+      .single() as { data: Profile | null, error: any }
 
     if (profileError || !profile) {
       throw createError('User profile not found', 401, 'PROFILE_NOT_FOUND')
@@ -80,14 +73,14 @@ export async function optionalAuth(req: Request, res: Response, next: NextFuncti
     const token = authHeader && authHeader.split(' ')[1]
 
     if (token) {
-      const { data: { user }, error } = await supabase.auth.getUser(token)
+      const { data: { user }, error } = await supabase().auth.getUser(token)
 
       if (!error && user) {
-        const { data: profile } = await supabase
+        const { data: profile } = await supabase()
           .from('profiles')
           .select('role')
-          .eq('id', user.id)
-          .single()
+          .eq('user_id', user.id)
+          .single() as { data: Profile | null, error: any }
 
         req.user = {
           userId: user.id,

@@ -1,3 +1,4 @@
+/// <reference path="../types/express.d.ts" />
 import { Request, Response } from 'express'
 import productService from '../services/productService'
 import { asyncHandler, createError } from '../middleware/errorHandler'
@@ -28,7 +29,7 @@ class ProductController {
   // GET /api/products/:id - Get single product
   getProductById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params
-    const product = await productService.getProductById(id)
+    const product = await productService.getProductById(Array.isArray(id) ? id[0] : id)
 
     res.json({
       success: true,
@@ -65,7 +66,7 @@ class ProductController {
       throw createError('User authentication required', 401, 'AUTH_REQUIRED')
     }
 
-    const product = await productService.updateProduct(id, productData, userId)
+    const product = await productService.updateProduct(Array.isArray(id) ? id[0] : id, productData, userId)
 
     res.json({
       success: true,
@@ -77,7 +78,7 @@ class ProductController {
   // DELETE /api/products/:id - Delete product (admin only)
   deleteProduct = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params
-    await productService.deleteProduct(id)
+    await productService.deleteProduct(Array.isArray(id) ? id[0] : id)
 
     res.json({
       success: true,
@@ -105,7 +106,7 @@ class ProductController {
       throw createError('Quantity is required', 400, 'QUANTITY_REQUIRED')
     }
 
-    const result = await productService.updateStock(id, parseInt(quantity.toString()), operation)
+    const result = await productService.updateStock(Array.isArray(id) ? id[0] : id, parseInt(quantity.toString()), operation)
 
     res.json({
       success: true,

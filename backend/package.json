@@ -30,10 +30,14 @@
     "pg": "^8.11.3",
     "rate-limiter-flexible": "^9.1.1",
     "redis": "^4.6.10",
-    "stripe": "^14.25.0"
+    "stripe": "^14.25.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.19.37",
+    "nodemon": "^3.0.2",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=20.0.0"

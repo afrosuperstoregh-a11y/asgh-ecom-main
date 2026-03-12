@@ -11,6 +11,21 @@ interface CategoryData {
   is_active?: boolean
 }
 
+interface Category {
+  id: number | string
+  name: string
+  slug: string
+  description?: string | null
+  image_url?: string | null
+  parent_id?: number | null
+  sort_order: number
+  is_active: boolean
+  created_by?: string
+  created_at?: string
+  updated_at?: string
+  updated_by?: string
+}
+
 class CategoryService {
   // Generate unique slug from name
   private generateSlug(name: string): string {
@@ -34,7 +49,10 @@ class CategoryService {
       
       const { data, error } = await query
       
-      if (error) throw error
+      if (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown database error'
+        throw createError(`Database error: ${errorMessage}`, 500, 'DATABASE_ERROR')
+      }
       
       if (!data || data.length === 0) {
         break
@@ -64,11 +82,14 @@ class CategoryService {
         .order('sort_order', { ascending: true })
         .order('name', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown database error'
+        throw createError(`Database error: ${errorMessage}`, 500, 'DATABASE_ERROR')
+      }
 
       // Get product counts for each category
       const categoriesWithCounts = await Promise.all(
-        (data || []).map(async (category) => {
+        (data as Category[] || []).map(async (category: Category) => {
           const { count, error: countError } = await supabase()
             .from('products')
             .select('*', { count: 'exact', head: true })
@@ -76,8 +97,8 @@ class CategoryService {
             .eq('status', 'active')
 
           return {
-            ...category,
-            productCount: countError ? 0 : count || 0
+            ...(category as object),
+            productCount: countError instanceof Error ? 0 : count || 0
           }
         })
       )
@@ -91,7 +112,8 @@ class CategoryService {
       await cacheService.set(cacheKey, result, CACHE_CONFIG.CATEGORIES_LIST.ttl)
       return result
     } catch (error) {
-      throw createError(`Failed to fetch categories: ${error.message}`, 500, 'CATEGORIES_FETCH_ERROR')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to fetch categories: ${errorMessage}`, 500, 'CATEGORIES_FETCH_ERROR')
     }
   }
 
@@ -111,13 +133,17 @@ class CategoryService {
         if (error.code === 'PGRST116') {
           throw createError('Category not found', 404, 'CATEGORY_NOT_FOUND')
         }
-        throw error
+        const errorMessage = error instanceof Error ? error.message : 'Unknown database error'
+        throw createError(`Database error: ${errorMessage}`, 500, 'DATABASE_ERROR')
       }
 
       return data
     } catch (error) {
-      if (error.statusCode) throw error
-      throw createError(`Failed to fetch category: ${error.message}`, 500, 'CATEGORY_FETCH_ERROR')
+      if (error && typeof error === 'object' && 'statusCode' in error) {
+        throw error
+      }
+      const errorMessage = error instanceof Error ? error.message : typeof error === 'string' ? error : 'Unknown error occurred'
+      throw createError(`Failed to fetch category: ${errorMessage}`, 500, 'CATEGORY_FETCH_ERROR')
     }
   }
 
@@ -141,16 +167,19 @@ class CategoryService {
         .order('sort_order', { ascending: true })
         .order('name', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown database error'
+        throw createError(`Database error: ${errorMessage}`, 500, 'DATABASE_ERROR')
+      }
 
       // Build hierarchical tree
-      const categories = data || []
+      const categories = (data || []) as Category[]
       const categoryMap: { [key: string]: any } = {}
       const tree: any[] = []
       
       // Create map of categories
       categories.forEach(cat => {
-        categoryMap[cat.id] = { ...cat, children: [] }
+        categoryMap[cat.id] = { ...(cat as object), children: [] }
       })
       
       // Build tree structure
@@ -171,7 +200,8 @@ class CategoryService {
       await cacheService.set(cacheKey, result, CACHE_CONFIG.CATEGORY_TREE.ttl)
       return result
     } catch (error) {
-      throw createError(`Failed to fetch category tree: ${error.message}`, 500, 'CATEGORY_TREE_ERROR')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to fetch category tree: ${errorMessage}`, 500, 'CATEGORY_TREE_ERROR')
     }
   }
 
@@ -221,11 +251,14 @@ class CategoryService {
           created_by: userId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .select()
         .single()
       
-      if (error) throw error
+      if (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown database error'
+        throw createError(`Database error: ${errorMessage}`, 500, 'DATABASE_ERROR')
+      }
       
       // Invalidate cache
       await cacheService.delPattern(CACHE_PATTERNS.CATEGORIES)
@@ -236,8 +269,11 @@ class CategoryService {
         data
       }
     } catch (error) {
-      if (error.statusCode) throw error
-      throw createError(`Failed to create category: ${error.message}`, 500, 'CATEGORY_CREATE_ERROR')
+      if (error && typeof error === 'object' && 'statusCode' in error) {
+        throw error
+      }
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to create category: ${errorMessage}`, 500, 'CATEGORY_CREATE_ERROR')
     }
   }
 
@@ -249,7 +285,7 @@ class CategoryService {
         .from('categories')
         .select('*')
         .eq('id', id)
-        .single()
+        .single() as { data: Category | null, error: any }
       
       if (fetchError || !existingCategory) {
         throw createError('Category not found', 404, 'CATEGORY_NOT_FOUND')
@@ -292,14 +328,17 @@ class CategoryService {
         }
       }
       
-      const { data, error } = await supabase()
+      const { data, error } = await (supabase() as any)
         .from('categories')
         .update(updates)
         .eq('id', id)
         .select()
         .single()
       
-      if (error) throw error
+      if (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown database error'
+        throw createError(`Database error: ${errorMessage}`, 500, 'DATABASE_ERROR')
+      }
       
       // Invalidate cache
       await cacheService.delPattern(CACHE_PATTERNS.CATEGORIES)
@@ -310,8 +349,9 @@ class CategoryService {
         data
       }
     } catch (error) {
-      if (error.statusCode) throw error
-      throw createError(`Failed to update category: ${error.message}`, 500, 'CATEGORY_UPDATE_ERROR')
+      if (error && typeof error === 'object' && 'statusCode' in error) throw error
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to update category: ${errorMessage}`, 500, 'CATEGORY_UPDATE_ERROR')
     }
   }
 
@@ -323,7 +363,7 @@ class CategoryService {
         .from('categories')
         .select('*')
         .eq('id', id)
-        .single()
+        .single() as { data: Category | null, error: any }
       
       if (fetchError || !existingCategory) {
         throw createError('Category not found', 404, 'CATEGORY_NOT_FOUND')
@@ -354,7 +394,7 @@ class CategoryService {
       }
       
       // Soft delete by deactivating
-      const { data, error } = await supabase()
+      const { data, error } = await (supabase() as any)
         .from('categories')
         .update({ 
           is_active: false, 
@@ -364,7 +404,10 @@ class CategoryService {
         .select()
         .single()
       
-      if (error) throw error
+      if (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown database error'
+        throw createError(`Database error: ${errorMessage}`, 500, 'DATABASE_ERROR')
+      }
       
       // Invalidate cache
       await cacheService.delPattern(CACHE_PATTERNS.CATEGORIES)
@@ -375,8 +418,11 @@ class CategoryService {
         data
       }
     } catch (error) {
-      if (error.statusCode) throw error
-      throw createError(`Failed to delete category: ${error.message}`, 500, 'CATEGORY_DELETE_ERROR')
+      if (error && typeof error === 'object' && 'statusCode' in error) {
+        throw error
+      }
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to delete category: ${errorMessage}`, 500, 'CATEGORY_DELETE_ERROR')
     }
   }
 
@@ -393,7 +439,10 @@ class CategoryService {
         .order('sort_order', { ascending: true })
         .order('name', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown database error'
+        throw createError(`Database error: ${errorMessage}`, 500, 'DATABASE_ERROR')
+      }
       
       return {
         success: true,
@@ -401,7 +450,8 @@ class CategoryService {
         count: (data || []).length
       }
     } catch (error) {
-      throw createError(`Failed to fetch all categories: ${error.message}`, 500, 'ALL_CATEGORIES_ERROR')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to fetch all categories: ${errorMessage}`, 500, 'ALL_CATEGORIES_ERROR')
     }
   }
 }

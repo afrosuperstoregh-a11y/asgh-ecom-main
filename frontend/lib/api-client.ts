@@ -159,6 +159,7 @@ class ApiClient {
       // Get product counts for each category
       const categoriesWithCounts = await Promise.all(
         (data || []).map(async (category) => {
+          if (!supabase) throw new Error('Supabase client not initialized')
           const { count, error: countError } = await supabase
             .from('products')
             .select('*', { count: 'exact', head: true })

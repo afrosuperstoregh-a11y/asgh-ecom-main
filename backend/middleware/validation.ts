@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
-import { z, ZodSchema } from 'zod'
+import { z, ZodSchema, ZodError } from 'zod'
+import { ParsedQs } from 'qs'
 
 // Zod schemas for validation
 export const schemas = {
@@ -87,8 +88,8 @@ export function validate(schema: ZodSchema, source: 'body' | 'query' | 'params' 
 
       // Replace request data with validated data
       if (source === 'body') req.body = validatedData
-      else if (source === 'query') req.query = validatedData
-      else if (source === 'params') req.params = validatedData
+      else if (source === 'query') req.query = validatedData as ParsedQs
+      else if (source === 'params') req.params = validatedData as any
 
       next()
     } catch (error) {
@@ -98,7 +99,7 @@ export function validate(schema: ZodSchema, source: 'body' | 'query' | 'params' 
           error: {
             message: 'Validation failed',
             code: 'VALIDATION_ERROR',
-            details: error.errors.map(err => ({
+            details: error.issues.map(err => ({
               field: err.path.join('.'),
               message: err.message,
               code: err.code
