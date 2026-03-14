@@ -3,6 +3,11 @@ const nextConfig = {
   // Turbopack configuration
   turbopack: {},
   
+  // Configure path aliases
+  experimental: {
+    // Enable experimental features if needed
+  },
+  
   // Enable React Strict Mode for better development practices
   reactStrictMode: true,
   
@@ -16,6 +21,26 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: '*.supabase.co',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '54321',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '54321',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
       },
     ],
     // Disable image optimization in development for faster builds
@@ -39,6 +64,12 @@ const nextConfig = {
   
   // Configure webpack for serverless compatibility
   webpack: (config, { isServer, dev, webpack }) => {
+    
+    // Add path aliases
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': require('path').resolve(__dirname, '.'),
+    };
     
     if (!isServer) {
       config.resolve.fallback = {
@@ -74,6 +105,16 @@ const nextConfig = {
   
   // Server external packages (moved from experimental)
   serverExternalPackages: [],
+  
+  // Add async rewrites to proxy API requests to backend
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:3002/api/:path*',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
