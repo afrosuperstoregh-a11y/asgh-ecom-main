@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, Star, Truck, Shield } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
-import { useCategories } from '@/hooks/useCategories';
+import { useCategories } from '../hooks/useCategories';
 import ShopByCategory from '@/components/ShopByCategory';
 import FeaturedProductCard from '@/components/FeaturedProductCard';
 
 export default function HomePage() {
   const { products, loading, error } = useProducts({ featured: true, limit: 6 });
-  const { categories: categoriesData } = useCategories();
+  useCategories();
 
   return (
     <div className="min-h-screen">
