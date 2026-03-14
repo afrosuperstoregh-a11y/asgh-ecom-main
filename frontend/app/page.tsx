@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, Star, Truck, Shield } from 'lucide-react';
-import { useProducts, useCategories } from '@/hooks/useSupabaseData';
+import { useProducts } from '@/hooks/useProducts';
+import { useCategories } from '@/hooks/useCategories';
 import ShopByCategory from '@/components/ShopByCategory';
+import FeaturedProductCard from '@/components/FeaturedProductCard';
 
 export default function HomePage() {
   const { products, loading, error } = useProducts({ featured: true, limit: 6 });
@@ -59,65 +61,7 @@ export default function HomePage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
               {products.map((product: any) => (
-                <div key={product.id} className="group">
-                  <Link href={`/product/${product.id}`} className="block">
-                    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                      <div className="aspect-square bg-gray-100 overflow-hidden">
-                        <img
-                          src={product.image || '/placeholder-product.svg'}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <div className="p-4 md:p-6">
-                        <div className="text-sm text-gray-500 uppercase tracking-wide mb-2">{product.categories?.name || 'Premium'}</div>
-                        <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
-                          {product.name}
-                        </h3>
-                        <div className="flex items-center space-x-1 mb-3">
-                          <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-4 w-4 ${
-                                  i < Math.floor(product.rating || 0)
-                                    ? 'text-yellow-400 fill-current'
-                                    : 'text-gray-300'
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-sm text-gray-500">({product.reviews || 0})</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xl md:text-2xl font-bold text-gray-900">${product.compare_price || product.price}</span>
-                            {product.compare_price && (
-                              <span className="text-sm text-gray-500 line-through">
-                                ${product.price}
-                              </span>
-                            )}
-                          </div>
-                          {product.compare_price && (
-                            <span className="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded">
-                              Sale
-                            </span>
-                          )}
-                        </div>
-                        {/* Stock Status */}
-                        <div className="text-xs text-gray-600 mt-2">
-                          {(product.inventory_quantity > 0 || product.allow_backorder) ? (
-                            <span className="text-green-600">
-                              {product.inventory_quantity >= 10 ? `${product.inventory_quantity} in stock` : 'Available'}
-                            </span>
-                          ) : (
-                            <span className="text-red-600">Out of Stock</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </div>
+                <FeaturedProductCard key={product.id} product={product} />
               ))}
             </div>
             <div className="text-center mt-8 md:mt-12">
