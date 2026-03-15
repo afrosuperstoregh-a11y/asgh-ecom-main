@@ -1,5 +1,7 @@
 'use client';
 
+// Import fix for Railway deployment - March 14, 2026
+
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, Star, Truck, Shield } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
