@@ -37,9 +37,9 @@ export async function GET() {
   try {
     // Create Supabase client inside the function to avoid build-time issues
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    if (!supabaseUrl || !supabaseServiceKey) {
+    if (!supabaseUrl || !supabaseAnonKey) {
       console.error('Missing required environment variables for categories API')
       
       // Return mock categories in production if environment is not configured
@@ -60,7 +60,7 @@ export async function GET() {
       })
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
