@@ -1,6 +1,6 @@
 'use client';
 
-// Import fix for Railway deployment - March 14, 2026 - Build: c4ed83d
+// Import fix for Railway deployment - March 14, 2026 - Build: fd4360a - CRITICAL DEPLOYMENT
 
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, Star, Truck, Shield } from 'lucide-react';
