@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, Star, Truck, Shield } from 'lucide-react';
-import { useProducts } from '../hooks/useProducts';
-import { useCategories } from '../hooks/useCategories';
+import { useProducts } from '@/hooks/useProducts';
+import { useCategories } from '@/hooks/useCategories';
 import ShopByCategory from '@/components/ShopByCategory';
 import FeaturedProductCard from '@/components/FeaturedProductCard';
 
