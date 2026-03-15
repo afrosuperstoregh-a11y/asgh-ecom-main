@@ -10,7 +10,7 @@ import ShopByCategory from '@/components/ShopByCategory';
 import FeaturedProductCard from '@/components/FeaturedProductCard';
 
 export default function HomePage() {
-  const { products, loading, error } = useProducts({ featured: true, limit: 6 });
+  const { products, loading, error } = useProducts({ featured: true });
   useCategories();
 
   return (

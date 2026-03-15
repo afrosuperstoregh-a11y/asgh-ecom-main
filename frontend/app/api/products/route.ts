@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 function validateEnvironment() {
   const required = [
     'NEXT_PUBLIC_SUPABASE_URL',
-    'SUPABASE_SERVICE_ROLE_KEY'
+    'NEXT_PUBLIC_SUPABASE_ANON_KEY'
   ]
   
   const missing = required.filter(key => !process.env[key])
@@ -77,10 +77,10 @@ export async function GET(request: Request) {
     validateEnvironment()
     
     // Create Supabase client inside the function to avoid build-time issues
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
@@ -89,7 +89,7 @@ export async function GET(request: Request) {
 
     // Test database connection
     try {
-      const { data: testConnection, error: connectionError } = await supabaseAdmin
+      const { data: testConnection, error: connectionError } = await supabase
         .from('products')
         .select('id')
         .limit(1)
@@ -155,7 +155,7 @@ export async function GET(request: Request) {
     const limit = shouldLimit ? parseInt(limitParam) : null;
     const offset = shouldLimit && page > 1 && limit ? (page - 1) * limit : null;
     
-    let query = supabaseAdmin
+    let query = supabase
       .from('products')
       .select(`
         *,
@@ -276,7 +276,7 @@ export async function GET(request: Request) {
     });
 
     // Get unique categories for filter dropdown
-    const { data: categoriesData } = await supabaseAdmin
+    const { data: categoriesData } = await supabase
       .from('categories')
       .select('slug')
       .eq('is_active', true);
