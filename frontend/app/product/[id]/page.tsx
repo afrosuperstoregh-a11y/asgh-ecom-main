@@ -2,38 +2,15 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { ArrowLeft, ShoppingCart, Star, Truck, Shield, Plus, Minus, X, ZoomIn, ZoomOut, Play } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '../../../context/CartContext';
-import { useProduct, useProducts } from '@/hooks/useSupabaseData';
+import { useProduct, useProducts } from '@/hooks/useProducts';
 import ProductVideo from '../../../components/ProductVideo';
 
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  comparePrice?: number;
-  sku: string;
-  status: string;
-  featured: boolean;
-  stock: number;
-  images: string[];
-  videos?: string[]; // Add videos field
-  category: {
-    id: string;
-    name: string;
-  };
-  createdAt: string;
-  _count: {
-    orderItems: number;
-  };
-  // Additional fields for frontend compatibility
-  rating?: number;
-  reviews?: number;
-  inStock?: boolean;
-  discountPrice?: number;
-}
+import { Product } from '@/types/product';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export default function ProductPage() {
   const params = useParams();
@@ -59,7 +36,7 @@ export default function ProductPage() {
         id: product.id,
         name: product.name,
         price: product.compare_price || product.price,
-        image: product.image || '/placeholder-product.svg',
+        image: product.image_url || product.image || '/placeholder-product.svg',
         category: product.categories?.name || 'Uncategorized'
       });
       
@@ -114,10 +91,55 @@ export default function ProductPage() {
   const isInStock = product.inventory_quantity > 0 || product.allow_backorder;
   const displayPrice = product.compare_price || product.price;
   const originalPrice = product.compare_price ? product.price : null;
-  const images = Array.isArray(product.images) ? product.images : [product.image];
+  
+  // Handle images from Supabase Storage
+  let images: string[] = [];
+  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    images = product.images;
+  } else if (product.image_url) {
+    images = [product.image_url];
+  } else if (product.image) {
+    images = [product.image];
+  } else {
+    images = ['/placeholder-product.svg'];
+  }
+  
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "description": product.description,
+    "image": images,
+    "brand": {
+      "@type": "Brand",
+      "name": "Afro Superstore"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": displayPrice,
+      "priceCurrency": "USD",
+      "availability": isInStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "seller": {
+        "@type": "Organization",
+        "name": "Afro Superstore"
+      }
+    },
+    "aggregateRating": product.rating ? {
+      "@type": "AggregateRating",
+      "ratingValue": product.rating,
+      "reviewCount": product.reviews || 0
+    } : undefined,
+    "sku": product.sku,
+    "category": product.categories?.name
+  };
 
   return (
-    <>
+    <ErrorBoundary>
+      <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Breadcrumb */}
@@ -150,7 +172,7 @@ export default function ProductPage() {
             <div className="space-y-4">
               {/* Main Media Display */}
               <div className="aspect-square bg-white rounded-lg overflow-hidden relative">
-                {product.videos && product.videos.length > 0 && currentMediaIndex >= images.length ? (
+                {Array.isArray(product.videos) && product.videos.length > 0 && currentMediaIndex >= images.length ? (
                   <ProductVideo
                     src={product.videos[currentMediaIndex - images.length]}
                     poster={images[0] || '/placeholder-product.svg'}
@@ -159,10 +181,12 @@ export default function ProductPage() {
                   />
                 ) : (
                   <div className="relative group cursor-zoom-in" onClick={() => setIsZoomed(true)}>
-                    <img
+                    <Image
                       src={images[currentMediaIndex] || '/placeholder-product.svg'}
                       alt={product.name}
-                      className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                      fill
+                      className="object-cover transition-transform duration-200 group-hover:scale-105"
+                      sizes="(max-width: 1024px) 100vw, 50vw"
                     />
                     {/* Zoom Icon Overlay */}
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center pointer-events-none">
@@ -185,16 +209,18 @@ export default function ProductPage() {
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <img
+                    <Image
                       src={image}
                       alt={`${product.name} - Image ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="80px"
                     />
                   </button>
                 ))}
                 
                 {/* Videos */}
-                {product.videos && product.videos.map((video: any, index: number) => (
+                {Array.isArray(product.videos) && product.videos.map((video: any, index: number) => (
                   <button
                     key={`video-${index}`}
                     onClick={() => setCurrentMediaIndex(images.length + index)}
@@ -354,9 +380,11 @@ export default function ProductPage() {
                   }`}
                   onClick={() => setZoomedImageIndex(index)}
                 >
-                  <img
+                  <Image
                     src={image}
                     alt={`${product.name} - Image ${index + 1}`}
+                    width={400}
+                    height={400}
                     className="max-w-md max-h-[80vh] object-contain rounded-lg"
                   />
                 </div>
@@ -365,6 +393,7 @@ export default function ProductPage() {
           </div>
         </div>
       )}
-    </>
+      </>
+    </ErrorBoundary>
   );
 }

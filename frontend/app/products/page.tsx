@@ -2,38 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCart } from "../../context/CartContext";
 import { Loader2, Search, Filter, Grid, List, Star, ShoppingCart } from 'lucide-react';
-import { useProducts, useCategories } from '@/hooks/useSupabaseData';
+import { useProducts } from '@/hooks/useProducts';
+import { useCategories } from '@/hooks/useCategories';
 
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  comparePrice?: number;
-  sku: string;
-  status: string;
-  featured: boolean;
-  stock: number;
-  inventory_quantity: number;
-  track_inventory: boolean;
-  allow_backorder: boolean;
-  images: string[];
-  category: {
-    id: string;
-    name: string;
-  };
-  createdAt: string;
-  _count: {
-    orderItems: number;
-  };
-  // Additional fields for frontend compatibility
-  rating?: number;
-  reviewCount?: number;
-  inStock?: boolean;
-  discountPrice?: number;
-}
+import { Product } from '@/types/product';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,10 +65,12 @@ export default function ProductsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading products...</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+            <p className="text-gray-600">Loading products...</p>
+          </div>
         </div>
       </div>
     );
@@ -116,21 +94,9 @@ export default function ProductsPage() {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
-            <p className="text-gray-600">Loading products...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -188,17 +154,20 @@ export default function ProductsPage() {
 
         {/* Products Grid */}
         {products.length > 0 ? (
-          <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6' : 'space-y-4'}>
+          <ErrorBoundary>
+            <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6' : 'space-y-4'}>
             {products.map((product) => (
               <div key={product.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
                 {viewMode === 'grid' ? (
                   <>
                     <Link href={`/product/${product.id}`}>
-                      <div className="relative">
-                        <img
+                      <div className="relative aspect-square">
+                        <Image
                           src={product.image || '/placeholder-product.jpg'}
                           alt={product.name}
-                          className="w-full h-48 sm:h-56 object-cover rounded-t-lg"
+                          fill
+                          className="object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-105"
+                          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                         />
                         {product.compare_price && (
                           <span className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">
@@ -255,11 +224,13 @@ export default function ProductsPage() {
                 ) : (
                   <div className="flex items-center p-4 gap-4">
                     <Link href={`/product/${product.id}`} className="flex-shrink-0">
-                      <div className="relative">
-                        <img
+                      <div className="relative w-20 h-20 sm:w-24 sm:h-24">
+                        <Image
                           src={product.image || '/placeholder-product.jpg'}
                           alt={product.name}
-                          className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg"
+                          fill
+                          className="object-cover rounded-lg"
+                          sizes="80px"
                         />
                         {!(product.inventory_quantity > 0 || product.allow_backorder) && (
                           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
@@ -295,7 +266,8 @@ export default function ProductsPage() {
                 )}
               </div>
             ))}
-          </div>
+            </div>
+          </ErrorBoundary>
         ) : (
           <div className="text-center py-12">
             <div className="mb-4">
@@ -372,6 +344,7 @@ export default function ProductsPage() {
           </div>
         )}
       </main>
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }

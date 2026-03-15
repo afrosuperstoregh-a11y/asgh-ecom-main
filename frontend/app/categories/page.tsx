@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Grid, List, Search, Filter, Package } from 'lucide-react';
-import { useCategories } from '@/hooks/useSupabaseData';
+import { useCategories } from '@/hooks/useCategories';
 
 export default function CategoriesPage() {
   const [searchQuery, setSearchQuery] = useState('');

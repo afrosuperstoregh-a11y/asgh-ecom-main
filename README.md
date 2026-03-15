@@ -1,221 +1,177 @@
-# Afro Superstore E-commerce Platform
+# Supabase CLI
 
-A modern, full-stack e-commerce platform built with Next.js and Node.js, celebrating African culture and heritage.
+[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=develop)](https://coveralls.io/github/supabase/cli?branch=develop) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
+](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
 
-## 🏗️ Architecture
+[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
 
-### Backend (Node.js + Express)
-- **Framework**: Express.js
-- **Database**: PostgreSQL via Supabase
-- **Authentication**: JWT + Supabase Auth
-- **File Storage**: Supabase Storage
-- **Payment**: Stripe Integration
-- **Email**: SendGrid
+This repository contains all the functionality for Supabase CLI.
 
-### Frontend (Next.js)
-- **Framework**: Next.js 14 with App Router
-- **Styling**: Tailwind CSS
-- **State Management**: Zustand
-- **Data Fetching**: React Query + Axios
-- **UI Components**: Headless UI + Heroicons
+- [x] Running Supabase locally
+- [x] Managing database migrations
+- [x] Creating and deploying Supabase Functions
+- [x] Generating types directly from your database schema
+- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
 
-## 📁 Project Structure
+## Getting started
 
-```
-asca_ecom-main/
-├── backend/
-│   └── src/
-│       ├── config/          # Configuration files
-│       ├── controllers/     # Route controllers
-│       ├── middleware/      # Express middleware
-│       ├── routes/          # API routes
-│       ├── services/        # Business logic
-│       ├── utils/           # Utility functions
-│       └── server.js        # Server entry point
-├── frontend/
-│   ├── app/                # Next.js app directory
-│   ├── components/         # React components
-│   ├── lib/                # Libraries and configurations
-│   ├── hooks/              # Custom React hooks
-│   ├── services/           # API services
-│   ├── store/              # State management
-│   └── styles/             # Global styles
-└── database/
-    └── migrations/         # Database migrations
-```
+### Install the CLI
 
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 20+
-- PostgreSQL (via Supabase)
-- Redis (optional, for caching)
-
-### Environment Setup
-
-1. **Backend Environment** (`.env`):
-```env
-# Server
-PORT=3001
-NODE_ENV=development
-
-# Supabase
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-
-# JWT
-JWT_SECRET=your_jwt_secret
-JWT_EXPIRES_IN=7d
-
-# Stripe
-STRIPE_SECRET_KEY=your_stripe_secret_key
-STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-STRIPE_WEBHOOK_SECRET=your_webhook_secret
-
-# Email
-EMAIL_PROVIDER=sendgrid
-EMAIL_API_KEY=your_sendgrid_api_key
-FROM_EMAIL=noreply@afrosuperstore.ca
-
-# Frontend URL
-FRONTEND_URL=http://localhost:3000
-```
-
-2. **Frontend Environment** (`.env.local`):
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_API_URL=http://localhost:3001/api
-```
-
-### Installation
-
-1. **Install Backend Dependencies**:
-```bash
-cd backend
-npm install
-```
-
-2. **Install Frontend Dependencies**:
-```bash
-cd frontend
-npm install
-```
-
-### Running the Application
-
-1. **Start Backend**:
-```bash
-cd backend
-npm run dev
-```
-
-2. **Start Frontend**:
-```bash
-cd frontend
-npm run dev
-```
-
-The application will be available at:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:3001
-
-## 🛠️ Development
-
-### Code Standards
-
-- **Files**: camelCase
-- **React Components**: PascalCase
-- **API Routes**: kebab-case
-- **Database Functions**: snake_case
-
-### API Endpoints
-
-#### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/logout` - User logout
-
-#### Products
-- `GET /api/products` - List products
-- `GET /api/products/:id` - Get product details
-- `POST /api/products` - Create product (admin)
-- `PUT /api/products/:id` - Update product (admin)
-- `DELETE /api/products/:id` - Delete product (admin)
-
-#### Orders
-- `GET /api/orders` - List user orders
-- `GET /api/orders/:id` - Get order details
-- `POST /api/orders` - Create order
-- `PATCH /api/orders/:id/status` - Update order status
-
-#### Users
-- `GET /api/users/profile` - Get user profile
-- `PUT /api/users/profile` - Update profile
-- `GET /api/users/addresses` - Get user addresses
-- `POST /api/users/addresses` - Add address
-
-## 🗄️ Database
-
-The project uses Supabase for database management. Key tables:
-
-- `users` - User accounts and profiles
-- `products` - Product catalog
-- `categories` - Product categories
-- `orders` - Customer orders
-- `order_items` - Order line items
-- `addresses` - Shipping addresses
-
-## 🔧 Configuration
-
-All configuration is centralized in:
-- Backend: `backend/src/config/env.js`
-- Frontend: `frontend/lib/supabase.ts`
-
-## 📦 Deployment
-
-### Backend Deployment
-1. Set production environment variables
-2. Run `npm run build`
-3. Deploy to your preferred hosting platform
-
-### Frontend Deployment
-1. Set production environment variables
-2. Run `npm run build`
-3. Deploy to Vercel, Netlify, or similar
-
-## 🧪 Testing
+Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
 
 ```bash
-# Backend tests
-cd backend
-npm test
-
-# Frontend tests
-cd frontend
-npm test
+npm i supabase --save-dev
 ```
 
-## 📝 Contributing
+When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+```
+NODE_OPTIONS=--no-experimental-fetch yarn add supabase
+```
 
-## 📄 License
+> **Note**
+For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
 
-This project is licensed under the MIT License.
+<details>
+  <summary><b>macOS</b></summary>
 
-## 🤝 Support
+  Available via [Homebrew](https://brew.sh). To install:
 
-For support and questions:
-- Email: support@afrosuperstore.ca
-- Documentation: Check the `/docs` folder
-- Issues: Create an issue on GitHub
+  ```sh
+  brew install supabase/tap/supabase
+  ```
 
----
+  To install the beta release channel:
+  
+  ```sh
+  brew install supabase/tap/supabase-beta
+  brew link --overwrite supabase-beta
+  ```
+  
+  To upgrade:
 
-Built with ❤️ for the Afro Superstore community
+  ```sh
+  brew upgrade supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Windows</b></summary>
+
+  Available via [Scoop](https://scoop.sh). To install:
+
+  ```powershell
+  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+  scoop install supabase
+  ```
+
+  To upgrade:
+
+  ```powershell
+  scoop update supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Linux</b></summary>
+
+  Available via [Homebrew](https://brew.sh) and Linux packages.
+
+  #### via Homebrew
+
+  To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+
+  #### via Linux packages
+
+  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
+
+  ```sh
+  sudo apk add --allow-untrusted <...>.apk
+  ```
+
+  ```sh
+  sudo dpkg -i <...>.deb
+  ```
+
+  ```sh
+  sudo rpm -i <...>.rpm
+  ```
+
+  ```sh
+  sudo pacman -U <...>.pkg.tar.zst
+  ```
+</details>
+
+<details>
+  <summary><b>Other Platforms</b></summary>
+
+  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
+
+  ```sh
+  go install github.com/supabase/cli@latest
+  ```
+
+  Add a symlink to the binary in `$PATH` for easier access:
+
+  ```sh
+  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
+  ```
+
+  This works on other non-standard Linux distros.
+</details>
+
+<details>
+  <summary><b>Community Maintained Packages</b></summary>
+
+  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
+  To install in your working directory:
+
+  ```bash
+  pkgx install supabase
+  ```
+
+  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
+</details>
+
+### Run the CLI
+
+```bash
+supabase bootstrap
+```
+
+Or using npx:
+
+```bash
+npx supabase bootstrap
+```
+
+The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
+
+## Docs
+
+Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
+
+## Breaking changes
+
+We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
+
+However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
+
+## Developing
+
+To run from source:
+
+```sh
+# Go >= 1.22
+go run . help
+```

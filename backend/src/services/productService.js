@@ -1,5 +1,60 @@
 const { supabase } = require('../config/supabase');
 
+// Helper function to generate Supabase Storage URL
+function getSupabaseImageUrl(imageUrl) {
+  if (!imageUrl) return null;
+  
+  // Convert to string if it's not already
+  const imageUrlStr = String(imageUrl);
+  
+  // If URL already starts with http, return as-is
+  if (imageUrlStr.startsWith('http')) {
+    return imageUrlStr;
+  }
+  
+  // Generate Supabase Storage public URL
+  const supabaseUrl = process.env.SUPABASE_URL || 'http://127.0.0.1:54321';
+  
+  // Determine bucket based on filename pattern or default to product-images
+  let bucket = 'product-images';
+  if (imageUrlStr.includes('category-') || imageUrlStr.includes('categories/')) {
+    bucket = 'category-images';
+  }
+  
+  // Remove leading slash if present
+  const cleanPath = imageUrlStr.startsWith('/') ? imageUrlStr.slice(1) : imageUrlStr;
+  
+  return `${supabaseUrl}/storage/v1/object/public/${bucket}/${cleanPath}`;
+}
+
+// Helper function to process images array and add full URLs
+function processProductImages(product) {
+  const processed = { ...product };
+  
+  // Handle images field - it might be a string or array
+  let imagesArray = [];
+  if (product.images) {
+    if (Array.isArray(product.images)) {
+      imagesArray = product.images;
+    } else if (typeof product.images === 'string') {
+      // Parse JSON string or treat as single image
+      try {
+        const parsed = JSON.parse(product.images);
+        imagesArray = Array.isArray(parsed) ? parsed : [product.images];
+      } catch (e) {
+        imagesArray = [product.images];
+      }
+    }
+  }
+  
+  // Transform image URLs
+  processed.images = imagesArray.map(img => getSupabaseImageUrl(img));
+  // Set image_url to the first image for compatibility
+  processed.image_url = processed.images[0] || null;
+  
+  return processed;
+}
+
 class ProductService {
   // Get products with pagination, filtering, and sorting
   async getProducts(options = {}) {
@@ -52,8 +107,11 @@ class ProductService {
 
       if (error) throw error;
 
+      // Transform image URLs to full Supabase URLs
+      const transformedData = (data || []).map(product => processProductImages(product));
+
       return {
-        products: data || [],
+        products: transformedData,
         pagination: {
           current_page: parseInt(page),
           total_pages: Math.ceil((count || 0) / limit),
@@ -87,7 +145,10 @@ class ProductService {
         throw error;
       }
 
-      return data;
+      // Transform image URL to full Supabase URL
+      const transformedData = data ? processProductImages(data) : data;
+
+      return transformedData;
     } catch (error) {
       throw new Error(`Failed to fetch product: ${error.message}`);
     }
@@ -259,12 +320,19 @@ class ProductService {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .eq('status', 'active')
-        .order('name');
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
+        .order('name', { ascending: true });
 
       if (error) throw error;
 
-      return data || [];
+      // Transform image URLs to full Supabase URLs
+      const transformedData = (data || []).map(category => ({
+        ...category,
+        image_url: getSupabaseImageUrl(category.image_url)
+      }));
+
+      return transformedData;
     } catch (error) {
       throw new Error(`Failed to fetch categories: ${error.message}`);
     }

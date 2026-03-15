@@ -30,6 +30,9 @@ const logger = require(loggerPath);
 const app = express();
 const PORT = config.port;
 
+// Trust proxy disabled for security - only enable behind trusted reverse proxy
+// app.set('trust proxy', true);
+
 // Security middleware with proper configuration
 app.use(helmet({
   contentSecurityPolicy: {

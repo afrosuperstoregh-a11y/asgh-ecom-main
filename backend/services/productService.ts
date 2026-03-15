@@ -3,6 +3,30 @@ import cacheService, { CACHE_CONFIG, CACHE_PATTERNS } from '../lib/cache/redis'
 import { createError } from '../middleware/errorHandler'
 import type { Database } from '../types/database'
 
+// Helper function to generate Supabase Storage URL
+function getSupabaseImageUrl(imageUrl: string | null | undefined): string | null {
+  if (!imageUrl) return null
+  
+  // If URL already starts with http, return as-is
+  if (imageUrl.startsWith('http')) {
+    return imageUrl
+  }
+  
+  // Generate Supabase Storage public URL
+  const supabaseUrl = process.env.SUPABASE_URL || 'http://127.0.0.1:54321'
+  
+  // Determine bucket based on filename pattern or default to product-images
+  let bucket = 'product-images'
+  if (imageUrl.includes('category-') || imageUrl.includes('categories/')) {
+    bucket = 'category-images'
+  }
+  
+  // Remove leading slash if present
+  const cleanPath = imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl
+  
+  return `${supabaseUrl}/storage/v1/object/public/${bucket}/${cleanPath}`
+}
+
 type Product = Database['public']['Tables']['products']['Row']
 type ProductInsert = Database['public']['Tables']['products']['Insert']
 type ProductUpdate = Database['public']['Tables']['products']['Update']
@@ -79,7 +103,13 @@ class ProductService {
       }
 
       if (category) {
-        query = query.eq('categories.slug', category)
+        // Check if category is numeric (ID) or string (slug)
+        const isNumeric = /^\d+$/.test(category)
+        if (isNumeric) {
+          query = query.eq('category_id', parseInt(category))
+        } else {
+          query = query.eq('categories.slug', category)
+        }
       }
 
       if (search) {
@@ -96,8 +126,14 @@ class ProductService {
 
       if (error) throw error
 
+      // Transform image URLs to full Supabase URLs
+      const transformedData = (data || []).map((product: any) => ({
+        ...product,
+        image_url: getSupabaseImageUrl(product.image_url)
+      }))
+
       const result = {
-        products: data || [],
+        products: transformedData,
         pagination: {
           current_page: parseInt(page.toString()),
           total_pages: Math.ceil((count || 0) / limit),
@@ -137,7 +173,13 @@ class ProductService {
         throw error
       }
 
-      return data
+      // Transform image URL to full Supabase URL
+      const transformedData = data ? {
+        ...(data as any),
+        image_url: getSupabaseImageUrl((data as any).image_url)
+      } : data
+
+      return transformedData
     } catch (error) {
       if (error && typeof error === 'object' && 'statusCode' in error) {
         throw error

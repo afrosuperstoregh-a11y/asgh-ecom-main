@@ -29,7 +29,7 @@ const DealsFilterBar: React.FC<DealsFilterBarProps> = ({
     const loadCategories = async () => {
       try {
         const cats = await categories.getAll();
-        setCategoriesList(cats);
+        setCategoriesList(cats || []);
       } catch (error) {
         console.error('Error loading categories:', error);
         setCategoriesList([]);
@@ -113,7 +113,7 @@ const DealsFilterBar: React.FC<DealsFilterBarProps> = ({
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
-              {categoriesList.length > 0 ? (
+              {categoriesList && categoriesList.length > 0 ? (
                 categoriesList.map((cat: any) => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))

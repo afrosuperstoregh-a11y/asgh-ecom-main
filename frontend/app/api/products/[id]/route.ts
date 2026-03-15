@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'
 
-// Validate environment variables
+// Validate required environment variables
 function validateEnvironment() {
   const required = [
     'NEXT_PUBLIC_SUPABASE_URL',
@@ -16,180 +15,161 @@ function validateEnvironment() {
 }
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
-    
     // Validate environment variables first
-    validateEnvironment();
+    validateEnvironment()
     
     // Create Supabase client inside the function to avoid build-time issues
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
       }
-    });
+    })
 
-    const { data: productData, error } = await supabase
+    // Await params to get the id
+    const { id } = await params
+
+    // Test database connection
+    try {
+      const { data: testConnection, error: connectionError } = await supabaseAdmin
+        .from('products')
+        .select('id')
+        .limit(1)
+      
+      if (connectionError) {
+        console.error('Database connection error:', connectionError)
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Database connection failed'
+        }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      }
+    } catch (connectionTestError) {
+      console.error('Database test failed:', connectionTestError)
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Database test failed'
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Query for the specific product
+    const { data: product, error } = await supabaseAdmin
       .from('products')
       .select(`
         *,
         categories!inner(name, slug)
       `)
-      .or(`id.eq.${id},slug.eq.${id}`)
+      .eq('id', id)
       .eq('status', 'active')
-      .single();
-    
-    if (error) {
-      console.error('Supabase query error:', error);
-      // Fallback to mock data
-      console.log('Using mock data for product:', id);
-    } else if (productData) {
-      // Ensure videos field exists
-      const productWithVideos: any = {
-        ...(productData as any),
-        videos: (productData as any).videos || []
-      };
+      .single()
 
-      return NextResponse.json({
-        success: true,
-        data: productWithVideos
+    if (error) {
+      console.error('Supabase query error:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
       });
+      
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: error.message,
+        details: error.details,
+        code: error.code
+      }), { 
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      })
     }
 
-    // Fallback to mock data if Supabase fails or isn't configured
-    console.log('Using mock data for product:', id);
-    
-    // Mock product data
-    const mockProducts: Record<string, any> = {
-      "girls-dashiki": {
-        id: "1",
-        name: "Girls Dashiki",
-        slug: "girls-dashiki",
-        description: "Latest style ladies Dashiki dress made with premium fabric and traditional African patterns. Perfect for special occasions and cultural events.",
-        short_description: "Latest style ladies Dashiki dress.",
-        sku: "100206",
-        price: 30.00,
-        compare_price: null,
-        cost_price: null,
-        weight: null,
-        dimensions: null,
-        category_id: "1",
-        vendor_id: null,
-        images: ["/placeholder-product.svg"],
-        videos: ["/sample-product-video.mp4"], // Add sample video
-        tags: ["dashiki", "women", "traditional", "african"],
-        inventory_quantity: 50,
-        track_inventory: true,
-        allow_backorder: false,
-        requires_shipping: true,
-        is_digital: false,
-        status: "active",
-        featured: false,
-        seo_title: null,
-        seo_description: null,
-        created_at: "2026-02-05T06:58:52.481147+00:00",
-        updated_at: "2026-02-05T06:58:52.481147+00:00",
-        created_by: null,
-        categories: {
-          "name": "Women Fashion",
-          "slug": "women-fashion"
+    if (!product) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Product not found'
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Process product to ensure images are arrays and handle URLs properly
+    let images = [];
+    if (product.images) {
+      if (typeof product.images === 'string') {
+        // If it's a JSON string, try to parse it
+        try {
+          const parsed = JSON.parse(product.images);
+          images = Array.isArray(parsed) ? parsed : [product.images];
+        } catch {
+          // If parsing fails, treat as single image URL
+          images = [product.images];
         }
-      },
-      "boys-dashiki": {
-        id: "2",
-        name: "Boys Dashiki",
-        slug: "boys-dashiki",
-        description: "Latest style boys Dashiki dress made with premium fabric and traditional African patterns. Perfect for special occasions and cultural events.",
-        short_description: "Latest style boys Dashiki dress.",
-        sku: "100207",
-        price: 30.00,
-        compare_price: null,
-        cost_price: null,
-        weight: null,
-        dimensions: null,
-        category_id: "2",
-        vendor_id: null,
-        images: ["/placeholder-product.svg"],
-        videos: [], // Add videos field - empty for now
-        tags: ["dashiki", "men", "traditional", "african"],
-        inventory_quantity: 50,
-        track_inventory: true,
-        allow_backorder: false,
-        requires_shipping: true,
-        is_digital: false,
-        status: "active",
-        featured: false,
-        seo_title: null,
-        seo_description: null,
-        created_at: "2026-02-05T06:58:52.578369+00:00",
-        updated_at: "2026-02-05T06:58:52.578369+00:00",
-        created_by: null,
-        categories: {
-          "name": "Men Fashion",
-          "slug": "men-fashion"
-        }
-      },
-      "banku-flour": {
-        id: "3",
-        name: "Banku Flour",
-        slug: "banku-flour",
-        description: "Premium quality fermented banku flour made from maize and cassava. Perfect for preparing traditional Ghanaian banku. Made with authentic ingredients and traditional fermentation methods.",
-        short_description: "Premium quality fermented banku flour.",
-        sku: "100201",
-        price: 50.00,
-        compare_price: null,
-        cost_price: null,
-        weight: null,
-        dimensions: null,
-        category_id: "3",
-        vendor_id: null,
-        images: ["/placeholder-product.svg"],
-        videos: [], // Add videos field - empty for now
-        tags: ["banku", "flour", "fermented", "ghanaian", "food"],
-        inventory_quantity: 100,
-        track_inventory: true,
-        allow_backorder: false,
-        requires_shipping: true,
-        is_digital: false,
-        status: "active",
-        featured: false,
-        seo_title: null,
-        seo_description: null,
-        created_at: "2026-02-05T06:58:52.630232+00:00",
-        updated_at: "2026-02-05T06:58:52.630232+00:00",
-        created_by: null,
-        categories: {
-          "name": "Food",
-          "slug": "food"
+      } else if (Array.isArray(product.images)) {
+        images = product.images;
+      } else {
+        images = [product.images];
+      }
+    }
+
+    // Ensure all image URLs are properly formatted for production
+    images = images.map((img: any) => {
+      if (!img || typeof img !== 'string') return '/placeholder-product.jpg';
+      
+      // If it's already a full URL, return as is
+      if (img.startsWith('http')) {
+        return img;
+      }
+      
+      // If it's a Supabase storage path, construct full URL
+      if (img.startsWith('/') || !img.includes('://')) {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        if (supabaseUrl && img.startsWith('product-images/')) {
+          return `${supabaseUrl}/storage/v1/object/public/products/${img}`;
         }
       }
+      
+      return img;
+    });
+
+    const processedProduct = {
+      ...product,
+      images: images.length > 0 ? images : ['/placeholder-product.jpg']
     };
 
-    const product = mockProducts[id] || mockProducts[`1`]; // Fallback to first product
-    
-    if (!product) {
-      return NextResponse.json({
-        success: false,
-        message: 'Product not found'
-      }, { status: 404 });
-    }
-    
-    return NextResponse.json({
+    return new Response(JSON.stringify({
       success: true,
-      data: product
-    });
+      data: processedProduct
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    })
+
   } catch (error) {
-    console.error('Error fetching product:', error);
-    return NextResponse.json({
+    console.error('Error in product API:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      error
+    });
+    
+    return new Response(JSON.stringify({ 
       success: false,
-      message: 'Failed to fetch product'
-    }, { status: 500 });
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error occurred'
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
   }
 }

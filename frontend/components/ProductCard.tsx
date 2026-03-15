@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Product } from '@/lib/api/products';
+import { Product } from '@/types/product';
 import { Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -16,6 +16,14 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   
+  // Debug logging
+  console.log('ProductCard - Product data:', {
+    id: product.id,
+    name: product.name,
+    image_url: product.image_url,
+    images: product.images
+  });
+  
   const isWishlisted = isInWishlist(product.id.toString());
   const hasDiscount = product.compare_price && product.compare_price > product.price;
   const inStock = product.inventory_quantity > 0 || product.allow_backorder;
@@ -25,7 +33,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.images?.[0] || '/placeholder-product.jpg'
+      image: product.image_url || product.images?.[0] || '/placeholder-product.jpg'
     });
   };
 
@@ -37,7 +45,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         id: product.id.toString(),
         name: product.name,
         price: product.price,
-        image: product.images?.[0] || '/placeholder-product.jpg'
+        image: product.image_url || product.images?.[0] || '/placeholder-product.jpg'
       });
     }
   };
@@ -51,10 +59,11 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Product Image */}
       <div className="relative aspect-square overflow-hidden bg-gray-100">
         <Image
-          src={product.images && product.images.length > 0 ? product.images[0] : '/placeholder-product.jpg'}
+          src={product.image_url || product.images?.[0] || '/placeholder-product.jpg'}
           alt={product.name}
           fill
-          className="object-cover"
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder-product.jpg';
@@ -71,6 +80,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Wishlist Button */}
         <button
           onClick={handleWishlist}
+          aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
           className={`absolute top-2 right-2 p-2 rounded-full transition-colors ${
             isWishlisted 
               ? 'bg-red-500 text-white' 
@@ -86,6 +96,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <button
               onClick={handleAddToCart}
               disabled={!inStock}
+              aria-label={inStock ? 'Add product to cart' : 'Product out of stock'}
               className={`w-full py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                 inStock
                   ? 'bg-blue-600 text-white hover:bg-blue-700'

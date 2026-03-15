@@ -19,9 +19,6 @@ import { asyncHandler } from '../middleware/errorHandler'
 
 const router = Router()
 
-// Apply rate limiting to all product routes
-router.use(rateLimiters.products)
-
 // Apply sanitization to all routes
 router.use(sanitizeBody)
 

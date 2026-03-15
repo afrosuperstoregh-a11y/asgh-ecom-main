@@ -2,6 +2,30 @@ import { supabase } from '../lib/supabase/server'
 import cacheService, { CACHE_CONFIG, CACHE_PATTERNS } from '../lib/cache/redis'
 import { createError } from '../middleware/errorHandler'
 
+// Helper function to generate Supabase Storage URL
+function getSupabaseImageUrl(imageUrl: string | null | undefined): string | null {
+  if (!imageUrl) return null
+  
+  // If URL already starts with http, return as-is
+  if (imageUrl.startsWith('http')) {
+    return imageUrl
+  }
+  
+  // Generate Supabase Storage public URL
+  const supabaseUrl = process.env.SUPABASE_URL || 'http://127.0.0.1:54321'
+  
+  // Determine bucket based on filename pattern or default to category-images
+  let bucket = 'category-images'
+  if (imageUrl.includes('product-') || imageUrl.includes('products/')) {
+    bucket = 'product-images'
+  }
+  
+  // Remove leading slash if present
+  const cleanPath = imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl
+  
+  return `${supabaseUrl}/storage/v1/object/public/${bucket}/${cleanPath}`
+}
+
 interface CategoryData {
   name: string
   description?: string
@@ -98,6 +122,7 @@ class CategoryService {
 
           return {
             ...(category as object),
+            image_url: getSupabaseImageUrl(category.image_url),
             productCount: countError instanceof Error ? 0 : count || 0
           }
         })
@@ -105,7 +130,7 @@ class CategoryService {
 
       const result = {
         success: true,
-        categories: categoriesWithCounts,
+        data: categoriesWithCounts,
         count: categoriesWithCounts.length
       }
 
@@ -117,17 +142,45 @@ class CategoryService {
     }
   }
 
-  // Get single category
-  async getCategoryById(id: string | number) {
+  // Get single category (by ID or slug)
+  async getCategoryById(idOrSlug: string | number) {
     try {
-      const { data, error } = await supabase()
+      // Try to fetch by ID first, then by slug
+      let query = supabase()
         .from('categories')
         .select(`
           *,
           products(count)
         `)
-        .eq('id', id)
+        .eq('is_active', true)
         .single()
+
+      // Check if the parameter is numeric (ID) or string (slug)
+      const isNumeric = typeof idOrSlug === 'number' || /^\d+$/.test(idOrSlug.toString())
+      
+      if (isNumeric) {
+        query = supabase()
+          .from('categories')
+          .select(`
+            *,
+            products(count)
+          `)
+          .eq('id', idOrSlug)
+          .eq('is_active', true)
+          .single()
+      } else {
+        query = supabase()
+          .from('categories')
+          .select(`
+            *,
+            products(count)
+          `)
+          .eq('slug', idOrSlug)
+          .eq('is_active', true)
+          .single()
+      }
+
+      const { data, error } = await query
 
       if (error) {
         if (error.code === 'PGRST116') {
@@ -137,7 +190,13 @@ class CategoryService {
         throw createError(`Database error: ${errorMessage}`, 500, 'DATABASE_ERROR')
       }
 
-      return data
+      // Transform image URL to full Supabase URL
+      const transformedData = data ? {
+        ...(data as any),
+        image_url: getSupabaseImageUrl((data as any).image_url)
+      } : data
+
+      return transformedData
     } catch (error) {
       if (error && typeof error === 'object' && 'statusCode' in error) {
         throw error
@@ -177,9 +236,13 @@ class CategoryService {
       const categoryMap: { [key: string]: any } = {}
       const tree: any[] = []
       
-      // Create map of categories
+      // Create map of categories with transformed image URLs
       categories.forEach(cat => {
-        categoryMap[cat.id] = { ...(cat as object), children: [] }
+        categoryMap[cat.id] = { 
+          ...(cat as object), 
+          image_url: getSupabaseImageUrl(cat.image_url),
+          children: [] 
+        }
       })
       
       // Build tree structure

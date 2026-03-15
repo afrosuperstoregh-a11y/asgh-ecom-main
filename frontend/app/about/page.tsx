@@ -52,11 +52,11 @@ export default function AboutPage() {
     
     // Simulate loading delay for better UX
     const timer = setTimeout(() => {
-      let filtered = [...productsList];
+      let filtered = Array.isArray(productsList) ? [...productsList] : [];
 
       // Apply category filter
       if (selectedCategory !== 'all-products') {
-        filtered = productsList.filter(product => 
+        filtered = filtered.filter(product => 
           product && (product.category_name === selectedCategory || product.category_slug === selectedCategory)
         );
       }

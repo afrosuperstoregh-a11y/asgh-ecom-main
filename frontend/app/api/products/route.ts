@@ -148,6 +148,7 @@ export async function GET(request: Request) {
     const order = searchParams.get('order') || 'DESC';
     const category = searchParams.get('category');
     const search = searchParams.get('search');
+    const featured = searchParams.get('featured');
     
     // Determine if this is a request for all products (no limit) or limited request
     const shouldLimit = limitParam !== null;
@@ -161,6 +162,11 @@ export async function GET(request: Request) {
         categories!inner(name, slug)
       `, { count: 'exact' })
       .eq('status', 'active');
+
+    // Add featured filter
+    if (featured === 'true') {
+      query = query.eq('featured', true);
+    }
 
     // Add category filter
     if (category && category !== 'all') {
@@ -244,8 +250,8 @@ export async function GET(request: Request) {
       }
 
       // Ensure all image URLs are properly formatted for production
-      images = images.map((img: string) => {
-        if (!img) return '/placeholder-product.jpg';
+      images = images.map((img: any) => {
+        if (!img || typeof img !== 'string') return '/placeholder-product.jpg';
         
         // If it's already a full URL, return as is
         if (img.startsWith('http')) {
