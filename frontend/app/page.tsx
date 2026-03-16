@@ -1,6 +1,6 @@
 'use client';
 
-// MASTER FIX: All environment variables - Deploy: d30e67a - FINAL ATTEMPT
+// PRODUCTION FIX: Safe Supabase initialization - Deploy: 1227d5c - Mar 15, 2025
 
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, Star, Truck, Shield } from 'lucide-react';
