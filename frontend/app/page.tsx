@@ -10,7 +10,7 @@ import ShopByCategory from '@/components/ShopByCategory';
 import FeaturedProductCard from '@/components/FeaturedProductCard';
 
 export default function HomePage() {
-  const { products, loading, error } = useProducts({ featured: true });
+  const { products, loading, error } = useProducts();
   useCategories();
 
   return (
@@ -48,13 +48,13 @@ export default function HomePage() {
       {/* Shop by Category Section */}
       <ShopByCategory />
 
-      {/* Featured Products */}
-      {!loading && products.length > 0 && (
+      {/* All Products */}
+      {!loading && (
         <section className="py-12 md:py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8 md:mb-12">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Featured Products</h2>
-              <p className="text-base md:text-lg text-gray-600 px-4">Check out our handpicked selection</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">All Products</h2>
+              <p className="text-base md:text-lg text-gray-600 px-4">Browse our complete collection of {products.length} products</p>
               {error && (
                 <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
                   <p className="text-sm">Using cached data: {error}</p>
@@ -66,15 +66,11 @@ export default function HomePage() {
                 <FeaturedProductCard key={product.id} product={product} />
               ))}
             </div>
-            <div className="text-center mt-8 md:mt-12">
-              <Link
-                href="/products"
-                className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 touch-target"
-              >
-                View All Products
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </div>
+            {products.length === 0 && !loading && (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No products found.</p>
+              </div>
+            )}
           </div>
         </section>
       )}
