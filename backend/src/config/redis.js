@@ -4,9 +4,15 @@ class RedisClient {
   constructor() {
     this.client = null;
     this.isConnected = false;
+    this.isEnabled = process.env.REDIS_ENABLED === 'true';
   }
 
   connect() {
+    if (!this.isEnabled) {
+      console.log('ℹ️ Redis is disabled');
+      return null;
+    }
+
     try {
       this.client = new Redis({
         host: process.env.REDIS_HOST || 'localhost',
@@ -48,6 +54,11 @@ class RedisClient {
   }
 
   async testConnection() {
+    if (!this.isEnabled) {
+      console.log('ℹ️ Redis is disabled, skipping connection test');
+      return true;
+    }
+
     try {
       if (!this.client) {
         this.client = this.connect();
@@ -63,6 +74,11 @@ class RedisClient {
   }
 
   getClient() {
+    if (!this.isEnabled) {
+      console.log('ℹ️ Redis is disabled, returning null client');
+      return null;
+    }
+
     if (!this.client) {
       this.client = this.connect();
     }
@@ -70,7 +86,7 @@ class RedisClient {
   }
 
   isReady() {
-    return this.isConnected && this.client && this.client.status === 'ready';
+    return this.isEnabled && this.isConnected && this.client && this.client.status === 'ready';
   }
 
   async disconnect() {
