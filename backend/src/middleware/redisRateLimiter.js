@@ -1,10 +1,11 @@
 const { RateLimiterRedis } = require('rate-limiter-flexible');
-const { redis } = require('../config/redis');
+const { redis, isReady } = require('../config/redis');
 
 class RedisRateLimiter {
   constructor() {
     this.limiters = new Map();
     this.client = redis();
+    this.redisEnabled = isReady();
   }
 
   // Create a rate limiter with specific configuration
@@ -20,14 +21,16 @@ class RedisRateLimiter {
     const limiterKey = `${keyPrefix}:${points}:${duration}`;
 
     if (!this.limiters.has(limiterKey)) {
-      const limiter = new RateLimiterRedis({
-        storeClient: this.client,
-        keyPrefix: `asca_ecom:${keyPrefix}`,
-        points,
-        duration,
-        blockDuration,
-        execEvenly,
-      });
+      // Only create Redis rate limiter if Redis is enabled
+      if (this.redisEnabled && this.client) {
+        const limiter = new RateLimiterRedis({
+          storeClient: this.client,
+          keyPrefix: `asca_ecom:${keyPrefix}`,
+          points,
+          duration,
+          blockDuration,
+          execEvenly,
+        });
 
       this.limiters.set(limiterKey, limiter);
     }
@@ -41,6 +44,11 @@ class RedisRateLimiter {
     const keyGenerator = options.keyGenerator || this.defaultKeyGenerator;
 
     return async (req, res, next) => {
+      // If Redis is disabled, skip rate limiting
+      if (!this.redisEnabled) {
+        return next();
+      }
+
       try {
         const key = keyGenerator(req);
         const result = await limiter.consume(key);

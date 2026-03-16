@@ -12,8 +12,12 @@ const config = require(configPath);
 const rateLimiterPath = path.join(__dirname, 'middleware', 'rateLimiter');
 const { generalLimiter } = require(rateLimiterPath);
 
-const redisRateLimiterPath = path.join(__dirname, 'middleware', 'redisRateLimiter');
-const { rateLimiters } = require(redisRateLimiterPath);
+// Only import Redis rate limiter if Redis is enabled
+let rateLimiters = {};
+if (process.env.REDIS_ENABLED === 'true') {
+  const redisRateLimiterPath = path.join(__dirname, 'middleware', 'redisRateLimiter');
+  rateLimiters = require(redisRateLimiterPath).rateLimiters;
+}
 
 const supabasePath = path.join(__dirname, 'config', 'supabase');
 const { testConnection } = require(supabasePath);
@@ -76,11 +80,13 @@ app.use(generalLimiter);
 // Session middleware
 app.use(sessionMiddleware);
 
-// Redis-based rate limiting for sensitive endpoints
-app.use('/api/auth/login', rateLimiters.login);
-app.use('/api/auth/register', rateLimiters.register);
-app.use('/api/orders', rateLimiters.orders);
-app.use('/api/payments', rateLimiters.payments);
+// Redis-based rate limiting for sensitive endpoints (only if Redis is enabled)
+if (process.env.REDIS_ENABLED === 'true') {
+  app.use('/api/auth/login', rateLimiters.login);
+  app.use('/api/auth/register', rateLimiters.register);
+  app.use('/api/orders', rateLimiters.orders);
+  app.use('/api/payments', rateLimiters.payments);
+}
 
 // Browser extension validation middleware - secure approach
 app.use((req, res, next) => {
