@@ -10,8 +10,10 @@ function validateEnvironment() {
   const missing = required.filter(key => !process.env[key])
   
   if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}. Please configure these in your hosting platform.`)
+    console.warn(`Missing environment variables: ${missing.join(', ')}. Will use fallback data.`);
+    return false; // Return false instead of throwing error
   }
+  return true; // Return true if all variables are present
 }
 
 // Mock products for fallback when database is not available
@@ -74,7 +76,7 @@ function getMockProducts() {
 export async function GET(request: Request) {
   try {
     // Validate environment variables first
-    validateEnvironment()
+    const hasValidEnv = validateEnvironment()
     
     // Create Supabase client inside the function to avoid build-time issues
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -103,6 +105,32 @@ export async function GET(request: Request) {
     // Determine if this is a request for all products (no limit) or limited request
     const shouldLimit = limitParam !== null;
     const limit = shouldLimit ? parseInt(limitParam) : null;
+
+    // If environment variables are missing, use mock data immediately
+    if (!hasValidEnv) {
+      console.log('Environment variables missing, using mock products');
+      const mockProducts = getMockProducts();
+      const limitedMockProducts = limit ? mockProducts.slice(0, limit) : mockProducts;
+      
+      return new Response(JSON.stringify({
+        success: true,
+        data: {
+          products: limitedMockProducts,
+          categories: ['featured', 'clothing', 'food', 'home', 'beauty'],
+          pagination: {
+            current_page: page,
+            total_pages: limit ? Math.ceil(mockProducts.length / limit) : 1,
+            total_items: mockProducts.length,
+            items_per_page: limit || mockProducts.length,
+            has_next: limit ? page < Math.ceil(mockProducts.length / limit) : false,
+            has_prev: page > 1
+          }
+        }
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
 
     // Test database connection but don't immediately fallback to mock data
     let databaseAvailable = false;
