@@ -7,7 +7,9 @@
     "dev": "npx next dev",
     "build": "npx next build",
     "start": "npx next start",
-    "lint": "npx eslint"
+    "lint": "npx eslint",
+    "deploy:prod": "npm run build && npm run start",
+    "prod": "NODE_ENV=production npm run build && NODE_ENV=production npm run start"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
