@@ -16,6 +16,42 @@ function validateEnvironment() {
   return true; // Return true if all variables are present
 }
 
+// Helper function to generate product names from image filenames
+function generateProductNameFromImage(imageUrl: string | string[] | null): string {
+  if (!imageUrl) return '';
+  
+  let filename = '';
+  
+  if (Array.isArray(imageUrl)) {
+    if (imageUrl.length === 0) return '';
+    filename = imageUrl[0].split('/').pop() || '';
+  } else {
+    filename = imageUrl.split('/').pop() || '';
+  }
+  
+  return filename
+    // Remove file extensions
+    .replace(/\.(jpg|jpeg|png|webp|gif|svg)$/i, '')
+    // Remove random IDs, hashes, and numeric sequences
+    .replace(/[-_]\d{3,}[-_]?/g, ' ')
+    .replace(/[-_][a-f0-9]{8,}[-_]?/g, ' ')
+    // Replace hyphens and underscores with spaces
+    .replace(/[-_]/g, ' ')
+    // Remove extra spaces and trim
+    .replace(/\s+/g, ' ')
+    .trim()
+    // Convert to Title Case
+    .replace(/\b\w/g, (l: string) => l.toUpperCase())
+    // Remove duplicate words
+    .replace(/\b(\w+)\b(?=.*\b\1\b)/gi, (match, word, offset, string) => {
+      const firstIndex = string.toLowerCase().indexOf(word.toLowerCase());
+      return offset === firstIndex ? word : '';
+    })
+    // Clean up remaining spaces
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // Mock products for fallback when database is not available
 function getMockProducts() {
   // Real product names from Supabase database

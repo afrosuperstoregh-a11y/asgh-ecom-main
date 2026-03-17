@@ -52,9 +52,26 @@ const categoryMapping: CategoryMapping = {
 // Helper functions
 function cleanProductName(filename: string): string {
   return filename
+    // Remove file extensions
     .replace(/\.(jpg|jpeg|png|webp|gif|svg)$/i, '')
+    // Remove random IDs, hashes, and numeric sequences (like -001, -123, etc.)
+    .replace(/[-_]\d{3,}[-_]?/g, ' ')
+    .replace(/[-_][a-f0-9]{8,}[-_]?/g, ' ') // Remove hash-like strings
+    // Replace hyphens and underscores with spaces
     .replace(/[-_]/g, ' ')
+    // Remove extra spaces and trim
+    .replace(/\s+/g, ' ')
+    .trim()
+    // Convert to Title Case (capitalize each word)
     .replace(/\b\w/g, (l: string) => l.toUpperCase())
+    // Remove duplicate words (case-insensitive)
+    .replace(/\b(\w+)\b(?=.*\b\1\b)/gi, (match, word, offset, string) => {
+      // Keep only the first occurrence
+      const firstIndex = string.toLowerCase().indexOf(word.toLowerCase());
+      return offset === firstIndex ? word : '';
+    })
+    // Clean up any remaining extra spaces
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -107,7 +124,114 @@ function generateRandomStock(): number {
   return Math.floor(Math.random() * 91) + 10; // 10 - 100
 }
 
-// Main sync function
+// Safe update function to fix existing products with invalid names
+async function fixInvalidProductNames(): Promise<{
+  success: boolean;
+  message: string;
+  data?: any;
+  error?: string;
+}> {
+  try {
+    // Validate environment variables first
+    if (!validateEnvironment()) {
+      return {
+        success: false,
+        message: 'Missing required environment variables',
+        error: 'Supabase configuration not available'
+      };
+    }
+    
+    // Create Supabase admin client
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+    
+    console.log('🔧 Starting safe product name fix...');
+    
+    // Get products with invalid names (NULL, empty, placeholder, or generic names)
+    const { data: invalidProducts, error: fetchError } = await supabaseAdmin
+      .from('products')
+      .select('id, name, slug, images')
+      .or('name.is.null,name.eq.,name.eq."Untitled",name.eq."Product",name.eq."Item",name.like."product%",name.like."item%",name.like."test%"');
+    
+    if (fetchError) {
+      throw fetchError;
+    }
+    
+    if (!invalidProducts || invalidProducts.length === 0) {
+      return {
+        success: true,
+        message: 'No products with invalid names found',
+        data: { updatedCount: 0 }
+      };
+    }
+    
+    console.log(`📝 Found ${invalidProducts.length} products with invalid names`);
+    
+    const updatedProducts = [];
+    
+    for (const product of invalidProducts) {
+      let newName = '';
+      
+      // Try to extract name from images array
+      if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+        const firstImage = product.images[0];
+        if (typeof firstImage === 'string') {
+          // Extract filename from URL
+          const filename = firstImage.split('/').pop() || '';
+          newName = cleanProductName(filename);
+        }
+      }
+      
+      // If still no valid name, generate a default one
+      if (!newName || newName.length < 2) {
+        newName = `Product ${product.id}`;
+      }
+      
+      // Update the product with the new name
+      const { data: updatedProduct, error: updateError } = await supabaseAdmin
+        .from('products')
+        .update({ 
+          name: newName,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', product.id)
+        .select()
+        .single();
+      
+      if (updateError) {
+        console.error(`❌ Failed to update product ${product.id}:`, updateError.message);
+        continue;
+      }
+      
+      updatedProducts.push(updatedProduct);
+      console.log(`✅ Updated product ${product.id}: "${product.name}" → "${newName}"`);
+    }
+    
+    return {
+      success: true,
+      message: `Successfully updated ${updatedProducts.length} product names`,
+      data: {
+        updatedCount: updatedProducts.length,
+        products: updatedProducts
+      }
+    };
+    
+  } catch (error: any) {
+    console.error('❌ Error fixing product names:', error.message);
+    return {
+      success: false,
+      message: 'Failed to fix product names',
+      error: error.message
+    };
+  }
+}
 async function syncProductsFromStorage(): Promise<{
   success: boolean;
   message: string;
@@ -279,6 +403,31 @@ async function syncProductsFromStorage(): Promise<{
   }
 }
 
+// API endpoint for fixing existing product names
+export async function PATCH(request: NextRequest) {
+  try {
+    console.log('🔧 [API] Starting product name fix...');
+    
+    const result = await fixInvalidProductNames();
+    
+    if (result.success) {
+      console.log('✅ [API] Product name fix completed successfully');
+      return NextResponse.json(result, { status: 200 });
+    } else {
+      console.log('❌ [API] Product name fix failed');
+      return NextResponse.json(result, { status: 500 });
+    }
+
+  } catch (error: any) {
+    console.error('❌ [API] Unexpected error:', error);
+    return NextResponse.json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    }, { status: 500 });
+  }
+}
+
 // API endpoint
 export async function POST(request: NextRequest) {
   try {
@@ -309,6 +458,15 @@ export async function GET() {
   return NextResponse.json({
     success: true,
     message: 'Product sync endpoint is ready',
-    usage: 'POST /api/sync-products to sync products from Supabase Storage'
+    usage: {
+      sync: 'POST /api/sync-products to sync products from Supabase Storage',
+      fix: 'PATCH /api/sync-products to fix existing products with invalid names'
+    },
+    features: [
+      'Automatic product name generation from image filenames',
+      'Safe update of existing products with NULL/placeholder names',
+      'Category detection based on folder structure',
+      'Duplicate prevention with unique slugs'
+    ]
   });
 }
