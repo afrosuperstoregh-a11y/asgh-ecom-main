@@ -91,7 +91,7 @@ export async function GET(request: Request) {
       }
     )
 
-    // Test database connection
+    // Test database connection but don't immediately fallback to mock data
     try {
       const { data: testConnection, error: connectionError } = await supabase
         .from('products')
@@ -100,49 +100,11 @@ export async function GET(request: Request) {
       
       if (connectionError) {
         console.error('Database connection error:', connectionError)
-        
-        // Return mock data if database is not accessible
-        return new Response(JSON.stringify({
-          success: true,
-          data: {
-            products: getMockProducts(),
-            categories: ['women-fashion', 'men-fashion', 'food'],
-            pagination: {
-              current_page: 1,
-              total_pages: 1,
-              total_items: 3,
-              items_per_page: 3,
-              has_next: false,
-              has_prev: false
-            }
-          }
-        }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        })
+        // Continue with the main query - don't fallback to mock data yet
       }
     } catch (connectionTestError) {
       console.error('Database test failed:', connectionTestError)
-      
-      // Return mock data if database test fails
-      return new Response(JSON.stringify({
-        success: true,
-        data: {
-          products: getMockProducts(),
-          categories: ['women-fashion', 'men-fashion', 'food'],
-          pagination: {
-            current_page: 1,
-            total_pages: 1,
-            total_items: 3,
-            items_per_page: 3,
-            has_next: false,
-            has_prev: false
-          }
-        }
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      // Continue with the main query - don't fallback to mock data yet
     }
 
     const { searchParams } = new URL(request.url);
@@ -202,16 +164,17 @@ export async function GET(request: Request) {
       
       // In production, return mock data instead of failing completely
       if (process.env.NODE_ENV === 'production') {
+        const mockProducts = getMockProducts();
         return new Response(JSON.stringify({
           success: true,
           data: {
-            products: getMockProducts(),
+            products: mockProducts,
             categories: ['women-fashion', 'men-fashion', 'food'],
             pagination: {
               current_page: page,
               total_pages: 1,
-              total_items: 3,
-              items_per_page: limit || 3,
+              total_items: mockProducts.length,
+              items_per_page: limit || mockProducts.length,
               has_next: false,
               has_prev: false
             }
@@ -340,16 +303,17 @@ export async function GET(request: Request) {
     
     // In production, always return mock data instead of failing
     if (process.env.NODE_ENV === 'production') {
+      const mockProducts = getMockProducts();
       return new Response(JSON.stringify({
         success: true,
         data: {
-          products: getMockProducts(),
+          products: mockProducts,
           categories: ['women-fashion', 'men-fashion', 'food'],
           pagination: {
             current_page: 1,
             total_pages: 1,
-            total_items: 3,
-            items_per_page: 3,
+            total_items: mockProducts.length,
+            items_per_page: mockProducts.length,
             has_next: false,
             has_prev: false
           }
