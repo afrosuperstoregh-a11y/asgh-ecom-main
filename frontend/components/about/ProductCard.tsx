@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { ShoppingCart } from 'lucide-react';
 import { Product } from '@/lib/api/products';
 import { Button } from '@/components/ui/Button';
 
@@ -88,6 +89,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) =
             <span className="text-red-600">Out of Stock</span>
           )}
         </div>
+
+        {/* Quick Add to Cart */}
+        <button
+          onClick={() => onBuyNow(product.id)}
+          disabled={!inStock}
+          className="absolute bottom-2 right-2 p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-colors"
+          aria-label="Add to cart"
+        >
+          <ShoppingCart className={`w-4 h-4 ${!inStock ? 'text-gray-400' : 'text-gray-700'}`} />
+        </button>
 
         {/* Buy Now Button */}
         <Button

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Product } from '@/types/product';
-import { Heart } from 'lucide-react';
+import { Heart, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
@@ -90,23 +90,17 @@ export default function ProductCard({ product }: ProductCardProps) {
           <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
         </button>
 
-        {/* Quick Add to Cart on Hover */}
-        {isHovered && (
-          <div className="absolute bottom-2 left-2 right-2">
-            <button
-              onClick={handleAddToCart}
-              disabled={!inStock}
-              aria-label={inStock ? 'Add product to cart' : 'Product out of stock'}
-              className={`w-full py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
-                inStock
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              {inStock ? 'Add to Cart' : 'Out of Stock'}
-            </button>
-          </div>
-        )}
+        {/* Quick Add to Cart */}
+        <button
+          onClick={handleAddToCart}
+          disabled={!inStock}
+          aria-label={inStock ? 'Add product to cart' : 'Product out of stock'}
+          className={`absolute bottom-2 right-2 p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-colors ${
+            !inStock ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          <ShoppingCart className={`w-4 h-4 ${!inStock ? 'text-gray-400' : 'text-gray-700'}`} />
+        </button>
       </div>
 
       {/* Product Info */}
