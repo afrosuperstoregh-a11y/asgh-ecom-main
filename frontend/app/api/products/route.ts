@@ -16,59 +16,23 @@ function validateEnvironment() {
 
 // Mock products for fallback when database is not available
 function getMockProducts() {
-  return [
-    {
-      id: 1,
-      name: 'Girls Dashiki',
-      slug: 'girls-dashiki',
-      description: 'Beautiful traditional African dashiki for girls',
-      price: 39.99,
-      compare_price: 49.99,
-      sku: 'GD-001',
-      status: 'active',
-      inventory_quantity: 15,
-      track_inventory: true,
-      allow_backorder: false,
-      images: ['https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/products/product-images/girls-dashiki.svg'],
-      categories: { name: 'Women Fashion', slug: 'women-fashion' },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: 2,
-      name: 'Boys Dashiki',
-      slug: 'boys-dashiki',
-      description: 'Traditional African dashiki for boys',
-      price: 35.99,
-      compare_price: 44.99,
-      sku: 'BD-001',
-      status: 'active',
-      inventory_quantity: 8,
-      track_inventory: true,
-      allow_backorder: false,
-      images: ['https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/products/product-images/boys-dashiki.svg'],
-      categories: { name: 'Men Fashion', slug: 'men-fashion' },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: 3,
-      name: 'Banku Flour',
-      slug: 'banku-flour',
-      description: 'Authentic African banku flour for traditional dishes',
-      price: 25.99,
-      compare_price: null,
-      sku: 'BF-001',
-      status: 'active',
-      inventory_quantity: 25,
-      track_inventory: true,
-      allow_backorder: true,
-      images: ['https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/products/product-images/banku-flour.svg'],
-      categories: { name: 'Food', slug: 'food' },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-  ]
+  return Array.from({ length: 135 }, (_, index) => ({
+    id: index + 1,
+    name: `Product ${index + 1}`,
+    slug: `product-${index + 1}`,
+    description: `High-quality product ${index + 1} from our collection`,
+    price: Math.floor(Math.random() * 100) + 10,
+    compare_price: Math.floor(Math.random() * 100) + 20,
+    sku: `PRD-${String(index + 1).padStart(3, '0')}`,
+    status: 'active',
+    inventory_quantity: Math.floor(Math.random() * 50) + 10,
+    track_inventory: true,
+    allow_backorder: false,
+    images: [`https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/products/product-images/product-${index + 1}.svg`],
+    categories: { name: 'Featured Products', slug: 'featured' },
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }))
 }
 
 export async function GET(request: Request) {
@@ -80,12 +44,16 @@ export async function GET(request: Request) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
+    const supabase = createClient(
+      supabaseUrl || "https://placeholder.supabase.co",
+      supabaseAnonKey || "placeholder-key",
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
       }
-    })
+    )
 
     // Test database connection
     try {
