@@ -218,19 +218,19 @@ export default function ProductsPage() {
         {/* Products Grid */}
         {products.length > 0 ? (
           <ErrorBoundary>
-            <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6' : 'space-y-4'}>
+            <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 justify-items-start' : 'space-y-4'}>
             {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+              <div key={product.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow w-[250px] h-[250px] flex flex-col">
                 {viewMode === 'grid' ? (
                   <>
-                    <Link href={`/product/${product.id}`}>
-                      <div className="relative aspect-square">
+                    <Link href={`/product/${product.id}`} className="flex-shrink-0" style={{ height: '150px' }}>
+                      <div className="relative w-full h-full overflow-hidden">
                         <Image
                           src={product.images?.[0] || product.image || '/placeholder-product.jpg'}
                           alt={product.name}
                           fill
                           className="object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-105"
-                          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                          sizes="250px"
                         />
                         {product.compare_price && (
                           <span className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">
@@ -244,9 +244,9 @@ export default function ProductsPage() {
                         )}
                       </div>
                     </Link>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base line-clamp-2">{product.name}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">{product.description}</p>
+                    <div className="p-3 flex-1 flex flex-col justify-between overflow-hidden">
+                      <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base line-clamp-2 overflow-hidden">{product.name}</h3>
+                      <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2 overflow-hidden">{product.description}</p>
                       <div className="flex items-center mb-2">
                         <div>
                           {[...Array(5)].map((_, i) => (
@@ -285,7 +285,7 @@ export default function ProductsPage() {
                     </div>
                   </>
                 ) : (
-                  <div className="flex items-center p-4 gap-4">
+                  <div className="flex items-center p-4 gap-4 h-full">
                     <Link href={`/product/${product.id}`} className="flex-shrink-0">
                       <div className="relative w-20 h-20 sm:w-24 sm:h-24">
                         <Image

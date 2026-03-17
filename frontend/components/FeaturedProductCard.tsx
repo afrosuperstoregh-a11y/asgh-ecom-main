@@ -62,37 +62,38 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
   
   return (
     <div className="group">
-      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 w-[250px] h-[250px] flex flex-col">
         {/* Product Image */}
-        <Link href={`/product/${product.id}`} className="block">
-          <div className="aspect-square bg-gray-100 overflow-hidden">
+        <Link href={`/product/${product.id}`} className="block flex-shrink-0" style={{ height: '150px' }}>
+          <div className="relative w-full h-full overflow-hidden bg-gray-100">
             <img
               src={product.image || product.images?.[0] || '/placeholder-product.svg'}
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              sizes="250px"
             />
           </div>
         </Link>
         
         {/* Product Info */}
-        <div className="p-4 md:p-6">
-          <div className="text-sm text-gray-500 uppercase tracking-wide mb-2">
+        <div className="p-3 flex-1 flex flex-col justify-between overflow-hidden">
+          <div className="text-xs text-gray-500 uppercase tracking-wide mb-1 truncate">
             {product.categories?.name || 'Premium'}
           </div>
           
           <Link href={`/product/${product.id}`} className="block">
-            <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2 overflow-hidden">
               {product.name}
             </h3>
           </Link>
           
           {/* Rating */}
-          <div className="flex items-center space-x-1 mb-3">
+          <div className="flex items-center space-x-1 mb-2">
             <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-4 w-4 ${
+                  className={`h-3 w-3 ${
                     i < Math.floor(product.rating || 0)
                       ? 'text-yellow-400 fill-current'
                       : 'text-gray-300'
@@ -100,30 +101,30 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
                 />
               ))}
             </div>
-            <span className="text-sm text-gray-500">({product.reviews || 0})</span>
+            <span className="text-xs text-gray-500">({product.reviews || 0})</span>
           </div>
           
           {/* Price */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-2">
-              <span className="text-xl md:text-2xl font-bold text-gray-900">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-1">
+              <span className="text-sm font-bold text-gray-900">
                 ${product.compare_price || product.price}
               </span>
               {product.compare_price && (
-                <span className="text-sm text-gray-500 line-through">
+                <span className="text-xs text-gray-500 line-through">
                   ${product.price}
                 </span>
               )}
             </div>
             {product.compare_price && (
-              <span className="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded">
+              <span className="bg-red-100 text-red-800 text-xs font-medium px-1 py-0.5 rounded">
                 Sale
               </span>
             )}
           </div>
           
           {/* Stock Status */}
-          <div className="text-xs text-gray-600 mb-4">
+          <div className="text-xs text-gray-600 mb-2 truncate">
             {inStock ? (
               <span className="text-green-600">
                 {(product.inventory_quantity || 0) >= 10 ? `${product.inventory_quantity} in stock` : 'Available'}
@@ -133,52 +134,24 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
             )}
           </div>
           
-          {/* Quantity Selector and Add to Cart */}
+          {/* Add to Cart Button */}
           {inStock && (
-            <div className="space-y-3">
-              {/* Quantity Selector */}
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-gray-700">Quantity:</span>
-                <div className="flex items-center border border-gray-300 rounded-md">
-                  <button
-                    onClick={decreaseQuantity}
-                    disabled={quantity <= 1}
-                    className="p-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Decrease quantity"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="px-3 py-2 text-sm font-medium text-gray-900 min-w-[3rem] text-center">
-                    {quantity}
-                  </span>
-                  <button
-                    onClick={increaseQuantity}
-                    className="p-2 text-gray-600 hover:bg-gray-100"
-                    aria-label="Increase quantity"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-              
-              {/* Add to Cart Button */}
-              <button
-                onClick={handleAddToCart}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2 font-medium"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                Add to Cart
-              </button>
-            </div>
+            <button
+              onClick={handleAddToCart}
+              className="w-full bg-blue-600 text-white py-1.5 px-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-1 font-medium text-xs"
+            >
+              <ShoppingCart className="h-3 w-3" />
+              Add to Cart
+            </button>
           )}
           
           {/* Out of Stock Message */}
           {!inStock && (
             <button
               disabled
-              className="w-full bg-gray-300 text-gray-500 py-2 px-4 rounded-lg cursor-not-allowed flex items-center justify-center gap-2 font-medium"
+              className="w-full bg-gray-300 text-gray-500 py-1.5 px-3 rounded-lg cursor-not-allowed flex items-center justify-center gap-1 font-medium text-xs"
             >
-              <ShoppingCart className="h-5 w-5" />
+              <ShoppingCart className="h-3 w-3" />
               Out of Stock
             </button>
           )}

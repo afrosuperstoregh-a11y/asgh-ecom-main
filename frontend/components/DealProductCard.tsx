@@ -126,12 +126,13 @@ const DealProductCard: React.FC<DealProductCardProps> = ({ product, viewMode = '
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 group">
-      <div className="relative overflow-hidden rounded-t-lg">
+    <div className="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 group w-[250px] h-[250px] flex flex-col">
+      <div className="relative overflow-hidden rounded-t-lg flex-shrink-0" style={{ height: '150px' }}>
         <img
           src={product.image}
           alt={product.name}
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          sizes="250px"
         />
         
         {/* Badges */}
@@ -180,43 +181,43 @@ const DealProductCard: React.FC<DealProductCardProps> = ({ product, viewMode = '
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="p-3 flex-1 flex flex-col justify-between overflow-hidden">
         <div className="mb-2">
-          <h3 className="text-lg font-semibold text-gray-900 hover:text-red-600 cursor-pointer line-clamp-2 mb-1">
+          <h3 className="text-sm font-semibold text-gray-900 hover:text-red-600 cursor-pointer line-clamp-2 mb-1 overflow-hidden">
             {product.name}
           </h3>
-          <p className="text-sm text-gray-600">{product.brand} • {product.category}</p>
+          <p className="text-xs text-gray-600 truncate">{product.brand} • {product.category}</p>
         </div>
 
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-2">
           <div className="flex items-center">
-            <Star className="w-4 h-4 text-yellow-400 fill-current" />
-            <span className="text-sm font-medium ml-1">{product.rating}</span>
-            <span className="text-sm text-gray-500 ml-1">({product.reviews})</span>
+            <Star className="w-3 h-3 text-yellow-400 fill-current" />
+            <span className="text-xs font-medium ml-1">{product.rating}</span>
+            <span className="text-xs text-gray-500 ml-1">({product.reviews})</span>
           </div>
           {isLowStock && (
-            <span className="text-red-600 text-xs font-medium bg-red-50 px-2 py-1 rounded">
+            <span className="text-red-600 text-xs font-medium bg-red-50 px-1 py-0.5 rounded">
               Only {product.stock} left!
             </span>
           )}
         </div>
 
-        <div className="flex items-baseline gap-2 mb-3">
-          <span className="text-xl font-bold text-red-600">${product.discountedPrice}</span>
-          <span className="text-sm text-gray-400 line-through">${product.originalPrice}</span>
-          <div className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+        <div className="flex items-baseline gap-2 mb-2">
+          <span className="text-sm font-bold text-red-600">${product.discountedPrice}</span>
+          <span className="text-xs text-gray-400 line-through">${product.originalPrice}</span>
+          <div className="bg-green-100 text-green-800 px-1 py-0.5 rounded-full text-xs font-medium">
             Save ${savings.toFixed(2)}
           </div>
         </div>
 
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Clock className="w-4 h-4" />
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1 text-xs text-gray-600 truncate">
+            <Clock className="w-3 h-3" />
             <span>Ends {product.dealEnds}</span>
           </div>
           {product.discount >= 50 && (
-            <div className="flex items-center gap-1 text-red-600 text-sm font-medium">
-              <TrendingDown className="w-4 h-4" />
+            <div className="flex items-center gap-1 text-red-600 text-xs font-medium">
+              <TrendingDown className="w-3 h-3" />
               <span>Hot Deal</span>
             </div>
           )}
@@ -224,9 +225,9 @@ const DealProductCard: React.FC<DealProductCardProps> = ({ product, viewMode = '
 
         <button
           onClick={handleBuyNow}
-          className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2"
+          className="w-full bg-red-600 text-white py-1.5 rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-1 text-xs"
         >
-          <ShoppingCart className="w-4 h-4" />
+          <ShoppingCart className="w-3 h-3" />
           Buy Now
         </button>
       </div>

@@ -52,18 +52,18 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div 
-      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden"
+      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden w-[250px] h-[250px] flex flex-col"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Product Image */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
+      <div className="relative flex-shrink-0 overflow-hidden bg-gray-100" style={{ height: '150px' }}>
         <Image
           src={product.image_url || product.images?.[0] || '/placeholder-product.jpg'}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          sizes="250px"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder-product.jpg';
@@ -110,14 +110,14 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Product Info */}
-      <div className="p-3">
+      <div className="p-3 flex-1 flex flex-col justify-between overflow-hidden">
         {/* Category */}
         {product.category_name && (
-          <p className="text-xs text-gray-500 mb-0.5">{product.category_name}</p>
+          <p className="text-xs text-gray-500 mb-0.5 truncate">{product.category_name}</p>
         )}
 
         {/* Product Name */}
-        <h3 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer">
+        <h3 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer overflow-hidden">
           {product.name}
         </h3>
 

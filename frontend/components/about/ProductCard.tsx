@@ -18,13 +18,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) =
   const inStock = product.inventory_quantity > 0 || product.allow_backorder;
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group">
+    <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group w-[250px] h-[250px] flex flex-col">
       {/* Product Image */}
-      <div className="relative overflow-hidden bg-gray-100 aspect-square">
+      <div className="relative overflow-hidden bg-gray-100 flex-shrink-0" style={{ height: '150px' }}>
         <img
           src={product.images && product.images.length > 0 ? product.images[0] : '/placeholder-product.jpg'}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          sizes="250px"
         />
         
         {/* Discount Badge */}
@@ -45,40 +46,40 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) =
       </div>
 
       {/* Product Info */}
-      <div className="p-4">
+      <div className="p-3 flex-1 flex flex-col justify-between overflow-hidden">
         {/* Category */}
         {product.category_name && (
           <div className="mb-2">
-            <span className="text-xs text-gray-500 uppercase tracking-wide">{product.category_name}</span>
+            <span className="text-xs text-gray-500 uppercase tracking-wide truncate">{product.category_name}</span>
           </div>
         )}
 
         {/* Product Name */}
-        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer">
+        <h3 className="text-sm font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer overflow-hidden">
           {product.name}
         </h3>
 
         {/* Short Description */}
         {product.short_description && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+          <p className="text-xs text-gray-600 mb-2 line-clamp-2 overflow-hidden">
             {product.short_description}
           </p>
         )}
 
         {/* Price */}
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-2xl font-bold text-gray-900">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-sm font-bold text-gray-900">
             ${product.price.toFixed(2)}
           </span>
           {hasDiscount && (
-            <span className="text-lg text-gray-500 line-through">
+            <span className="text-xs text-gray-500 line-through">
               ${product.compare_price?.toFixed(2)}
             </span>
           )}
         </div>
 
         {/* Stock Status */}
-        <div className="text-sm text-gray-600 mb-4">
+        <div className="text-xs text-gray-600 mb-3 truncate">
           {inStock ? (
             <span className="text-green-600">
               {product.inventory_quantity > 0 ? `${product.inventory_quantity} in stock` : 'Available'}
@@ -90,8 +91,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) =
 
         {/* Buy Now Button */}
         <Button
-          size="lg"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          size="sm"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 rounded-lg transition-colors duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed text-xs"
           onClick={() => onBuyNow(product.id)}
           disabled={!inStock}
         >
