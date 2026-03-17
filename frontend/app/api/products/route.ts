@@ -54,6 +54,37 @@ function getMockProducts() {
     'Fitness Tracker', 'Smart Watch', 'Heart Monitor', 'Pedometer', 'Resistance Bands'
   ]
 
+  const realImages = [
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku-flour.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku-mix.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/barbeque.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/beauty&health/h&bproduct1.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/beauty&health/h&bproduct2.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/beauty&health/h&bproduct3.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/books&media/b&mproduct1.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/books&media/b&mproduct2.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/books&media/b&mproduct3.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/clothing/dashiki-shirt-1.jpeg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/clothing/dashiki-shirt-2.jpeg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/clothing/dashiki-shirt-3.jpeg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/clothing/dashiki-shirt-4.jpeg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/electronics/dell-latitude-e5440-1.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/electronics/lenovo-thinkpad-i7-2.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/electronics/lenovo-thinkpad-i7-3.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/home&living/h&lproduct1.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/home&living/h&lproduct2.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/home&living/h&lproduct3.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/jewelry&accessories/j&aproduct1.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/jewelry&accessories/j&aproduct2.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/jewelry&accessories/j&aproduct3.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/sport&fitness/s&fproduct1.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/sport&fitness/s&fproduct2.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/sport&fitness/s&fproduct3.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/women-fashion/w&fproduct1.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/women-fashion/w&fproduct2.jpg',
+    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/women-fashion/w&fproduct3.jpg'
+  ]
+
   return productNames.map((name, index) => ({
     id: index + 1,
     name: name,
@@ -66,7 +97,7 @@ function getMockProducts() {
     inventory_quantity: Math.floor(Math.random() * 50) + 10,
     track_inventory: true,
     allow_backorder: false,
-    images: [`/placeholder-product.svg`],
+    images: [realImages[index % realImages.length]], // Use real images in rotation
     categories: { name: 'Featured Products', slug: 'featured' },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()

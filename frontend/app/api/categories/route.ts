@@ -6,7 +6,7 @@ function getMockCategories() {
     {
       id: '1',
       name: 'Women Fashion',
-      image_url: '/placeholder-category.svg',
+      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/women.png',
       created_at: new Date().toISOString(),
       is_active: true,
       sort_order: 1,
@@ -15,7 +15,7 @@ function getMockCategories() {
     {
       id: '2', 
       name: 'Men Fashion',
-      image_url: '/placeholder-category.svg',
+      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/men.png',
       created_at: new Date().toISOString(),
       is_active: true,
       sort_order: 2,
@@ -23,8 +23,8 @@ function getMockCategories() {
     },
     {
       id: '3',
-      name: 'Food',
-      image_url: '/placeholder-category.svg',
+      name: 'Beauty & Health',
+      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/beauty.png',
       created_at: new Date().toISOString(),
       is_active: true,
       sort_order: 3,
@@ -32,8 +32,8 @@ function getMockCategories() {
     },
     {
       id: '4',
-      name: 'Home & Living',
-      image_url: '/placeholder-category.svg',
+      name: 'Clothing',
+      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/clothing.jpg',
       created_at: new Date().toISOString(),
       is_active: true,
       sort_order: 4,
@@ -41,12 +41,66 @@ function getMockCategories() {
     },
     {
       id: '5',
-      name: 'Beauty',
-      image_url: '/placeholder-category.svg',
+      name: 'Electronics',
+      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/electronics.png',
       created_at: new Date().toISOString(),
       is_active: true,
       sort_order: 5,
       product_count: 6
+    },
+    {
+      id: '6',
+      name: 'Home & Living',
+      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/home-decor.jpg',
+      created_at: new Date().toISOString(),
+      is_active: true,
+      sort_order: 6,
+      product_count: 7
+    },
+    {
+      id: '7',
+      name: 'Food & Beverages',
+      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/food.png',
+      created_at: new Date().toISOString(),
+      is_active: true,
+      sort_order: 7,
+      product_count: 5
+    },
+    {
+      id: '8',
+      name: 'Accessories',
+      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/accessories.jpg',
+      created_at: new Date().toISOString(),
+      is_active: true,
+      sort_order: 8,
+      product_count: 9
+    },
+    {
+      id: '9',
+      name: 'Sport Fitness',
+      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/sports.png',
+      created_at: new Date().toISOString(),
+      is_active: true,
+      sort_order: 9,
+      product_count: 4
+    },
+    {
+      id: '10',
+      name: 'Books Media',
+      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/books.png',
+      created_at: new Date().toISOString(),
+      is_active: true,
+      sort_order: 10,
+      product_count: 3
+    },
+    {
+      id: '11',
+      name: 'Art & Crafts',
+      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/Jewelry.png',
+      created_at: new Date().toISOString(),
+      is_active: true,
+      sort_order: 11,
+      product_count: 2
     }
   ]
 }
@@ -62,7 +116,7 @@ export async function GET() {
       return new Response(JSON.stringify({ 
         success: true,
         data: getMockCategories(),
-        count: 3
+        count: 11
       }), { 
         status: 200,
         headers: { 'Content-Type': 'application/json' }
