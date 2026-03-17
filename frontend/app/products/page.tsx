@@ -278,7 +278,7 @@ export default function ProductsPage() {
                           <button
                             onClick={() => handleAddToCart(product)}
                             disabled={!(product.inventory_quantity > 0 || product.allow_backorder)}
-                            className="p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-colors"
+                            className="p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-colors z-10"
                             aria-label="Add to cart"
                           >
                             <ShoppingCart className="h-4 w-4 text-gray-700" />

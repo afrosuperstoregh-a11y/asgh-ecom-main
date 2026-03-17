@@ -94,7 +94,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) =
         <button
           onClick={() => onBuyNow(product.id)}
           disabled={!inStock}
-          className="absolute bottom-2 right-2 p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-colors"
+          className="absolute bottom-2 right-2 p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-colors z-10"
           aria-label="Add to cart"
         >
           <ShoppingCart className={`w-4 h-4 ${!inStock ? 'text-gray-400' : 'text-gray-700'}`} />

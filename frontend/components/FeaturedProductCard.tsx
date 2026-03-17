@@ -138,7 +138,7 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
           {inStock && (
             <button
               onClick={handleAddToCart}
-              className="absolute bottom-2 right-2 p-2 bg-blue-600 text-white rounded-full shadow hover:bg-blue-700 transition-colors duration-200"
+              className="absolute bottom-2 right-2 p-2 bg-blue-600 text-white rounded-full shadow hover:bg-blue-700 transition-colors duration-200 z-10"
               aria-label="Add to cart"
             >
               <ShoppingCart className="h-4 w-4" />
