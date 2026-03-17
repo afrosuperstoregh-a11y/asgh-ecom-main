@@ -16,11 +16,47 @@ function validateEnvironment() {
 
 // Mock products for fallback when database is not available
 function getMockProducts() {
-  return Array.from({ length: 135 }, (_, index) => ({
+  const productNames = [
+    'Girls Dashiki', 'Boys Dashiki', 'Banku Flour', 'Kenkey Mix', 'Fufu Powder',
+    'Jollof Rice Mix', 'Palm Oil', 'Groundnut Oil', 'Shea Butter', 'Black Soap',
+    'Kente Cloth', 'Ankara Fabric', 'African Print Shirt', 'Dashiki Robe', 'Buba Top',
+    'Iro Wrapper', 'Gele Headtie', 'Agbada Gown', 'Kaftan Dress', 'Traditional Beads',
+    'Cowrie Shell Necklace', 'Wooden Mask', 'African Sculpture', 'Drum Set', 'Calabash Bowl',
+    'Tropical Fruit Basket', 'Plantain Chips', 'Coconut Water', 'Hibiscus Tea', 'Ginger Beer',
+    'African Spice Mix', 'Peanut Butter', 'Moringa Powder', 'Baobab Fruit', 'Tamarind Paste',
+    'Yam Flour', 'Cassava Flour', 'Millet Porridge', 'Sorghum Drink', 'Bambara Beans',
+    'African Coffee', 'Rooibos Tea', 'Honeybush Tea', 'Marula Oil', 'Argan Oil',
+    'African Black Soap', 'Neem Soap', 'Coconut Soap', 'Palm Kernel Oil', 'Shea Nut Oil',
+    'Traditional Basket', 'Woven Mat', 'Leather Sandals', 'Beaded Jewelry', 'Wooden Bracelet',
+    'African Art Print', 'Canvas Painting', 'Wall Hanging', 'Decorative Mask', 'Carved Statue',
+    'Musical Instrument', 'Talking Drum', 'Mbira Thumb Piano', 'Kalimba', 'Shekere',
+    'African Cookbook', 'Recipe Cards', 'Kitchen Utensils', 'Cooking Pot', 'Serving Tray',
+    'Childrens Story Book', 'African Folk Tales', 'Coloring Book', 'Educational Games', 'Puzzle Set',
+    'Essential Oil Set', 'Incense Sticks', 'Aromatherapy Candles', 'Room Spray', 'Potpourri',
+    'Natural Lip Balm', 'Body Butter', 'Face Mask', 'Hair Oil', 'Skin Cream',
+    'African Tea Set', 'Coffee Mug', 'Water Bottle', 'Lunch Box', 'Food Container',
+    'Reusable Bag', 'Shopping Tote', 'Beach Towel', 'Picnic Blanket', 'Travel Pillow',
+    'Phone Case', 'Laptop Sleeve', 'Tablet Cover', 'Cable Organizer', 'Desk Lamp',
+    'Wall Clock', 'Picture Frame', 'Mirror Set', 'Candle Holder', 'Vase Collection',
+    'Throw Pillows', 'Cushion Covers', 'Bed Sheets', 'Table Runner', 'Curtain Set',
+    'Garden Tools', 'Plant Pot', 'Watering Can', 'Garden Gloves', 'Seeds Packet',
+    'Pet Supplies', 'Dog Collar', 'Cat Toy', 'Bird Feeder', 'Fish Food',
+    'Sports Equipment', 'Yoga Mat', 'Exercise Ball', 'Jump Rope', 'Water Bottle',
+    'Party Supplies', 'Balloon Set', 'Party Decorations', 'Gift Wrap', 'Greeting Cards',
+    'Office Supplies', 'Notebook Set', 'Pen Collection', 'Desk Organizer', 'File Folder',
+    'Cleaning Supplies', 'Laundry Detergent', 'Dish Soap', 'Surface Cleaner', 'Trash Bags',
+    'Storage Boxes', 'Organizer Bins', 'Clothing Rack', 'Shoe Rack', 'Book Shelf',
+    'Emergency Kit', 'First Aid Box', 'Flashlight', 'Batteries', 'Tool Set',
+    'Winter Accessories', 'Wool Scarf', 'Warm Gloves', 'Thermal Socks', 'Winter Hat',
+    'Summer Essentials', 'Sun Hat', 'Sunglasses', 'Beach Bag', 'Cooling Towel',
+    'Fitness Tracker', 'Smart Watch', 'Heart Monitor', 'Pedometer', 'Resistance Bands'
+  ]
+
+  return productNames.map((name, index) => ({
     id: index + 1,
-    name: `Product ${index + 1}`,
-    slug: `product-${index + 1}`,
-    description: `High-quality product ${index + 1} from our collection`,
+    name: name,
+    slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    description: `High-quality ${name.toLowerCase()} from our authentic African collection`,
     price: Math.floor(Math.random() * 100) + 10,
     compare_price: Math.floor(Math.random() * 100) + 20,
     sku: `PRD-${String(index + 1).padStart(3, '0')}`,
@@ -28,7 +64,7 @@ function getMockProducts() {
     inventory_quantity: Math.floor(Math.random() * 50) + 10,
     track_inventory: true,
     allow_backorder: false,
-    images: [`https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/products/product-images/product-${index + 1}.svg`],
+    images: [`https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/products/product-images/${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.svg`],
     categories: { name: 'Featured Products', slug: 'featured' },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
