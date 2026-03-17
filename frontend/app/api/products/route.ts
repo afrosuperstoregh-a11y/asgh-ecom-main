@@ -162,31 +162,9 @@ export async function GET(request: Request) {
         code: error.code
       });
       
-      // In production, return mock data instead of failing completely
-      if (process.env.NODE_ENV === 'production') {
-        const mockProducts = getMockProducts();
-        return new Response(JSON.stringify({
-          success: true,
-          data: {
-            products: mockProducts,
-            categories: ['women-fashion', 'men-fashion', 'food'],
-            pagination: {
-              current_page: page,
-              total_pages: 1,
-              total_items: mockProducts.length,
-              items_per_page: limit || mockProducts.length,
-              has_next: false,
-              has_prev: false
-            }
-          }
-        }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
-      
       return new Response(JSON.stringify({ 
-        error: error.message,
+        error: 'Database query failed',
+        message: error.message,
         details: error.details,
         code: error.code
       }), { 
@@ -301,32 +279,9 @@ export async function GET(request: Request) {
       error
     });
     
-    // In production, always return mock data instead of failing
-    if (process.env.NODE_ENV === 'production') {
-      const mockProducts = getMockProducts();
-      return new Response(JSON.stringify({
-        success: true,
-        data: {
-          products: mockProducts,
-          categories: ['women-fashion', 'men-fashion', 'food'],
-          pagination: {
-            current_page: 1,
-            total_pages: 1,
-            total_items: mockProducts.length,
-            items_per_page: mockProducts.length,
-            has_next: false,
-            has_prev: false
-          }
-        }
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
-    
     return new Response(JSON.stringify({ 
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error occurred'
+      error: 'API request failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
     }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
