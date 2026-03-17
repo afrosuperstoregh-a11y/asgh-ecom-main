@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from "../../context/CartContext";
-import { Loader2, Search, Filter, Grid, List, Star, ShoppingCart } from 'lucide-react';
+import { Loader2, Search, Filter, Grid, List, Star, ShoppingCart, X } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
+import FilterPanel from '@/components/FilterPanel';
 
 import { Product } from '@/types/product';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -17,6 +18,9 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
   const [currentPage, setCurrentPage] = useState(1);
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const { addToCart } = useCart();
 
   // Use our custom hook for products with real-time updates
@@ -24,7 +28,9 @@ export default function ProductsPage() {
     page: currentPage,
     limit: 20,
     category: selectedCategory,
-    search: searchQuery
+    search: searchQuery,
+    minPrice: minPrice ? parseFloat(minPrice) : undefined,
+    maxPrice: maxPrice ? parseFloat(maxPrice) : undefined
   });
 
   const { categories } = useCategories();
@@ -51,6 +57,18 @@ export default function ProductsPage() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleApplyFilters = () => {
+    setCurrentPage(1);
+    refetch();
+  };
+
+  const handleClearFilters = () => {
+    setSelectedCategory('');
+    setMinPrice('');
+    setMaxPrice('');
+    setCurrentPage(1);
   };
 
   const handleAddToCart = (product: any) => {
@@ -119,9 +137,15 @@ export default function ProductsPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <button className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <button 
+              onClick={() => setIsFilterPanelOpen(true)}
+              className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
               <Filter className="h-5 w-5" />
               <span className="hidden sm:inline">Filters</span>
+              {(selectedCategory || minPrice || maxPrice) && (
+                <span className="ml-2 h-2 w-2 bg-blue-600 rounded-full"></span>
+              )}
             </button>
             <div className="flex border border-gray-300 rounded-lg">
               <button
@@ -139,6 +163,45 @@ export default function ProductsPage() {
             </div>
           </div>
         </div>
+
+        {/* Active Filters Display */}
+        {(selectedCategory || minPrice || maxPrice) && (
+          <div className="mb-6 flex flex-wrap gap-2">
+            {selectedCategory && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                Category: {categories?.find(c => c.slug === selectedCategory)?.name || selectedCategory}
+                <button
+                  onClick={() => setSelectedCategory('')}
+                  className="ml-1 hover:text-blue-600"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+            {minPrice && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                Min: ${minPrice}
+                <button
+                  onClick={() => setMinPrice('')}
+                  className="ml-1 hover:text-blue-600"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+            {maxPrice && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                Max: ${maxPrice}
+                <button
+                  onClick={() => setMaxPrice('')}
+                  className="ml-1 hover:text-blue-600"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Results count */}
         <div className="mb-6">
@@ -345,6 +408,21 @@ export default function ProductsPage() {
         )}
       </main>
       </div>
+      
+      {/* Filter Panel */}
+      <FilterPanel
+        isOpen={isFilterPanelOpen}
+        onClose={() => setIsFilterPanelOpen(false)}
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        onMinPriceChange={setMinPrice}
+        onMaxPriceChange={setMaxPrice}
+        onApplyFilters={handleApplyFilters}
+        onClearFilters={handleClearFilters}
+      />
     </ErrorBoundary>
   );
 }

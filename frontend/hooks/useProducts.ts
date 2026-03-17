@@ -7,6 +7,8 @@ export function useProducts(params: {
   limit?: number
   category?: string
   search?: string
+  minPrice?: number
+  maxPrice?: number
   featured?: boolean
 } = {}) {
   const [products, setProducts] = useState<Product[]>([])
@@ -25,6 +27,8 @@ export function useProducts(params: {
       if (params.limit) queryParams.append('limit', params.limit.toString())
       if (params.category) queryParams.append('category', params.category)
       if (params.search) queryParams.append('search', params.search)
+      if (params.minPrice) queryParams.append('minPrice', params.minPrice.toString())
+      if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice.toString())
       if (params.featured !== undefined) queryParams.append('featured', params.featured.toString())
 
       const apiUrl = `/api/products?${queryParams.toString()}`

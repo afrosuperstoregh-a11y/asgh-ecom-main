@@ -199,6 +199,8 @@ export async function GET(request: Request) {
     const category = searchParams.get('category');
     const search = searchParams.get('search');
     const featured = searchParams.get('featured');
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
     
     // Determine if this is a request for all products (no limit) or limited request
     const shouldLimit = limitParam !== null;
@@ -296,6 +298,15 @@ export async function GET(request: Request) {
     // Add search filter
     if (search) {
       query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,sku.ilike.%${search}%`);
+    }
+
+    // Add price range filters
+    if (minPrice) {
+      query = query.gte('price', parseFloat(minPrice));
+    }
+
+    if (maxPrice) {
+      query = query.lte('price', parseFloat(maxPrice));
     }
 
     // Add ordering
