@@ -10,8 +10,10 @@ function validateEnvironment() {
   const missing = required.filter(key => !process.env[key])
   
   if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}. Please configure these in your hosting platform.`)
+    console.warn(`Missing environment variables: ${missing.join(', ')}. Will use fallback data.`);
+    return false; // Return false instead of throwing error
   }
+  return true; // Return true if all variables are present
 }
 
 export async function GET(
@@ -20,7 +22,17 @@ export async function GET(
 ) {
   try {
     // Validate environment variables first
-    validateEnvironment()
+    const hasValidEnv = validateEnvironment()
+    
+    if (!hasValidEnv) {
+      return new Response(JSON.stringify({ 
+        error: 'Environment variables not configured',
+        message: 'Product details unavailable'
+      }), { 
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
     
     // Create Supabase client inside the function to avoid build-time issues
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!

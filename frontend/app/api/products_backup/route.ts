@@ -10,8 +10,10 @@ function validateEnvironment() {
   const missing = required.filter(key => !process.env[key])
   
   if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}. Please configure these in your hosting platform.`)
+    console.warn(`Missing environment variables: ${missing.join(', ')}. Will use fallback data.`);
+    return false; // Return false instead of throwing error
   }
+  return true; // Return true if all variables are present
 }
 
 // Mock products for fallback when database is not available
