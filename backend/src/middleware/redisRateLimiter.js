@@ -32,7 +32,8 @@ class RedisRateLimiter {
           execEvenly,
         });
 
-      this.limiters.set(limiterKey, limiter);
+        this.limiters.set(limiterKey, limiter);
+      }
     }
 
     return this.limiters.get(limiterKey);
