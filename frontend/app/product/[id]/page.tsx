@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useCart } from '../../../context/CartContext';
 import { useProduct, useProducts } from '@/hooks/useProducts';
 import ProductVideo from '../../../components/ProductVideo';
+import ProductInfo from '../../../components/ProductInfo';
 
 import { Product } from '@/types/product';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -239,103 +240,8 @@ export default function ProductPage() {
             </div>
 
             {/* Product Details */}
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
-                <p className="text-gray-600 mb-4">{product.description}</p>
-                
-                {/* Rating */}
-                <div className="flex items-center mb-4">
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-5 w-5 ${
-                          i < Math.floor(product.rating || 0)
-                            ? 'text-yellow-400 fill-current'
-                            : 'text-gray-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-gray-500 ml-2">({product.reviews || 0} reviews)</span>
-                </div>
-
-                {/* Price */}
-                <div className="flex items-center space-x-4 mb-6">
-                  <span className="text-3xl font-bold text-gray-900">${displayPrice}</span>
-                  {originalPrice && (
-                    <span className="text-xl text-gray-500 line-through">${originalPrice}</span>
-                  )}
-                  {product.discountPrice && originalPrice && (
-                    <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-semibold">
-                      Save ${originalPrice - displayPrice}
-                    </span>
-                  )}
-                </div>
-
-                {/* Stock Status */}
-                <div className="mb-6">
-                  {isInStock ? (
-                    <span className="text-green-600 font-medium">
-                      ✓ In Stock ({product.inventory_quantity} available)
-                    </span>
-                  ) : (
-                    <span className="text-red-600 font-medium">
-                      ✗ Out of Stock
-                    </span>
-                  )}
-                </div>
-
-                {/* Quantity and Add to Cart */}
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <span className="text-gray-700">Quantity:</span>
-                    <div className="flex items-center border rounded-lg">
-                      <button
-                        onClick={decreaseQuantity}
-                        disabled={quantity <= 1}
-                        className="p-2 hover:bg-gray-100 disabled:opacity-50"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </button>
-                      <span className="px-4 py-2 border-x">{quantity}</span>
-                      <button
-                        onClick={increaseQuantity}
-                        disabled={quantity >= (product.inventory_quantity || 0)}
-                        className="p-2 hover:bg-gray-100 disabled:opacity-50"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={handleAddToCart}
-                    disabled={!isInStock || addingToCart}
-                    className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                  >
-                    <ShoppingCart className="h-5 w-5" />
-                    <span>{addingToCart ? 'Adding...' : 'Add to Cart'}</span>
-                  </button>
-                </div>
-
-                {/* Product Info */}
-                <div className="border-t pt-6 space-y-4">
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <Truck className="h-5 w-5" />
-                    <span>Free shipping on orders over $50</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <Shield className="h-5 w-5" />
-                    <span>1-year warranty included</span>
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    <p><strong>SKU:</strong> {product.sku}</p>
-                    <p><strong>Category:</strong> {product.categories?.name}</p>
-                  </div>
-                </div>
-              </div>
+            <div>
+              <ProductInfo product={product} />
             </div>
           </div>
         </div>
