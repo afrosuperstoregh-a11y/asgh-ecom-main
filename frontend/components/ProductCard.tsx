@@ -25,6 +25,15 @@ export default function ProductCard({ product }: ProductCardProps) {
       price: product.price,
       image: product.image_url || product.images?.[0] || '/placeholder-product.jpg'
     });
+    
+    // Visual feedback - briefly change cart icon color
+    const cartIcon = document.querySelector(`[data-cart-id="${product.id}"]`);
+    if (cartIcon) {
+      cartIcon.classList.add('text-green-600');
+      setTimeout(() => {
+        cartIcon.classList.remove('text-green-600');
+      }, 300);
+    }
   };
 
   const handleWishlist = () => {
@@ -83,6 +92,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           onClick={handleAddToCart}
           disabled={!inStock}
           aria-label={inStock ? 'Add product to cart' : 'Product out of stock'}
+          data-cart-id={product.id}
           className={`absolute bottom-2 right-2 p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-colors z-10 ${
             !inStock ? 'opacity-50 cursor-not-allowed' : ''
           }`}
