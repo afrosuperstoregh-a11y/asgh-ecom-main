@@ -10,7 +10,7 @@ import ShopByCategory from '@/components/ShopByCategory';
 import FeaturedProductCard from '@/components/FeaturedProductCard';
 
 export default function HomePage() {
-  const { products, loading, error } = useProducts();
+  const { products, loading, error } = useProducts({ limit: 200 });
   useCategories();
 
   return (
@@ -54,14 +54,14 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8 md:mb-12">
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">All Products</h2>
-              <p className="text-base md:text-lg text-gray-600 px-4">Browse our complete collection of {products.length} products</p>
+              <p className="text-base md:text-lg text-gray-600 px-4">Browse our complete collection of {products.length} authentic African products</p>
               {error && (
                 <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
                   <p className="text-sm">Using cached data: {error}</p>
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
               {products.map((product: any) => (
                 <FeaturedProductCard key={product.id} product={product} />
               ))}

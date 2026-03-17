@@ -2,7 +2,7 @@ const { supabase } = require('../config/supabase');
 
 // Helper function to generate Supabase Storage URL
 function getSupabaseImageUrl(imageUrl) {
-  if (!imageUrl) return null;
+  if (!imageUrl) return '/placeholder-product.jpg';
   
   // Convert to string if it's not already
   const imageUrlStr = String(imageUrl);
@@ -12,9 +12,19 @@ function getSupabaseImageUrl(imageUrl) {
     return imageUrlStr;
   }
   
-  // Generate Supabase Storage public URL
-  const supabaseUrl = process.env.SUPABASE_URL || 'http://127.0.0.1:54321';
+  // If it's a local placeholder path, return as-is
+  if (imageUrlStr.startsWith('/placeholder-')) {
+    return imageUrlStr;
+  }
   
+  // Check if Supabase is available by checking environment variables
+  const supabaseUrl = process.env.SUPABASE_URL;
+  if (!supabaseUrl || supabaseUrl.includes('your-project-id')) {
+    // Supabase not configured, return placeholder
+    return '/placeholder-product.jpg';
+  }
+  
+  // Generate Supabase Storage public URL
   // Determine bucket based on filename pattern or default to product-images
   let bucket = 'product-images';
   if (imageUrlStr.includes('category-') || imageUrlStr.includes('categories/')) {
@@ -48,9 +58,13 @@ function processProductImages(product) {
   }
   
   // Transform image URLs
-  processed.images = imagesArray.map(img => getSupabaseImageUrl(img));
+  processed.images = imagesArray.map(img => getSupabaseImageUrl(img)).filter(img => img);
+  // Ensure at least one placeholder image
+  if (processed.images.length === 0) {
+    processed.images = ['/placeholder-product.jpg'];
+  }
   // Set image_url to the first image for compatibility
-  processed.image_url = processed.images[0] || null;
+  processed.image_url = processed.images[0] || '/placeholder-product.jpg';
   
   return processed;
 }

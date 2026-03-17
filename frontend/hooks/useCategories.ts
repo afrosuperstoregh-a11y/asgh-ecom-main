@@ -11,7 +11,7 @@ export function useCategories() {
       setLoading(true)
       setError(null)
 
-      const response = await fetch('/api/products/categories')
+      const response = await fetch('/api/categories')
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)

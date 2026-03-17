@@ -36,6 +36,11 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'azpgqsmgyorjbqsgxuxw.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'picsum.photos',
       },
       {
@@ -49,7 +54,8 @@ const nextConfig = {
     domains: [
       'localhost',
       '127.0.0.1',
-      'afrosuperstore.ca'
+      'afrosuperstore.ca',
+      'azpgqsmgyorjbqsgxuxw.supabase.co'
     ],
     // Enable image formats
     formats: ['image/webp', 'image/avif'],
@@ -113,6 +119,16 @@ const nextConfig = {
   // Add async rewrites to proxy API requests to backend
   async rewrites() {
     return [
+      // Exclude frontend API routes from backend proxy
+      {
+        source: '/api/categories',
+        destination: '/api/categories',
+      },
+      {
+        source: '/api/products',
+        destination: '/api/products',
+      },
+      // Proxy other API requests to backend
       {
         source: '/api/:path*',
         destination: 'http://localhost:3002/api/:path*',

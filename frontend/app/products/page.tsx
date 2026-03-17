@@ -58,7 +58,7 @@ export default function ProductsPage() {
       id: product.id,
       name: product.name,
       price: product.compare_price || product.price,
-      image: product.image || '/placeholder-product.svg',
+      image: product.images?.[0] || product.image || '/placeholder-product.jpg',
       category: product.categories?.name || 'Uncategorized'
     });
   };
@@ -163,7 +163,7 @@ export default function ProductsPage() {
                     <Link href={`/product/${product.id}`}>
                       <div className="relative aspect-square">
                         <Image
-                          src={product.image || '/placeholder-product.jpg'}
+                          src={product.images?.[0] || product.image || '/placeholder-product.jpg'}
                           alt={product.name}
                           fill
                           className="object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-105"
@@ -226,7 +226,7 @@ export default function ProductsPage() {
                     <Link href={`/product/${product.id}`} className="flex-shrink-0">
                       <div className="relative w-20 h-20 sm:w-24 sm:h-24">
                         <Image
-                          src={product.image || '/placeholder-product.jpg'}
+                          src={product.images?.[0] || product.image || '/placeholder-product.jpg'}
                           alt={product.name}
                           fill
                           className="object-cover rounded-lg"

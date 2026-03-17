@@ -6,7 +6,7 @@ function getMockCategories() {
     {
       id: '1',
       name: 'Women Fashion',
-      image_url: 'https://images.unsplash.com/photo-1490481651871-ab68de25343c?w=400&h=300&fit=crop',
+      image_url: '/placeholder-category.svg',
       created_at: new Date().toISOString(),
       is_active: true,
       sort_order: 1,
@@ -15,7 +15,7 @@ function getMockCategories() {
     {
       id: '2', 
       name: 'Men Fashion',
-      image_url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop',
+      image_url: '/placeholder-category.svg',
       created_at: new Date().toISOString(),
       is_active: true,
       sort_order: 2,
@@ -24,11 +24,29 @@ function getMockCategories() {
     {
       id: '3',
       name: 'Food',
-      image_url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
+      image_url: '/placeholder-category.svg',
       created_at: new Date().toISOString(),
       is_active: true,
       sort_order: 3,
       product_count: 8
+    },
+    {
+      id: '4',
+      name: 'Home & Living',
+      image_url: '/placeholder-category.svg',
+      created_at: new Date().toISOString(),
+      is_active: true,
+      sort_order: 4,
+      product_count: 10
+    },
+    {
+      id: '5',
+      name: 'Beauty',
+      image_url: '/placeholder-category.svg',
+      created_at: new Date().toISOString(),
+      is_active: true,
+      sort_order: 5,
+      product_count: 6
     }
   ]
 }
@@ -41,21 +59,12 @@ export async function GET() {
 
     if (!supabaseUrl || !supabaseAnonKey) {
       console.error('Missing required environment variables for categories API')
-      
-      // Return mock categories in production if environment is not configured
-      if (process.env.NODE_ENV === 'production') {
-        return new Response(JSON.stringify({ 
-          success: true,
-          data: getMockCategories(),
-          count: 3
-        }), { 
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
-
-      return new Response(JSON.stringify({ error: 'Database not configured' }), { 
-        status: 500,
+      return new Response(JSON.stringify({ 
+        success: true,
+        data: getMockCategories(),
+        count: 3
+      }), { 
+        status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
     }
@@ -66,6 +75,38 @@ export async function GET() {
         persistSession: false
       }
     })
+
+    // Test database connection
+    let databaseAvailable = false;
+    try {
+      const { data: testConnection, error: connectionError } = await supabase
+        .from('categories')
+        .select('id')
+        .limit(1)
+      
+      if (connectionError) {
+        console.error('Database connection error:', connectionError)
+        databaseAvailable = false;
+      } else {
+        databaseAvailable = true;
+      }
+    } catch (connectionTestError) {
+      console.error('Database test failed:', connectionTestError)
+      databaseAvailable = false;
+    }
+
+    // If database is not available, fallback to mock categories
+    if (!databaseAvailable) {
+      console.log('Database unavailable, using mock categories');
+      return new Response(JSON.stringify({ 
+        success: true,
+        data: getMockCategories(),
+        count: 3
+      }), { 
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
 
     const { data: categories, error } = await supabase
       .from('categories')
@@ -81,23 +122,13 @@ export async function GET() {
         code: error.code
       })
       
-      // In production, return mock data instead of failing completely
-      if (process.env.NODE_ENV === 'production') {
-        return new Response(JSON.stringify({ 
-          success: true,
-          data: getMockCategories(),
-          count: 3
-        }), { 
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
-      
+      // Fallback to mock categories
       return new Response(JSON.stringify({ 
-        error: 'Database connection failed',
-        message: process.env.NODE_ENV === 'development' ? error.message : 'Unable to fetch categories'
+        success: true,
+        data: getMockCategories(),
+        count: 3
       }), { 
-        status: 503,
+        status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
     }
@@ -166,20 +197,13 @@ export async function GET() {
   } catch (err) {
     console.error('Categories API error:', err)
     
-    // In production, always return mock data instead of failing
-    if (process.env.NODE_ENV === 'production') {
-      return new Response(JSON.stringify({ 
-        success: true,
-        data: getMockCategories(),
-        count: 3
-      }), { 
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
-    
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { 
-      status: 500,
+    // Always return mock data instead of failing
+    return new Response(JSON.stringify({ 
+      success: true,
+      data: getMockCategories(),
+      count: 3
+    }), { 
+      status: 200,
       headers: { 'Content-Type': 'application/json' }
     })
   }
