@@ -27,21 +27,33 @@ export function useProducts(params: {
       if (params.search) queryParams.append('search', params.search)
       if (params.featured !== undefined) queryParams.append('featured', params.featured.toString())
 
-      const response = await fetch(`/api/products?${queryParams.toString()}`)
+      const apiUrl = `/api/products?${queryParams.toString()}`
+      console.log('useProducts - Fetching from:', apiUrl)
+      
+      const response = await fetch(apiUrl)
+      
+      console.log('useProducts - Response status:', response.status)
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorText = await response.text()
+        console.error('useProducts - HTTP error response:', errorText)
+        throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`)
       }
 
       const result = await response.json()
       
-      console.log('useProducts - API Response:', result)
+      console.log('useProducts - Full API Response:', result)
 
       if (result.success) {
+        console.log('useProducts - Products found:', result.data?.products?.length || 0)
         setProducts(result.data.products || [])
         setPagination(result.data.pagination)
+      } else if (result.error) {
+        console.error('useProducts - API returned error:', result.error)
+        throw new Error(result.message || result.error || 'Failed to fetch products')
       } else {
-        throw new Error(result.message || 'Failed to fetch products')
+        console.error('useProducts - Unexpected response format:', result)
+        throw new Error('Invalid response format')
       }
     } catch (err) {
       console.error('Error fetching products:', err)
@@ -50,11 +62,11 @@ export function useProducts(params: {
     } finally {
       setLoading(false)
     }
-  }, [params.page, params.limit, params.category, params.search, params.featured])
+  }, [JSON.stringify(params)]) // Stringify params to prevent infinite re-renders
 
   useEffect(() => {
     fetchProducts()
-  }, [fetchProducts])
+  }, [fetchProducts]) // This will now only re-run when params change
 
   return { products, loading, error, pagination, refetch: fetchProducts }
 }
