@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Image from 'next/image';
 import { Product } from '@/types/product';
 import { Heart, ShoppingCart } from 'lucide-react';
@@ -12,17 +11,8 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
-  
-  // Debug logging
-  console.log('ProductCard - Product data:', {
-    id: product.id,
-    name: product.name,
-    image_url: product.image_url,
-    images: product.images
-  });
   
   const isWishlisted = isInWishlist(product.id.toString());
   const hasDiscount = product.compare_price && product.compare_price > product.price;
@@ -53,8 +43,6 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div 
       className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden w-[250px] h-[250px] flex flex-col"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       {/* Product Image */}
       <div className="relative flex-shrink-0 overflow-hidden bg-gray-100" style={{ height: '150px' }}>
