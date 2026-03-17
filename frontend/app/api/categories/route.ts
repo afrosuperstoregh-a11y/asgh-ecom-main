@@ -74,9 +74,14 @@ export async function GET() {
       .order('sort_order', { ascending: true })
 
     if (error) {
-      console.error('Supabase fetch error:', error)
+      console.error('Supabase fetch error:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
       
-      // In production, return mock data instead of failing
+      // In production, return mock data instead of failing completely
       if (process.env.NODE_ENV === 'production') {
         return new Response(JSON.stringify({ 
           success: true,
@@ -88,8 +93,11 @@ export async function GET() {
         })
       }
       
-      return new Response(JSON.stringify({ error: error.message }), { 
-        status: 500,
+      return new Response(JSON.stringify({ 
+        error: 'Database connection failed',
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Unable to fetch categories'
+      }), { 
+        status: 503,
         headers: { 'Content-Type': 'application/json' }
       })
     }

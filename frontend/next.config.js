@@ -46,7 +46,11 @@ const nextConfig = {
     // Disable image optimization in development for faster builds
     unoptimized: process.env.NODE_ENV === 'development',
     // Add local image patterns
-    domains: [],
+    domains: [
+      'localhost',
+      '127.0.0.1',
+      'afrosuperstore.ca'
+    ],
     // Enable image formats
     formats: ['image/webp', 'image/avif'],
     // Minimum cache TTL

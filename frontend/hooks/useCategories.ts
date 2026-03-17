@@ -40,7 +40,7 @@ export function useCategories() {
 
   useEffect(() => {
     fetchCategories()
-  }, [fetchCategories])
+  }, []) // Empty dependency array - only run once on mount
 
   return { categories, loading, error, refetch: fetchCategories }
 }
