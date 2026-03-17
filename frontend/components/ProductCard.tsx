@@ -57,7 +57,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Product Image */}
-      <div className="relative aspect-square overflow-hidden bg-gray-100">
+      <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
         <Image
           src={product.image_url || product.images?.[0] || '/placeholder-product.jpg'}
           alt={product.name}
@@ -97,7 +97,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               onClick={handleAddToCart}
               disabled={!inStock}
               aria-label={inStock ? 'Add product to cart' : 'Product out of stock'}
-              className={`w-full py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+              className={`w-full py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
                 inStock
                   ? 'bg-blue-600 text-white hover:bg-blue-700'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -110,24 +110,24 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Product Info */}
-      <div className="p-4">
+      <div className="p-3">
         {/* Category */}
         {product.category_name && (
-          <p className="text-xs text-gray-500 mb-1">{product.category_name}</p>
+          <p className="text-xs text-gray-500 mb-0.5">{product.category_name}</p>
         )}
 
         {/* Product Name */}
-        <h3 className="text-sm font-medium text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer">
+        <h3 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer">
           {product.name}
         </h3>
 
         {/* Price */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg font-bold text-gray-900">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-base font-bold text-gray-900">
             ${product.price.toFixed(2)}
           </span>
           {hasDiscount && (
-            <span className="text-sm text-gray-500 line-through">
+            <span className="text-xs text-gray-500 line-through">
               ${product.compare_price?.toFixed(2)}
             </span>
           )}
