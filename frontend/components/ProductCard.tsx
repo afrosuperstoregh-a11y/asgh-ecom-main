@@ -104,7 +104,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Product Info */}
-      <div className="p-3 flex-1 flex flex-col justify-between overflow-hidden">
+      <div className="p-3 flex-1 flex flex-col justify-between overflow-hidden relative">
         {/* Category */}
         {product.category_name && (
           <p className="text-xs text-gray-500 mb-0.5 truncate">{product.category_name}</p>
@@ -128,7 +128,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Stock Status */}
-        <div className="text-xs text-gray-600">
+        <div className="text-xs text-gray-600 mb-2">
           {inStock ? (
             <span className="text-green-600">
               {product.inventory_quantity >= 10 ? `${product.inventory_quantity} in stock` : 'Available'}
@@ -137,6 +137,18 @@ export default function ProductCard({ product }: ProductCardProps) {
             <span className="text-red-600">Out of Stock</span>
           )}
         </div>
+
+        {/* Shopping Cart Icon - Always Visible */}
+        <button
+          onClick={handleAddToCart}
+          disabled={!inStock}
+          aria-label={inStock ? 'Add product to cart' : 'Product out of stock'}
+          className={`absolute bottom-2 right-2 p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-colors ${
+            !inStock ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          <ShoppingCart className={`w-4 h-4 ${!inStock ? 'text-gray-400' : 'text-gray-700'}`} />
+        </button>
       </div>
     </div>
   );
