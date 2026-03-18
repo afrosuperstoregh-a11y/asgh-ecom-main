@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { categories, brands, allColors, allSizes } from '@/data/products';
+import { brands, allColors, allSizes } from '@/data/products';
+import { useCategories } from '@/hooks/useCategories';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface MobileFilterDrawerProps {
@@ -31,6 +32,7 @@ export default function MobileFilterDrawer({
   onClearFilters, 
   onApplyFilters 
 }: MobileFilterDrawerProps) {
+  const { categories } = useCategories();
   const [expandedSections, setExpandedSections] = useState({
     category: true,
     price: true,

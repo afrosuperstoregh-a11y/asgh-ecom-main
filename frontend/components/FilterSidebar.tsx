@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { categories, brands, allColors, allSizes } from '@/data/products';
+import { brands, allColors, allSizes } from '@/data/products';
+import { useCategories } from '@/hooks/useCategories';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface FilterSidebarProps {
@@ -21,6 +22,7 @@ interface FilterSidebarProps {
 }
 
 export default function FilterSidebar({ filters, onFiltersChange, onClearFilters }: FilterSidebarProps) {
+  const { categories } = useCategories();
   const [expandedSections, setExpandedSections] = useState({
     category: true,
     price: true,
@@ -28,6 +30,8 @@ export default function FilterSidebar({ filters, onFiltersChange, onClearFilters
     color: true,
     size: true,
     rating: true,
+    discount: true,
+    inStock: true,
     availability: true
   });
 
@@ -98,7 +102,7 @@ export default function FilterSidebar({ filters, onFiltersChange, onClearFilters
         </button>
         {expandedSections.category && (
           <div className="space-y-2">
-            {categories.map((category) => (
+            {categories.map((category: any) => (
               <label key={category.id} className="flex items-center cursor-pointer">
                 <input
                   type="radio"

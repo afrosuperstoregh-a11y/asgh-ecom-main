@@ -30,9 +30,9 @@ export default function WishlistPage() {
     addToCartAction({
       id: product.id,
       name: product.name,
-      price: product.discountPrice || product.price,
-      image: product.images[0],
-      category: product.category
+      price: product.compare_price || product.price,
+      image: product.images?.[0] || '/placeholder-product.jpg',
+      category: product.category_name
     });
   };
 
@@ -74,14 +74,14 @@ export default function WishlistPage() {
                         <Star
                           key={i}
                           className={`h-4 w-4 ${
-                            i < Math.floor(item.rating || 0)
+                            i < Math.floor((item as any).rating || 0)
                               ? 'text-yellow-400 fill-current'
                               : 'text-gray-300'
                           }`}
                         />
                       ))}
                     </div>
-                    <span className="text-sm text-gray-500 ml-2">({item.reviewCount || 0})</span>
+                    <span className="text-sm text-gray-500 ml-2">({(item as any).reviewCount || 0})</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-bold text-gray-900">${item.price}</span>

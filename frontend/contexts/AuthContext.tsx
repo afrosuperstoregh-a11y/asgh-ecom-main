@@ -9,15 +9,21 @@ interface User {
   email: string;
   name: string;
   role?: string;
+  user_metadata?: {
+    role?: string;
+  };
 }
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   register: (userData: RegisterData) => Promise<boolean>;
+  signUp: (userData: RegisterData) => Promise<boolean>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<boolean>;
   signInWithGoogle: () => Promise<void>;
   signInWithFacebook: () => Promise<void>;
+  loading: boolean;
   isLoading: boolean;
   isAuthenticated: boolean;
 }
@@ -185,9 +191,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     login,
     register,
+    signUp: register,
     logout,
+    resetPassword: async () => true,
     signInWithGoogle,
     signInWithFacebook,
+    loading: isLoading,
     isLoading,
     isAuthenticated: !!user,
   };
