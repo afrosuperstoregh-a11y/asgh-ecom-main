@@ -29,6 +29,41 @@ export async function getPublicImageUrl(bucket: string, path: string): Promise<s
 }
 
 /**
+ * Fixes Supabase image URLs to ensure they work with Next.js Image component
+ * @param imageUrl - The image URL from the database
+ * @returns The fixed image URL
+ */
+export function fixImageUrl(imageUrl?: string): string {
+  if (!imageUrl || imageUrl.trim() === '') {
+    return '/placeholder-product.jpg'
+  }
+
+  // If it's already a full Supabase URL, return it as is
+  if (imageUrl.includes('supabase.co/storage/v1/object/public')) {
+    return imageUrl
+  }
+
+  // If it's a relative path starting with product-images, convert to full Supabase URL
+  if (imageUrl.startsWith('product-images/')) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (supabaseUrl) {
+      return `${supabaseUrl}/storage/v1/object/public/${imageUrl}`
+    }
+  }
+
+  // If it's just a filename, assume it's in the product-images bucket
+  if (!imageUrl.includes('/') && !imageUrl.startsWith('http')) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (supabaseUrl) {
+      return `${supabaseUrl}/storage/v1/object/public/product-images/${imageUrl}`
+    }
+  }
+
+  // Return original URL if none of the above conditions match
+  return imageUrl
+}
+
+/**
  * Gets the public URL for a product image
  * @param imagePath - The image path within the 'products' bucket
  * @returns The public URL for the product image

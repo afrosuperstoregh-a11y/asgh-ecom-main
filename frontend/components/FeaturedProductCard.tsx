@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Star, ShoppingCart, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { fixImageUrl } from '../lib/supabase-storage';
 
 interface Product {
   id: string;
@@ -51,7 +52,7 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
         id: product.id,
         name: product.name,
         price: product.price,
-        image: product.image || product.images?.[0] || '/placeholder-product.jpg',
+        image: fixImageUrl(product.image || product.images?.[0]),
         category: product.categories?.name
       });
     }
@@ -67,7 +68,7 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
         <Link href={`/product/${product.id}`} className="block flex-shrink-0" style={{ height: '150px' }}>
           <div className="relative w-full h-full overflow-hidden bg-gray-100">
             <img
-              src={product.image || product.images?.[0] || '/placeholder-product.svg'}
+              src={fixImageUrl(product.image || product.images?.[0])}
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               sizes="250px"

@@ -4,6 +4,7 @@ import React from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Product } from '@/lib/api/products';
 import { Button } from '@/components/ui/Button';
+import { fixImageUrl } from '@/lib/supabase-storage';
 
 interface ProductCardProps {
   product: Product;
@@ -23,7 +24,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) =
       {/* Product Image */}
       <div className="relative overflow-hidden bg-gray-100 flex-shrink-0" style={{ height: '150px' }}>
         <img
-          src={product.images && product.images.length > 0 ? product.images[0] : '/placeholder-product.jpg'}
+          src={fixImageUrl(product.images && product.images.length > 0 ? product.images[0] : undefined)}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           sizes="250px"

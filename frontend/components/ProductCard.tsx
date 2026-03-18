@@ -5,6 +5,7 @@ import { Product } from '@/types/product';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { fixImageUrl } from '../lib/supabase-storage';
 
 interface ProductCardProps {
   product: Product;
@@ -23,7 +24,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.image_url || product.images?.[0] || '/placeholder-product.jpg'
+      image: fixImageUrl(product.image_url || product.images?.[0])
     });
     
     // Visual feedback - briefly change cart icon color
@@ -44,7 +45,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         id: product.id.toString(),
         name: product.name,
         price: product.price,
-        image: product.image_url || product.images?.[0] || '/placeholder-product.jpg'
+        image: fixImageUrl(product.image_url || product.images?.[0])
       });
     }
   };
@@ -56,7 +57,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Product Image */}
       <div className="relative flex-shrink-0 overflow-hidden bg-gray-100" style={{ height: '150px' }}>
         <Image
-          src={product.image_url || product.images?.[0] || '/placeholder-product.jpg'}
+          src={fixImageUrl(product.image_url || product.images?.[0])}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"

@@ -17,10 +17,12 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'azpgqsmgyorjbqsgxuxw.supabase.co',
+        pathname: '/storage/v1/object/public/**',
       },
       {
         protocol: 'https',
         hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
       },
       {
         protocol: 'http',
@@ -36,11 +38,6 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'azpgqsmgyorjbqsgxuxw.supabase.co',
-        pathname: '/storage/v1/object/public/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'picsum.photos',
       },
       {
@@ -50,13 +47,6 @@ const nextConfig = {
     ],
     // Disable image optimization in development for faster builds
     unoptimized: false,
-    // Add local image patterns
-    domains: [
-      'localhost',
-      '127.0.0.1',
-      'afrosuperstore.ca',
-      'azpgqsmgyorjbqsgxuxw.supabase.co'
-    ],
     // Enable image formats
     formats: ['image/webp', 'image/avif'],
     // Minimum cache TTL

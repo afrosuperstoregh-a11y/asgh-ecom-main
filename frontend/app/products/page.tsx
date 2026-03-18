@@ -8,6 +8,7 @@ import { Loader2, Search, Filter, Grid, List, Star, ShoppingCart, X } from 'luci
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import FilterPanel from '@/components/FilterPanel';
+import { fixImageUrl } from '@/lib/supabase-storage';
 
 import { Product } from '@/types/product';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -226,7 +227,7 @@ export default function ProductsPage() {
                     <Link href={`/product/${product.id}`} className="flex-shrink-0" style={{ height: '150px' }}>
                       <div className="relative w-full h-full overflow-hidden">
                         <Image
-                          src={product.images?.[0] || product.image || '/placeholder-product.jpg'}
+                          src={fixImageUrl(product.images?.[0] || product.image)}
                           alt={product.name}
                           fill
                           className="object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-105"
@@ -292,7 +293,7 @@ export default function ProductsPage() {
                     <Link href={`/product/${product.id}`} className="flex-shrink-0">
                       <div className="relative w-20 h-20 sm:w-24 sm:h-24">
                         <Image
-                          src={product.images?.[0] || product.image || '/placeholder-product.jpg'}
+                          src={fixImageUrl(product.images?.[0] || product.image)}
                           alt={product.name}
                           fill
                           className="object-cover rounded-lg"
