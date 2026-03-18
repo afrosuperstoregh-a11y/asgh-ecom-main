@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Star } from 'lucide-react';
 import { Product } from '@/lib/api/products';
 import { Button } from '@/components/ui/Button';
 import { fixImageUrl } from '@/lib/supabase-storage';
@@ -20,7 +20,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) =
   const inStock = product.inventory_quantity > 0 || product.allow_backorder;
 
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden group w-[275px] h-[350px] flex flex-col">
+    <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden group w-[275px] h-[375px] flex flex-col">
       {/* Product Image */}
       <div className="relative overflow-hidden bg-gray-100 flex-shrink-0 rounded-t-xl" style={{ height: '200px' }}>
         <img
@@ -67,6 +67,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) =
             {product.short_description}
           </p>
         )}
+
+        {/* Star Rating */}
+        <div className="flex items-center gap-1 whitespace-nowrap mb-2">
+          <div className="flex items-center">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`w-4 h-4 flex-shrink-0 ${
+                  i < Math.floor((product as any).rating || 0)
+                    ? 'text-yellow-400 fill-current'
+                    : 'text-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-xs text-gray-500 flex-shrink-0">({(product as any).reviews || 0})</span>
+        </div>
 
         {/* Price */}
         <div className="flex items-center gap-2 mb-3">

@@ -80,6 +80,7 @@ function ProductGridComponent({ products: propProducts, loading: propLoading }: 
                   fill
                   className="object-cover rounded-t-lg"
                   sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                  loading="eager"
                 />
                 <span className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 text-xs rounded-full">
                   Best Seller

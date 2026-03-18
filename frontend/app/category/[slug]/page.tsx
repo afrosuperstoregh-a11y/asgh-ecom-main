@@ -145,9 +145,9 @@ export default function CategoryPage() {
         {products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow w-[275px] h-[375px] flex flex-col">
                 {/* Product Image */}
-                <div className="relative h-48 bg-gray-100">
+                <div className="relative flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-lg" style={{ height: '200px' }}>
                   <img
                     src={getProductImage(product)}
                     alt={product.name}
@@ -164,33 +164,35 @@ export default function CategoryPage() {
                 </div>
 
                 {/* Product Info */}
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                    {product.name}
-                  </h3>
-                  
-                  {/* Price */}
-                  <div className="mb-3">
-                    {product.compare_price && product.compare_price > product.price ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-red-600">
+                <div className="p-4 flex-1 flex flex-col justify-between overflow-hidden">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 overflow-hidden">
+                      {product.name}
+                    </h3>
+                    
+                    {/* Price */}
+                    <div className="mb-3">
+                      {product.compare_price && product.compare_price > product.price ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-bold text-red-600">
+                            {formatPrice(product.price)}
+                          </span>
+                          <span className="text-sm text-gray-500 line-through">
+                            {formatPrice(product.compare_price)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-lg font-bold text-gray-900">
                           {formatPrice(product.price)}
                         </span>
-                        <span className="text-sm text-gray-500 line-through">
-                          {formatPrice(product.compare_price)}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-lg font-bold text-gray-900">
-                        {formatPrice(product.price)}
-                      </span>
-                    )}
+                      )}
+                    </div>
                   </div>
 
                   {/* View Product Button */}
                   <a
                     href={`/product/${product.slug}`}
-                    className="block w-full bg-red-600 text-white text-center py-2 rounded hover:bg-red-700 transition-colors"
+                    className="mt-auto block w-full bg-red-600 text-white text-center py-2 rounded hover:bg-red-700 transition-colors"
                   >
                     View Product
                   </a>

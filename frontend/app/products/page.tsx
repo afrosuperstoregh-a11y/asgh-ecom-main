@@ -87,7 +87,7 @@ export default function ProductsPage() {
       <div className="min-h-screen bg-gray-50">
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-primary-600 mx-auto mb-4" />
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
             <p className="text-gray-600">Loading products...</p>
           </div>
         </div>
@@ -133,7 +133,7 @@ export default function ProductsPage() {
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-base"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
             </div>
           </div>
@@ -151,13 +151,13 @@ export default function ProductsPage() {
             <div className="flex border border-gray-300 rounded-lg">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`px-3 py-2 ${viewMode === 'grid' ? 'bg-primary-600 text-white' : 'text-gray-600 hover:bg-gray-50'} transition-colors`}
+                className={`px-3 py-2 ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'} transition-colors`}
               >
                 <Grid className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`px-3 py-2 ${viewMode === 'list' ? 'bg-primary-600 text-white' : 'text-gray-600 hover:bg-gray-50'} transition-colors`}
+                className={`px-3 py-2 ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'} transition-colors`}
               >
                 <List className="h-5 w-5" />
               </button>
@@ -221,7 +221,7 @@ export default function ProductsPage() {
           <ErrorBoundary>
             <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6' : 'space-y-6'}>
             {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 w-[275px] h-[350px] flex flex-col">
+              <div key={product.id} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 w-[275px] h-[375px] flex flex-col group">
                 {viewMode === 'grid' ? (
                   <>
                     <Link href={`/product/${product.id}`} className="flex-shrink-0" style={{ height: '200px' }}>
@@ -245,40 +245,44 @@ export default function ProductsPage() {
                         )}
                       </div>
                     </Link>
-                    <div className="p-4 flex-1 flex flex-col justify-between overflow-hidden">
-                      <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base line-clamp-2 overflow-hidden">{product.name}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600 mb-3 line-clamp-2 overflow-hidden">{product.description}</p>
-                      <div className="flex items-center mb-3">
-                        <div>
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-4 w-4 ${
-                                i < Math.floor(product.rating || 0)
-                                  ? 'text-yellow-400 fill-current'
-                                  : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
+                    <div className="p-4 flex-1 flex flex-col overflow-hidden">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base line-clamp-2 overflow-hidden">{product.name}</h3>
+                        <p className="text-xs sm:text-sm text-gray-600 mb-3 line-clamp-2 overflow-hidden">{product.description}</p>
+                        <div className="flex items-center mb-3">
+                          <div>
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i < Math.floor(product.rating || 0)
+                                    ? 'text-yellow-400 fill-current'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-xs sm:text-sm text-gray-500 ml-2">({product.reviews || 0})</span>
                         </div>
-                        <span className="text-xs sm:text-sm text-gray-500 ml-2">({product.reviews || 0})</span>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          {product.compare_price ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg font-bold text-gray-900">${product.compare_price}</span>
-                              <span className="text-sm text-gray-500 line-through">${product.price}</span>
-                            </div>
-                          ) : (
-                            <span className="text-lg font-bold text-gray-900">${product.price}</span>
-                          )}
+                      <div className="mt-auto">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            {product.compare_price ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg font-bold text-gray-900">${product.compare_price}</span>
+                                <span className="text-sm text-gray-500 line-through">${product.price}</span>
+                              </div>
+                            ) : (
+                              <span className="text-lg font-bold text-gray-900">${product.price}</span>
+                            )}
+                          </div>
                         </div>
                         {/* Add to Cart Button */}
                         <button
                           onClick={() => handleAddToCart(product)}
                           disabled={!(product.inventory_quantity > 0 || product.allow_backorder)}
-                          className={`mt-auto w-full px-4 py-2.5 rounded-lg font-medium text-sm transition-colors ${
+                          className={`w-full px-4 py-2.5 rounded-lg font-medium text-sm transition-colors ${
                             (product.inventory_quantity > 0 || product.allow_backorder)
                               ? 'bg-blue-600 text-white hover:bg-blue-700'
                               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -290,7 +294,7 @@ export default function ProductsPage() {
                     </div>
                   </>
                 ) : (
-                  <div className="flex items-center p-4 gap-4 h-full">
+                  <div className="flex items-center p-4 gap-4 h-full bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
                     <Link href={`/product/${product.id}`} className="flex-shrink-0">
                       <div className="relative w-20 h-20 sm:w-24 sm:h-24">
                         <Image
@@ -324,9 +328,9 @@ export default function ProductsPage() {
                         <button
                           onClick={() => handleAddToCart(product)}
                           disabled={!(product.inventory_quantity > 0 || product.allow_backorder)}
-                          className="bg-primary-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm touch-target"
+                          className="bg-blue-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
                         >
-                          Add to Cart
+                          {(product.inventory_quantity > 0 || product.allow_backorder) ? 'Add to Cart' : 'Out of Stock'}
                         </button>
                       </div>
                     </div>
@@ -412,7 +416,6 @@ export default function ProductsPage() {
           </div>
         )}
       </main>
-      </div>
       
       {/* Filter Panel */}
       <FilterPanel
@@ -428,6 +431,7 @@ export default function ProductsPage() {
         onApplyFilters={handleApplyFilters}
         onClearFilters={handleClearFilters}
       />
+      </div>
     </ErrorBoundary>
   );
 }

@@ -320,12 +320,12 @@ const AccountWishlistPage = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredAndSortedItems.map((item) => (
-                  <div key={item.id} className="bg-white shadow-lg rounded-lg overflow-hidden group hover:shadow-xl transition-shadow">
-                    <div className="relative">
+                  <div key={item.id} className="bg-white shadow-lg rounded-lg overflow-hidden group hover:shadow-xl transition-shadow w-[275px] h-[375px] flex flex-col">
+                    <div className="relative flex-shrink-0 overflow-hidden rounded-t-lg" style={{ height: '200px' }}>
                       <img
                         src={item.image}
                         alt={item.name}
-                        className="w-full h-48 object-cover"
+                        className="w-full h-full object-cover"
                       />
                       {item.discount > 0 && (
                         <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-medium">
@@ -347,35 +347,37 @@ const AccountWishlistPage = () => {
                       </button>
                     </div>
                     
-                    <div className="p-4">
-                      <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">{item.name}</h3>
-                      
-                      <div className="flex items-center mb-2">
-                        <div className="flex items-center">
-                          {renderStars(item.rating)}
+                    <div className="p-4 flex-1 flex flex-col justify-between overflow-hidden">
+                      <div>
+                        <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 overflow-hidden">{item.name}</h3>
+                        
+                        <div className="flex items-center mb-2">
+                          <div className="flex items-center">
+                            {renderStars(item.rating)}
+                          </div>
+                          <span className="text-sm text-gray-600 ml-2">({item.reviews})</span>
                         </div>
-                        <span className="text-sm text-gray-600 ml-2">({item.reviews})</span>
-                      </div>
 
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <div className="text-lg font-bold text-gray-900">${item.price.toFixed(2)}</div>
-                          {item.originalPrice > item.price && (
-                            <div className="text-sm text-gray-500 line-through">
-                              ${item.originalPrice.toFixed(2)}
-                            </div>
-                          )}
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <div className="text-lg font-bold text-gray-900">${item.price.toFixed(2)}</div>
+                            {item.originalPrice > item.price && (
+                              <div className="text-sm text-gray-500 line-through">
+                                ${item.originalPrice.toFixed(2)}
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            {item.category}
+                          </span>
                         </div>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                          {item.category}
-                        </span>
+
+                        <div className="text-xs text-gray-500 mb-3">
+                          Added on {new Date(item.addedDate).toLocaleDateString()}
+                        </div>
                       </div>
 
-                      <div className="text-xs text-gray-500 mb-3">
-                        Added on {new Date(item.addedDate).toLocaleDateString()}
-                      </div>
-
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mt-auto">
                         <button
                           onClick={() => addToCart(item.id)}
                           disabled={!item.inStock}

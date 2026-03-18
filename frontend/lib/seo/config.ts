@@ -57,7 +57,7 @@ const siteConfig: SiteConfig = {
   organization: {
     name: 'E-Commerce Store',
     url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-    logo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/images/logo.png`,
+    logo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/logo.png`,
   },
   socialLinks: {
     twitter: 'https://twitter.com/ecommercestore',
