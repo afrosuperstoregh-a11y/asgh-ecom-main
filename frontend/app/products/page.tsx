@@ -274,17 +274,18 @@ export default function ProductsPage() {
                             <span className="text-lg font-bold text-gray-900">${product.price}</span>
                           )}
                         </div>
-                        <div className="flex gap-2">
-                          {/* Quick Add to Cart */}
-                          <button
-                            onClick={() => handleAddToCart(product)}
-                            disabled={!(product.inventory_quantity > 0 || product.allow_backorder)}
-                            className="p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-colors z-10"
-                            aria-label="Add to cart"
-                          >
-                            <ShoppingCart className="h-4 w-4 text-gray-700" />
-                          </button>
-                        </div>
+                        {/* Add to Cart Button */}
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          disabled={!(product.inventory_quantity > 0 || product.allow_backorder)}
+                          className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
+                            (product.inventory_quantity > 0 || product.allow_backorder)
+                              ? 'bg-blue-600 text-white hover:bg-blue-700'
+                              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          }`}
+                        >
+                          {(product.inventory_quantity > 0 || product.allow_backorder) ? 'Add to Cart' : 'Out of Stock'}
+                        </button>
                       </div>
                     </div>
                   </>

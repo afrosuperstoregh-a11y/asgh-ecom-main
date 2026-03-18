@@ -136,6 +136,19 @@ export default function ProductCard({ product }: ProductCardProps) {
             <span className="text-red-600">Out of Stock</span>
           )}
         </div>
+
+        {/* Add to Cart Button */}
+        <button
+          onClick={handleAddToCart}
+          disabled={!inStock}
+          className={`w-full py-2 px-3 rounded-lg font-medium text-sm transition-colors ${
+            inStock
+              ? 'bg-blue-600 text-white hover:bg-blue-700'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+        >
+          {inStock ? 'Add to Cart' : 'Out of Stock'}
+        </button>
       </div>
     </div>
   );
