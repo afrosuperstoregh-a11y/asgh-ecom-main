@@ -20,13 +20,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) =
   const inStock = product.inventory_quantity > 0 || product.allow_backorder;
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group w-[275px] h-[350px] flex flex-col">
+    <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden group w-[275px] h-[350px] flex flex-col">
       {/* Product Image */}
-      <div className="relative overflow-hidden bg-gray-100 flex-shrink-0" style={{ height: '200px' }}>
+      <div className="relative overflow-hidden bg-gray-100 flex-shrink-0 rounded-t-xl" style={{ height: '200px' }}>
         <img
           src={fixImageUrl(product.images && product.images.length > 0 ? product.images[0] : undefined)}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 rounded-t-xl"
           sizes="275px"
         />
         
@@ -48,11 +48,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) =
       </div>
 
       {/* Product Info */}
-      <div className="p-3 flex-1 flex flex-col justify-between overflow-hidden">
+      <div className="p-4 flex-1 flex flex-col justify-between overflow-hidden relative">
         {/* Category */}
         {product.category_name && (
           <div className="mb-2">
-            <span className="text-xs text-gray-500 uppercase tracking-wide truncate">{product.category_name}</span>
+            <span className="text-xs text-gray-500 uppercase tracking-wide truncate mb-2">{product.category_name}</span>
           </div>
         )}
 
@@ -95,7 +95,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) =
         <button
           onClick={() => onBuyNow(product.id)}
           disabled={!inStock}
-          className="absolute bottom-2 right-2 p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-colors z-10"
+          className="absolute bottom-4 right-4 p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-colors z-10"
           aria-label="Add to cart"
         >
           <ShoppingCart className={`w-4 h-4 ${!inStock ? 'text-gray-400' : 'text-gray-700'}`} />
@@ -104,7 +104,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) =
         {/* Buy Now Button */}
         <Button
           size="sm"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
           onClick={() => onBuyNow(product.id)}
           disabled={!inStock}
         >

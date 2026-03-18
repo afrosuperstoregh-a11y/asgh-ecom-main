@@ -219,18 +219,18 @@ export default function ProductsPage() {
         {/* Products Grid */}
         {products.length > 0 ? (
           <ErrorBoundary>
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 justify-items-start' : 'space-y-4'}>
+            <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6' : 'space-y-6'}>
             {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow w-[275px] h-[350px] flex flex-col">
+              <div key={product.id} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 w-[275px] h-[350px] flex flex-col">
                 {viewMode === 'grid' ? (
                   <>
                     <Link href={`/product/${product.id}`} className="flex-shrink-0" style={{ height: '200px' }}>
-                      <div className="relative w-full h-full overflow-hidden">
+                      <div className="relative w-full h-full overflow-hidden rounded-t-xl">
                         <Image
                           src={fixImageUrl(product.images?.[0] || product.image)}
                           alt={product.name}
                           fill
-                          className="object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-105"
+                          className="object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-105 rounded-t-xl"
                           sizes="275px"
                         />
                         {product.compare_price && (
@@ -245,10 +245,10 @@ export default function ProductsPage() {
                         )}
                       </div>
                     </Link>
-                    <div className="p-3 flex-1 flex flex-col justify-between overflow-hidden">
+                    <div className="p-4 flex-1 flex flex-col justify-between overflow-hidden">
                       <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base line-clamp-2 overflow-hidden">{product.name}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2 overflow-hidden">{product.description}</p>
-                      <div className="flex items-center mb-2">
+                      <p className="text-xs sm:text-sm text-gray-600 mb-3 line-clamp-2 overflow-hidden">{product.description}</p>
+                      <div className="flex items-center mb-3">
                         <div>
                           {[...Array(5)].map((_, i) => (
                             <Star
@@ -278,7 +278,7 @@ export default function ProductsPage() {
                         <button
                           onClick={() => handleAddToCart(product)}
                           disabled={!(product.inventory_quantity > 0 || product.allow_backorder)}
-                          className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
+                          className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-colors ${
                             (product.inventory_quantity > 0 || product.allow_backorder)
                               ? 'bg-blue-600 text-white hover:bg-blue-700'
                               : 'bg-gray-300 text-gray-500 cursor-not-allowed'

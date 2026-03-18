@@ -52,15 +52,15 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div 
-      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden w-[275px] h-[350px] flex flex-col"
+      className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden w-[275px] h-[350px] flex flex-col"
     >
       {/* Product Image */}
-      <div className="relative flex-shrink-0 overflow-hidden bg-gray-100" style={{ height: '200px' }}>
+      <div className="relative flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-xl" style={{ height: '200px' }}>
         <Image
           src={fixImageUrl(product.image_url || product.images?.[0])}
           alt={product.name}
           fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          className="object-cover transition-transform duration-300 group-hover:scale-105 rounded-t-xl"
           sizes="275px"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
@@ -103,19 +103,19 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Product Info */}
-      <div className="p-3 flex-1 flex flex-col justify-between overflow-hidden">
+      <div className="p-4 flex-1 flex flex-col justify-between overflow-hidden">
         {/* Category */}
         {product.category_name && (
-          <p className="text-xs text-gray-500 mb-0.5 truncate">{product.category_name}</p>
+          <p className="text-xs text-gray-500 mb-2 truncate">{product.category_name}</p>
         )}
 
         {/* Product Name */}
-        <h3 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer overflow-hidden">
+        <h3 className="text-sm font-medium text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer overflow-hidden">
           {product.name}
         </h3>
 
         {/* Price */}
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-2 mb-2">
           <span className="text-base font-bold text-gray-900">
             ${product.price.toFixed(2)}
           </span>
@@ -127,7 +127,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Stock Status */}
-        <div className="text-xs text-gray-600">
+        <div className="text-xs text-gray-600 mb-3">
           {inStock ? (
             <span className="text-green-600">
               {product.inventory_quantity >= 10 ? `${product.inventory_quantity} in stock` : 'Available'}
@@ -141,7 +141,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <button
           onClick={handleAddToCart}
           disabled={!inStock}
-          className={`w-full py-2 px-3 rounded-lg font-medium text-sm transition-colors ${
+          className={`w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-colors ${
             inStock
               ? 'bg-blue-600 text-white hover:bg-blue-700'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'

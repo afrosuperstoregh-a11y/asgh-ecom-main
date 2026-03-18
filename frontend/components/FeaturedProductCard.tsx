@@ -63,33 +63,33 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
   
   return (
     <div className="group">
-      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 w-[275px] h-[350px] flex flex-col">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 w-[275px] h-[350px] flex flex-col">
         {/* Product Image */}
         <Link href={`/product/${product.id}`} className="block flex-shrink-0" style={{ height: '200px' }}>
-          <div className="relative w-full h-full overflow-hidden bg-gray-100">
+          <div className="relative w-full h-full overflow-hidden bg-gray-100 rounded-t-xl">
             <img
               src={fixImageUrl(product.image || product.images?.[0])}
               alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 rounded-t-xl"
               sizes="275px"
             />
           </div>
         </Link>
         
         {/* Product Info */}
-        <div className="p-3 flex-1 flex flex-col justify-between overflow-hidden">
-          <div className="text-xs text-gray-500 uppercase tracking-wide mb-1 truncate">
+        <div className="p-4 flex-1 flex flex-col justify-between overflow-hidden">
+          <div className="text-xs text-gray-500 uppercase tracking-wide mb-2 truncate">
             {product.categories?.name || 'Premium'}
           </div>
           
           <Link href={`/product/${product.id}`} className="block">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2 overflow-hidden">
+            <h3 className="text-sm font-semibold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2 overflow-hidden">
               {product.name}
             </h3>
           </Link>
           
           {/* Rating */}
-          <div className="flex items-center space-x-1 mb-2">
+          <div className="flex items-center space-x-1 mb-3">
             <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
                 <Star
@@ -106,7 +106,7 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
           </div>
           
           {/* Price */}
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-1">
               <span className="text-sm font-bold text-gray-900">
                 ${product.compare_price || product.price}
@@ -125,7 +125,7 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
           </div>
           
           {/* Stock Status */}
-          <div className="text-xs text-gray-600 mb-2 truncate">
+          <div className="text-xs text-gray-600 mb-3 truncate">
             {inStock ? (
               <span className="text-green-600">
                 {(product.inventory_quantity || 0) >= 10 ? `${product.inventory_quantity} in stock` : 'Available'}
@@ -139,7 +139,7 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
           {inStock && (
             <button
               onClick={handleAddToCart}
-              className="w-full bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium text-sm"
+              className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium text-sm"
             >
               Add to Cart
             </button>
@@ -149,7 +149,7 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
           {!inStock && (
             <button
               disabled
-              className="w-full bg-gray-300 text-gray-500 py-2 px-3 rounded-lg cursor-not-allowed font-medium text-sm"
+              className="w-full bg-gray-300 text-gray-500 py-2.5 px-4 rounded-lg cursor-not-allowed font-medium text-sm"
             >
               Out of Stock
             </button>
