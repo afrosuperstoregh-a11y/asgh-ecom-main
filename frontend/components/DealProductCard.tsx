@@ -225,7 +225,7 @@ const DealProductCard: React.FC<DealProductCardProps> = ({ product, viewMode = '
 
         <button
           onClick={handleBuyNow}
-          className="w-full bg-red-600 text-white py-2.5 px-4 rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-1 text-xs"
+          className="mt-auto w-full bg-red-600 text-white py-2.5 px-4 rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-1 text-xs"
         >
           <ShoppingCart className="w-3 h-3" />
           Buy Now

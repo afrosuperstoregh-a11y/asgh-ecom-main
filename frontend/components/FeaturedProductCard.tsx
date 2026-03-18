@@ -139,7 +139,7 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
           {inStock && (
             <button
               onClick={handleAddToCart}
-              className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium text-sm"
+              className="mt-auto w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium text-sm"
             >
               Add to Cart
             </button>
@@ -149,7 +149,7 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
           {!inStock && (
             <button
               disabled
-              className="w-full bg-gray-300 text-gray-500 py-2.5 px-4 rounded-lg cursor-not-allowed font-medium text-sm"
+              className="mt-auto w-full bg-gray-300 text-gray-500 py-2.5 px-4 rounded-lg cursor-not-allowed font-medium text-sm"
             >
               Out of Stock
             </button>

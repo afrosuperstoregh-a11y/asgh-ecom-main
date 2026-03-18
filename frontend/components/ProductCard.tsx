@@ -141,7 +141,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <button
           onClick={handleAddToCart}
           disabled={!inStock}
-          className={`w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-colors ${
+          className={`mt-auto w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-colors ${
             inStock
               ? 'bg-blue-600 text-white hover:bg-blue-700'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'

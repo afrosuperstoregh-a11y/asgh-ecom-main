@@ -278,7 +278,7 @@ export default function ProductsPage() {
                         <button
                           onClick={() => handleAddToCart(product)}
                           disabled={!(product.inventory_quantity > 0 || product.allow_backorder)}
-                          className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-colors ${
+                          className={`mt-auto w-full px-4 py-2.5 rounded-lg font-medium text-sm transition-colors ${
                             (product.inventory_quantity > 0 || product.allow_backorder)
                               ? 'bg-blue-600 text-white hover:bg-blue-700'
                               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
