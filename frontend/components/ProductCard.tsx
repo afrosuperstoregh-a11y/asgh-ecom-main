@@ -52,16 +52,16 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div 
-      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden w-[250px] h-[250px] flex flex-col"
+      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden w-[275px] h-[350px] flex flex-col"
     >
       {/* Product Image */}
-      <div className="relative flex-shrink-0 overflow-hidden bg-gray-100" style={{ height: '150px' }}>
+      <div className="relative flex-shrink-0 overflow-hidden bg-gray-100" style={{ height: '200px' }}>
         <Image
           src={fixImageUrl(product.image_url || product.images?.[0])}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
-          sizes="250px"
+          sizes="275px"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder-product.jpg';

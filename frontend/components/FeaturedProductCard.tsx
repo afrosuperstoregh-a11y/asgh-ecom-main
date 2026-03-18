@@ -63,15 +63,15 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
   
   return (
     <div className="group">
-      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 w-[250px] h-[250px] flex flex-col">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 w-[275px] h-[350px] flex flex-col">
         {/* Product Image */}
-        <Link href={`/product/${product.id}`} className="block flex-shrink-0" style={{ height: '150px' }}>
+        <Link href={`/product/${product.id}`} className="block flex-shrink-0" style={{ height: '200px' }}>
           <div className="relative w-full h-full overflow-hidden bg-gray-100">
             <img
               src={fixImageUrl(product.image || product.images?.[0])}
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="250px"
+              sizes="275px"
             />
           </div>
         </Link>

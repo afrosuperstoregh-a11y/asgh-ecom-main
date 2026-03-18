@@ -126,13 +126,13 @@ const DealProductCard: React.FC<DealProductCardProps> = ({ product, viewMode = '
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 group w-[250px] h-[250px] flex flex-col">
-      <div className="relative overflow-hidden rounded-t-lg flex-shrink-0" style={{ height: '150px' }}>
+    <div className="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 group w-[275px] h-[350px] flex flex-col">
+      <div className="relative overflow-hidden rounded-t-lg flex-shrink-0" style={{ height: '200px' }}>
         <img
           src={product.image}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          sizes="250px"
+          sizes="275px"
         />
         
         {/* Badges */}

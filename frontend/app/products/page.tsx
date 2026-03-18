@@ -221,17 +221,17 @@ export default function ProductsPage() {
           <ErrorBoundary>
             <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 justify-items-start' : 'space-y-4'}>
             {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow w-[250px] h-[250px] flex flex-col">
+              <div key={product.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow w-[275px] h-[350px] flex flex-col">
                 {viewMode === 'grid' ? (
                   <>
-                    <Link href={`/product/${product.id}`} className="flex-shrink-0" style={{ height: '150px' }}>
+                    <Link href={`/product/${product.id}`} className="flex-shrink-0" style={{ height: '200px' }}>
                       <div className="relative w-full h-full overflow-hidden">
                         <Image
                           src={fixImageUrl(product.images?.[0] || product.image)}
                           alt={product.name}
                           fill
                           className="object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-105"
-                          sizes="250px"
+                          sizes="275px"
                         />
                         {product.compare_price && (
                           <span className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">

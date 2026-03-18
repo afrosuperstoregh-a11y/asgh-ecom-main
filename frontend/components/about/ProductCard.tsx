@@ -20,14 +20,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) =
   const inStock = product.inventory_quantity > 0 || product.allow_backorder;
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group w-[250px] h-[250px] flex flex-col">
+    <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group w-[275px] h-[350px] flex flex-col">
       {/* Product Image */}
-      <div className="relative overflow-hidden bg-gray-100 flex-shrink-0" style={{ height: '150px' }}>
+      <div className="relative overflow-hidden bg-gray-100 flex-shrink-0" style={{ height: '200px' }}>
         <img
           src={fixImageUrl(product.images && product.images.length > 0 ? product.images[0] : undefined)}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          sizes="250px"
+          sizes="275px"
         />
         
         {/* Discount Badge */}
