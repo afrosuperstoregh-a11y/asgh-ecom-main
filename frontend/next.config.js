@@ -45,8 +45,8 @@ const nextConfig = {
         hostname: 'images.unsplash.com',
       },
     ],
-    // Disable image optimization in development for faster builds
-    unoptimized: false,
+    // Disable image optimization for Supabase URLs to prevent 400 errors
+    unoptimized: true,
     // Enable image formats
     formats: ['image/webp', 'image/avif'],
     // Minimum cache TTL
