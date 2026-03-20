@@ -44,17 +44,28 @@ export const tokenManager = {
   validateToken: (token: string | null): boolean => {
     if (!token) return false;
     
-    // Accept standard JWT tokens (remove the strict prefix requirement)
+    // Handle production tokens
+    if (token.startsWith('prod-jwt-token-')) {
+      const tokenParts = token.split('-');
+      const timestamp = tokenParts[3];
+      
+      if (timestamp) {
+        const tokenTime = parseInt(timestamp);
+        const currentTime = Date.now();
+        const isExpired = (currentTime - tokenTime) > 24 * 60 * 60 * 1000; // 24 hours
+        return !isExpired;
+      }
+      return true;
+    }
+    
+    // Handle standard JWT tokens
     try {
-      // Basic JWT format check (header.payload.signature)
       const parts = token.split('.');
       if (parts.length !== 3) return false;
       
-      // Decode payload to check expiration
       const payload = JSON.parse(atob(parts[1]));
       const currentTime = Math.floor(Date.now() / 1000);
       
-      // Check if token is expired (with 24 hour buffer)
       return payload.exp ? payload.exp > currentTime : true;
     } catch (error) {
       console.error('Token validation error:', error);
