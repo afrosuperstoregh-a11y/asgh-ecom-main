@@ -28,7 +28,7 @@ export default function ProductsPage() {
   // Use our custom hook for products with real-time updates
   const { products, loading, error, pagination, refetch } = useProducts({
     page: currentPage,
-    limit: 20,
+    limit: 50, // Use reasonable limit with pagination
     category: selectedCategory,
     search: searchQuery,
     minPrice: minPrice ? parseFloat(minPrice) : undefined,
@@ -117,7 +117,7 @@ export default function ProductsPage() {
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-50">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 w-full overflow-x-hidden">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">All Products</h1>
@@ -220,7 +220,7 @@ export default function ProductsPage() {
         {/* Products Grid */}
         {products.length > 0 ? (
           <ErrorBoundary>
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6' : 'space-y-6'}>
+            <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 w-full overflow-x-hidden' : 'space-y-6'}>
             {products.map((product) => (
               <div key={product.id}>
                 {viewMode === 'grid' ? (

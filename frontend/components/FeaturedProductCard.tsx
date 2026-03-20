@@ -63,9 +63,9 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
   
   return (
     <div className="group">
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 w-[275px] h-[375px] flex flex-col">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[275px] sm:w-[275px] aspect-[4/5] flex flex-col">
         {/* Product Image */}
-        <Link href={`/product/${product.id}`} className="block flex-shrink-0" style={{ height: '200px' }}>
+        <Link href={`/product/${product.id}`} className="block flex-shrink-0 w-full aspect-[4/3] sm:aspect-[16/9] overflow-hidden">
           <div className="relative w-full h-full overflow-hidden bg-gray-100 rounded-t-xl">
             <img
               src={fixImageUrl(product.image || product.images?.[0])}
@@ -85,13 +85,13 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
           
           <div className="space-y-1 flex-1">
             <Link href={`/product/${product.id}`} className="block">
-              <h3 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 overflow-hidden">
+              <h3 className="text-sm sm:text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 overflow-hidden">
                 {product.name}
               </h3>
             </Link>
             
-            {/* Rating */}
-            <div className="flex items-center gap-1 whitespace-nowrap">
+            {/* Rating - Hidden on mobile for cleaner layout */}
+            <div className="flex items-center gap-1 whitespace-nowrap hidden sm:block">
               <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (
                   <Star
@@ -126,8 +126,8 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
               )}
             </div>
             
-            {/* Stock Status */}
-            <div className="text-xs text-gray-600">
+            {/* Stock Status - Hidden on mobile for cleaner layout */}
+            <div className="text-xs sm:text-sm text-gray-600 hidden sm:block">
               {inStock ? (
                 <span className="text-green-600">
                   {(product.inventory_quantity || 0) >= 10 ? `${product.inventory_quantity} in stock` : 'Available'}
@@ -143,14 +143,14 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
             {inStock ? (
               <button
                 onClick={handleAddToCart}
-                className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium text-sm"
+                className="w-full bg-blue-600 text-white py-2.5 px-4 sm:py-2.5 sm:px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium text-sm sm:text-sm"
               >
                 Add to Cart
               </button>
             ) : (
               <button
                 disabled
-                className="w-full bg-gray-300 text-gray-500 py-2.5 px-4 rounded-lg cursor-not-allowed font-medium text-sm"
+                className="w-full bg-gray-300 text-gray-500 py-2.5 px-4 sm:py-2.5 sm:px-4 rounded-lg cursor-not-allowed font-medium text-sm sm:text-sm"
               >
                 Out of Stock
               </button>
