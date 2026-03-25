@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { tokenManager } from '../../../lib/token-manager';
+import { useToast } from '../../../components/admin/Toast';
 import {
   Search,
   Filter,
@@ -39,7 +41,7 @@ interface Payment {
     last4?: string;
     brand?: string;
   };
-  refunds: Array<{
+  refunds?: Array<{
     id: string;
     amount: number;
     status: string;
@@ -69,6 +71,7 @@ interface Filters {
 }
 
 export default function PaymentsPage() {
+  const { showSuccess, showError } = useToast();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [stats, setStats] = useState<PaymentStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -107,8 +110,18 @@ export default function PaymentsPage() {
         )
       });
 
+      const token = tokenManager.getToken();
+      if (!token) {
+        setError('No authentication token found');
+        setLoading(false);
+        return;
+      }
+      
       const response = await fetch(`/api/admin/payments?${queryParams}`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.ok) {
@@ -119,7 +132,9 @@ export default function PaymentsPage() {
         setError('Failed to fetch payments');
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Payments fetch error:', error);
+    }
       setError('Failed to fetch payments');
     } finally {
       setLoading(false);
@@ -128,8 +143,17 @@ export default function PaymentsPage() {
 
   const fetchStats = async () => {
     try {
+      const token = tokenManager.getToken();
+      if (!token) {
+        console.error('No authentication token found for stats');
+        return;
+      }
+      
       const response = await fetch('/api/admin/payments/stats/overview', {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.ok) {
@@ -137,7 +161,9 @@ export default function PaymentsPage() {
         setStats(data.data?.overview || data.overview || data);
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Stats fetch error:', error);
+    }
     }
   };
 
@@ -155,20 +181,30 @@ export default function PaymentsPage() {
 
     const amount = parseFloat(refundAmount);
     if (amount <= 0 || amount > paymentAmount) {
-      alert('Invalid refund amount');
+      showError('Invalid refund amount');
       return;
     }
 
     const reason = prompt('Enter refund reason (optional):');
 
     try {
+      const token = tokenManager.getToken();
+      if (!token) {
+        showError('No authentication token found');
+        return;
+      }
+      
       const response = await fetch(`/api/admin/payments/${paymentId}/refund`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         credentials: 'include',
-        body: JSON.stringify({ amount, reason: reason || undefined })
+        body: JSON.stringify({
+          amount,
+          reason: reason || 'Customer request'
+        })
       });
 
       if (response.ok) {
@@ -176,11 +212,13 @@ export default function PaymentsPage() {
         fetchStats(); // Refresh stats
       } else {
         const errorData = await response.json();
-        alert(errorData.message || 'Failed to process refund');
+        showSuccess('Refund processed successfully');
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Refund error:', error);
-      alert('Failed to process refund');
+    }
+      showError('Failed to process refund');
     }
   };
 
@@ -259,10 +297,10 @@ export default function PaymentsPage() {
               <div className="ml-4 flex-1">
                 <p className="text-sm font-medium text-gray-600">Total Revenue</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {formatCurrency(stats.totalRevenue)}
+                  {formatCurrency(stats?.totalRevenue || 0)}
                 </p>
                 <p className="text-xs text-gray-500">
-                  Net: {formatCurrency(stats.netRevenue)}
+                  Net: {formatCurrency(stats?.netRevenue || 0)}
                 </p>
               </div>
             </div>
@@ -276,10 +314,10 @@ export default function PaymentsPage() {
               <div className="ml-4 flex-1">
                 <p className="text-sm font-medium text-gray-600">Total Payments</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {stats.totalPayments.toLocaleString()}
+                  {(stats?.totalPayments || 0).toLocaleString()}
                 </p>
                 <p className="text-xs text-gray-500">
-                  Success rate: {stats.successRate.toFixed(1)}%
+                  Success rate: {(stats?.successRate || 0).toFixed(1)}%
                 </p>
               </div>
             </div>
@@ -293,10 +331,10 @@ export default function PaymentsPage() {
               <div className="ml-4 flex-1">
                 <p className="text-sm font-medium text-gray-600">Completed</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {stats.completedPayments.toLocaleString()}
+                  {(stats?.completedPayments || 0).toLocaleString()}
                 </p>
                 <p className="text-xs text-gray-500">
-                  Failed: {stats.failedPayments.toLocaleString()}
+                  Failed: {(stats?.failedPayments || 0).toLocaleString()}
                 </p>
               </div>
             </div>
@@ -310,10 +348,10 @@ export default function PaymentsPage() {
               <div className="ml-4 flex-1">
                 <p className="text-sm font-medium text-gray-600">Refunded</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {formatCurrency(stats.totalRefunded)}
+                  {formatCurrency(stats?.totalRefunded || 0)}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {stats.refundedPayments} refunds
+                  {stats?.refundedPayments || 0} refunds
                 </p>
               </div>
             </div>
@@ -486,10 +524,10 @@ export default function PaymentsPage() {
                       <div className="text-sm font-medium text-gray-900">
                         {formatCurrency(payment.amount)}
                       </div>
-                      {payment.refunds.length > 0 && (
+                      {(payment.refunds?.length || 0) > 0 && (
                         <div className="text-xs text-red-600">
                           Refunded: {formatCurrency(
-                            payment.refunds.reduce((sum, refund) => 
+                            (payment.refunds || []).reduce((sum, refund) => 
                               refund.status === 'COMPLETED' ? sum + Number(refund.amount) : sum, 0
                             )
                           )}

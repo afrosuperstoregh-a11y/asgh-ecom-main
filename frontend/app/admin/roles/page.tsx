@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useConfirmModal } from '../../../components/admin/ConfirmModal';
+import { useToast } from '../../../components/admin/Toast';
 import {
   Users,
   Shield,
@@ -55,6 +57,8 @@ export default function RolesPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [permissions, setPermissions] = useState<Record<string, string[]>>({});
+  const { openConfirmModal, ConfirmModalComponent } = useConfirmModal();
+  const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,7 +79,9 @@ export default function RolesPage() {
         setRoles(data);
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Roles fetch error:', error);
+    }
     }
   };
 
@@ -90,7 +96,9 @@ export default function RolesPage() {
         setUsers(data);
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Users fetch error:', error);
+    }
     }
   };
 
@@ -105,56 +113,74 @@ export default function RolesPage() {
         setPermissions(data);
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Permissions fetch error:', error);
+    }
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteRole = async (roleId: string, roleName: string) => {
-    if (!confirm(`Are you sure you want to delete the "${roleName}" role? This action cannot be undone.`)) {
-      return;
-    }
+    await openConfirmModal({
+      title: 'Delete Role',
+      message: `Are you sure you want to delete the "${roleName}" role? This action cannot be undone.`,
+      type: 'danger',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/admin/roles/${roleId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+          });
 
-    try {
-      const response = await fetch(`/api/admin/roles/${roleId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        fetchRoles(); // Refresh the list
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Failed to delete role');
-      }
-    } catch (error) {
+          if (response.ok) {
+            fetchRoles(); // Refresh the list
+            showSuccess('Role deleted successfully');
+          } else {
+            const errorData = await response.json();
+            showError(errorData.message || 'Failed to delete role');
+          }
+        } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Delete role error:', error);
-      alert('Failed to delete role');
     }
+          showError('Failed to delete role');
+        }
+      }
+    });
   };
 
   const handleDeleteUser = async (userId: string, userName: string) => {
-    if (!confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
-      return;
-    }
+    await openConfirmModal({
+      title: 'Delete User',
+      message: `Are you sure you want to delete user "${userName}"? This action cannot be undone.`,
+      type: 'danger',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/admin/roles/users/${userId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+          });
 
-    try {
-      const response = await fetch(`/api/admin/roles/users/${userId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        fetchUsers(); // Refresh the list
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Failed to delete user');
-      }
-    } catch (error) {
+          if (response.ok) {
+            fetchUsers(); // Refresh the list
+            showSuccess('User deleted successfully');
+          } else {
+            const errorData = await response.json();
+            showError(errorData.message || 'Failed to delete user');
+          }
+        } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Delete user error:', error);
-      alert('Failed to delete user');
     }
+          showError('Failed to delete user');
+        }
+      }
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -446,6 +472,7 @@ export default function RolesPage() {
   }
 
   return (
+    <>
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
@@ -486,5 +513,7 @@ export default function RolesPage() {
         {activeTab === 'permissions' && renderPermissions()}
       </div>
     </div>
+    <ConfirmModalComponent />
+    </>
   );
 }

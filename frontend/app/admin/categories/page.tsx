@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { adminApi } from '../../../lib/admin-api-client';
+import { tokenManager } from '../../../lib/token-manager';
+import { useConfirmModal } from '../../../components/admin/ConfirmModal';
+import { useToast } from '../../../components/admin/Toast';
 import {
   Plus,
   Search,
@@ -10,8 +14,10 @@ import {
   ChevronDown,
   MoreVertical,
   Upload,
+  Download,
   Image as ImageIcon
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface Category {
   id: string;
@@ -29,35 +35,134 @@ interface Category {
 }
 
 export default function CategoriesPage() {
+  const router = useRouter();
+  const { openConfirmModal, ConfirmModalComponent } = useConfirmModal();
+  const { showSuccess, showError } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    const handleMouseDown = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.dropdown-menu')) {
+        setActiveDropdown(null);
+      }
+    };
+
+    if (activeDropdown) {
+      document.addEventListener('mousedown', handleMouseDown);
+      return () => document.removeEventListener('mousedown', handleMouseDown);
+    }
+  }, [activeDropdown]);
+
   const fetchCategories = async () => {
     try {
       setLoading(true);
       
-      const response = await fetch('/api/admin/categories', {
-        credentials: 'include'
-      });
+      // Validate token before making request
+      const token = tokenManager.getToken();
+      if (!token || !tokenManager.validateToken(token)) {
+        setError('Authentication required');
+        return;
+      }
 
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data.data || data.categories || []);
+      const result = await adminApi.categories.list();
+      
+      if (result.success && result.data) {
+        const data = result.data as any;
+        setCategories(data.categories || data || []);
       } else {
-        setError('Failed to fetch categories');
+        setError(result.error?.message || 'Failed to fetch categories');
       }
     } catch (error) {
       console.error('Categories fetch error:', error);
       setError('Failed to fetch categories');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleDropdown = (categoryId: string) => {
+    setActiveDropdown(activeDropdown === categoryId ? null : categoryId);
+  };
+
+  const handleEditCategory = (categoryId: string) => {
+    router.push(`/admin/categories/${categoryId}/edit`);
+  };
+
+  const handleImportCategories = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv,.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          setImporting(true);
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          const response = await fetch('/api/admin/categories/import', {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            showSuccess(`Successfully imported ${result.imported} categories. ${result.errors?.length || 0} errors.`);
+            fetchCategories();
+          } else {
+            const error = await response.json();
+            showError(`Import failed: ${error.message || 'Unknown error'}`);
+          }
+        } catch (error) {
+          console.error('Import error:', error);
+          showError('Import failed due to an error');
+        } finally {
+          setImporting(false);
+        }
+      }
+    };
+    input.click();
+  };
+
+  const handleExportCategories = async () => {
+    try {
+      setExporting(true);
+      const response = await fetch('/api/admin/categories/export', {
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `categories-export-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        showSuccess('Categories exported successfully');
+      } else {
+        showError('Export failed');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      showError('Export failed due to an error');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -74,26 +179,37 @@ export default function CategoriesPage() {
   };
 
   const handleDelete = async (categoryId: string, categoryName: string) => {
-    if (!confirm(`Are you sure you want to delete "${categoryName}"? This action cannot be undone.`)) {
-      return;
-    }
+    await openConfirmModal({
+      title: 'Delete Category',
+      message: `Are you sure you want to delete "${categoryName}"? This action cannot be undone.`,
+      type: 'danger',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        try {
+          // Validate token before making request
+          const token = tokenManager.getToken();
+          if (!token || !tokenManager.validateToken(token)) {
+            showError('Authentication required');
+            return;
+          }
 
-    try {
-      const response = await fetch(`/api/admin/categories/${categoryId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        fetchCategories(); // Refresh the list
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Failed to delete category');
-      }
-    } catch (error) {
+          const result = await adminApi.categories.delete(categoryId);
+          
+          if (result.success) {
+            fetchCategories(); // Refresh the list
+            showSuccess('Category deleted successfully');
+          } else {
+            showError(result.error?.message || 'Failed to delete category');
+          }
+        } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Delete error:', error);
-      alert('Failed to delete category');
     }
+          showError('Failed to delete category');
+        }
+      }
+    });
   };
 
   const filterCategories = (categories: Category[], term: string): Category[] => {
@@ -177,7 +293,7 @@ export default function CategoriesPage() {
             <div className="flex items-center mt-1 text-xs text-gray-500">
               <span>Slug: {category.slug}</span>
               <span className="mx-2">•</span>
-              <span>{category._count.products} products</span>
+              <span>{category._count?.products || 0} products</span>
               <span className="mx-2">•</span>
               <span>Order: {category.sortOrder}</span>
             </div>
@@ -185,18 +301,76 @@ export default function CategoriesPage() {
           
           {/* Actions */}
           <div className="flex items-center space-x-2 ml-4">
-            <button className="p-2 text-blue-600 hover:text-blue-900">
+            <button 
+              onClick={() => handleEditCategory(category.id)}
+              className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md transition-colors duration-200"
+              aria-label="Edit category"
+            >
               <Edit className="h-4 w-4" />
             </button>
             <button 
               onClick={() => handleDelete(category.id, category.name)}
-              className="p-2 text-red-600 hover:text-red-900"
+              className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors duration-200"
+              aria-label="Delete category"
             >
               <Trash2 className="h-4 w-4" />
             </button>
-            <button className="p-2 text-gray-600 hover:text-gray-900">
-              <MoreVertical className="h-4 w-4" />
-            </button>
+            <div className="relative dropdown-menu">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleDropdown(category.id);
+                }}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors duration-200"
+                aria-label="More options"
+                aria-expanded={activeDropdown === category.id}
+                aria-controls={`dropdown-${category.id}`}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </button>
+              {activeDropdown === category.id && (
+                <div 
+                  id={`dropdown-${category.id}`}
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200 dropdown-menu" 
+                  role="menu"
+                  aria-orientation="vertical"
+                >
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        handleEditCategory(category.id);
+                        setActiveDropdown(null);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      role="menuitem"
+                    >
+                      Edit Category
+                    </button>
+                    <button
+                      onClick={() => {
+                        // View category details
+                        setActiveDropdown(null);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      role="menuitem"
+                    >
+                      View Details
+                    </button>
+                    <div className="border-t border-gray-100"></div>
+                    <button
+                      onClick={() => {
+                        handleDelete(category.id, category.name);
+                        setActiveDropdown(null);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      role="menuitem"
+                    >
+                      Delete Category
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         
@@ -234,6 +408,7 @@ export default function CategoriesPage() {
   }
 
   return (
+    <>
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
@@ -243,11 +418,29 @@ export default function CategoriesPage() {
             <p className="text-gray-600 mt-2">Manage your product categories and hierarchy</p>
           </div>
           <div className="flex items-center space-x-3">
-            <button className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-              <Upload className="h-4 w-4 mr-2" />
-              Import
+            <button 
+              onClick={handleImportCategories}
+              disabled={importing}
+              className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              aria-label="Import categories"
+            >
+              <Upload className={`h-4 w-4 mr-2 ${importing ? 'animate-spin' : ''}`} />
+              {importing ? 'Importing...' : 'Import'}
             </button>
-            <button className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+            <button 
+              onClick={handleExportCategories}
+              disabled={exporting}
+              className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              aria-label="Export categories"
+            >
+              <Download className={`h-4 w-4 mr-2 ${exporting ? 'animate-spin' : ''}`} />
+              {exporting ? 'Exporting...' : 'Export'}
+            </button>
+            <button 
+              onClick={() => router.push('/admin/categories/create')}
+              className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              aria-label="Add new category"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Category
             </button>
@@ -295,7 +488,11 @@ export default function CategoriesPage() {
             </p>
             {!searchTerm && (
               <div className="mt-6">
-                <button className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                <button 
+                  onClick={() => router.push('/admin/categories/create')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                  aria-label="Add new category"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Category
                 </button>
@@ -327,11 +524,13 @@ export default function CategoriesPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-sm font-medium text-gray-500">Total Products</h3>
             <p className="mt-2 text-3xl font-bold text-blue-600">
-              {categories.reduce((sum, cat) => sum + cat._count.products, 0)}
+              {categories.reduce((sum, cat) => sum + (cat._count?.products || 0), 0)}
             </p>
           </div>
         </div>
       )}
     </div>
+    <ConfirmModalComponent />
+    </>
   );
 }

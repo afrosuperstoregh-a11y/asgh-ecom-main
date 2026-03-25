@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { tokenManager } from '../../../lib/token-manager';
 import {
   TrendingUp,
   TrendingDown,
@@ -72,8 +73,17 @@ export default function AnalyticsPage() {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
+      const token = tokenManager.getToken();
+      if (!token) {
+        setError('No authentication token found');
+        setLoading(false);
+        return;
+      }
       const response = await fetch(`/api/admin/analytics?range=${dateRange}`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.ok) {
@@ -243,7 +253,7 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <StatCard
                 title="Total Revenue"
-                value={formatCurrency(data.overview.totalRevenue)}
+                value={formatCurrency(data?.overview?.totalRevenue || 0)}
                 change={12.5}
                 changeType="increase"
                 icon={DollarSign}
@@ -251,7 +261,7 @@ export default function AnalyticsPage() {
               />
               <StatCard
                 title="Total Orders"
-                value={data.overview.totalOrders.toLocaleString()}
+                value={(data?.overview?.totalOrders || 0).toLocaleString()}
                 change={8.2}
                 changeType="increase"
                 icon={ShoppingCart}
@@ -259,7 +269,7 @@ export default function AnalyticsPage() {
               />
               <StatCard
                 title="Total Customers"
-                value={data.overview.totalCustomers.toLocaleString()}
+                value={(data?.overview?.totalCustomers || 0).toLocaleString()}
                 change={15.3}
                 changeType="increase"
                 icon={Users}
@@ -267,7 +277,7 @@ export default function AnalyticsPage() {
               />
               <StatCard
                 title="Conversion Rate"
-                value={formatPercentage(data.overview.conversionRate)}
+                value={formatPercentage(data?.overview?.conversionRate || 0)}
                 change={-2.1}
                 changeType="decrease"
                 icon={TrendingUp}
@@ -282,19 +292,19 @@ export default function AnalyticsPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">New Customers</span>
-                    <span className="text-sm font-medium">{data.customerMetrics.newCustomers.toLocaleString()}</span>
+                    <span className="text-sm font-medium">{(data?.customerMetrics?.newCustomers || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Returning Customers</span>
-                    <span className="text-sm font-medium">{data.customerMetrics.returningCustomers.toLocaleString()}</span>
+                    <span className="text-sm font-medium">{(data?.customerMetrics?.returningCustomers || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Retention Rate</span>
-                    <span className="text-sm font-medium">{formatPercentage(data.customerMetrics.customerRetentionRate)}</span>
+                    <span className="text-sm font-medium">{formatPercentage(data?.customerMetrics?.customerRetentionRate || 0)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Avg. Customer LTV</span>
-                    <span className="text-sm font-medium">{formatCurrency(data.customerMetrics.averageCustomerLifetimeValue)}</span>
+                    <span className="text-sm font-medium">{formatCurrency(data?.customerMetrics?.averageCustomerLifetimeValue || 0)}</span>
                   </div>
                 </div>
               </div>
@@ -304,22 +314,22 @@ export default function AnalyticsPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Average Order Value</span>
-                    <span className="text-sm font-medium">{formatCurrency(data.overview.averageOrderValue)}</span>
+                    <span className="text-sm font-medium">{formatCurrency(data?.overview?.averageOrderValue || 0)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Total Products</span>
-                    <span className="text-sm font-medium">{data.overview.totalProducts.toLocaleString()}</span>
+                    <span className="text-sm font-medium">{formatCurrency(data?.overview?.totalProducts || 0)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Revenue per Customer</span>
                     <span className="text-sm font-medium">
-                      {formatCurrency(data.overview.totalRevenue / data.overview.totalCustomers)}
+                      {formatCurrency((data?.overview?.totalRevenue || 0) / (data?.overview?.totalCustomers || 1))}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Orders per Customer</span>
                     <span className="text-sm font-medium">
-                      {(data.overview.totalOrders / data.overview.totalCustomers).toFixed(1)}
+                      {((data?.overview?.totalOrders || 0) / (data?.overview?.totalCustomers || 1)).toFixed(1)}
                     </span>
                   </div>
                 </div>
@@ -396,15 +406,15 @@ export default function AnalyticsPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">New Customers</span>
-                    <span className="text-sm font-medium">{data.customerMetrics.newCustomers.toLocaleString()}</span>
+                    <span className="text-sm font-medium">{(data?.customerMetrics?.newCustomers || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Returning Customers</span>
-                    <span className="text-sm font-medium">{data.customerMetrics.returningCustomers.toLocaleString()}</span>
+                    <span className="text-sm font-medium">{(data?.customerMetrics?.returningCustomers || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Retention Rate</span>
-                    <span className="text-sm font-medium">{formatPercentage(data.customerMetrics.customerRetentionRate)}</span>
+                    <span className="text-sm font-medium">{formatPercentage(data?.customerMetrics?.customerRetentionRate || 0)}</span>
                   </div>
                 </div>
               </div>
@@ -414,16 +424,16 @@ export default function AnalyticsPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Average Customer LTV</span>
-                    <span className="text-sm font-medium">{formatCurrency(data.customerMetrics.averageCustomerLifetimeValue)}</span>
+                    <span className="text-sm font-medium">{formatCurrency(data?.customerMetrics?.averageCustomerLifetimeValue || 0)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Average Order Value</span>
-                    <span className="text-sm font-medium">{formatCurrency(data.overview.averageOrderValue)}</span>
+                    <span className="text-sm font-medium">{formatCurrency(data?.overview?.averageOrderValue || 0)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Revenue per Customer</span>
                     <span className="text-sm font-medium">
-                      {formatCurrency(data.overview.totalRevenue / data.overview.totalCustomers)}
+                      {formatCurrency((data?.overview?.totalRevenue || 0) / (data?.overview?.totalCustomers || 1))}
                     </span>
                   </div>
                 </div>
@@ -457,19 +467,19 @@ export default function AnalyticsPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {data.trafficSources.map((source, index) => (
+                    {(data?.trafficSources || []).map((source, index) => (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {source.source}
+                          {source?.source || 'Unknown'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {source.visitors.toLocaleString()}
+                          {(source?.visitors || 0).toLocaleString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatPercentage(source.percentage)}
+                          {formatPercentage(source?.percentage || 0)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatPercentage(source.conversionRate)}
+                          {formatPercentage(source?.conversionRate || 0)}
                         </td>
                       </tr>
                     ))}

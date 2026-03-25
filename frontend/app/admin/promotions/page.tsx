@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { tokenManager } from '../../../lib/token-manager';
+import { useConfirmModal } from '../../../components/admin/ConfirmModal';
+import { useToast } from '../../../components/admin/Toast';
 import {
   Plus,
   Search,
@@ -21,7 +24,7 @@ interface Promotion {
   name: string;
   description?: string;
   type: string;
-  value: number;
+  value?: number;
   minimumAmount?: number;
   maximumDiscount?: number;
   usageLimit?: number;
@@ -31,13 +34,13 @@ interface Promotion {
   endsAt?: string;
   autoApply: boolean;
   priority: number;
-  codes: Array<{
+  codes?: Array<{
     id: string;
     code: string;
     usageLimit?: number;
     usageCount: number;
   }>;
-  _count: {
+  _count?: {
     usage: number;
   };
 }
@@ -52,6 +55,8 @@ interface Filters {
 
 export default function PromotionsPage() {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const { openConfirmModal, ConfirmModalComponent } = useConfirmModal();
+  const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
@@ -85,8 +90,17 @@ export default function PromotionsPage() {
         )
       });
 
+      const token = tokenManager.getToken();
+      if (!token) {
+        setError('No authentication token found');
+        setLoading(false);
+        return;
+      }
       const response = await fetch(`/api/admin/promotions?${queryParams}`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.ok) {
@@ -97,7 +111,9 @@ export default function PromotionsPage() {
         setError('Failed to fetch promotions');
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Promotions fetch error:', error);
+    }
       setError('Failed to fetch promotions');
     } finally {
       setLoading(false);
@@ -110,25 +126,41 @@ export default function PromotionsPage() {
   };
 
   const handleDelete = async (promotionId: string, promotionName: string) => {
-    if (!confirm(`Are you sure you want to delete "${promotionName}"? This action cannot be undone.`)) {
-      return;
-    }
+    await openConfirmModal({
+      title: 'Delete Promotion',
+      message: `Are you sure you want to delete "${promotionName}"? This action cannot be undone.`,
+      type: 'danger',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        try {
+          const token = tokenManager.getToken();
+          if (!token) {
+            showError('No authentication token found');
+            return;
+          }
+          const response = await fetch(`/api/admin/promotions/${promotionId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
 
-    try {
-      const response = await fetch(`/api/admin/promotions/${promotionId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        fetchPromotions(); // Refresh the list
-      } else {
-        alert('Failed to delete promotion');
-      }
-    } catch (error) {
+          if (response.ok) {
+            fetchPromotions(); // Refresh the list
+            showSuccess('Promotion deleted successfully');
+          } else {
+            showError('Failed to delete promotion');
+          }
+        } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Delete error:', error);
-      alert('Failed to delete promotion');
     }
+          showError('Failed to delete promotion');
+        }
+      }
+    });
   };
 
   const formatCurrency = (amount: number) => {
@@ -179,6 +211,11 @@ export default function PromotionsPage() {
   };
 
   const getValueDisplay = (promotion: Promotion) => {
+    // Handle undefined value
+    if (promotion.value === undefined || promotion.value === null) {
+      return 'Not specified';
+    }
+    
     switch (promotion.type) {
       case 'PERCENTAGE':
         return `${promotion.value}%`;
@@ -219,6 +256,7 @@ export default function PromotionsPage() {
   }
 
   return (
+    <>
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
@@ -377,7 +415,7 @@ export default function PromotionsPage() {
                       <div className="flex items-center justify-center text-blue-600">
                         <Users className="h-4 w-4 mr-1" />
                         <span className="text-lg font-semibold">
-                          {promotion._count.usage}
+                          {promotion._count?.usage || promotion.usageCount || 0}
                         </span>
                       </div>
                       <p className="text-xs text-gray-500">Uses</p>
@@ -386,7 +424,7 @@ export default function PromotionsPage() {
                       <div className="flex items-center justify-center text-green-600">
                         <Tag className="h-4 w-4 mr-1" />
                         <span className="text-lg font-semibold">
-                          {promotion.codes.length}
+                          {promotion.codes?.length || 0}
                         </span>
                       </div>
                       <p className="text-xs text-gray-500">Codes</p>
@@ -498,5 +536,7 @@ export default function PromotionsPage() {
         )}
       </div>
     </div>
+    <ConfirmModalComponent />
+    </>
   );
 }

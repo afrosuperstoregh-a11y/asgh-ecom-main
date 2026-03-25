@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useToast } from '../../../components/admin/Toast';
+import { tokenManager } from '../../../lib/token-manager';
 import {
   Search,
   Filter,
@@ -56,6 +58,7 @@ interface Filters {
 }
 
 export default function OrdersPage() {
+  const { showSuccess, showError } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +87,12 @@ export default function OrdersPage() {
     try {
       setLoading(true);
       
+      const token = tokenManager.getToken();
+      if (!token) {
+        setError('Authentication required');
+        return;
+      }
+      
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
@@ -93,7 +102,10 @@ export default function OrdersPage() {
       });
 
       const response = await fetch(`/api/admin/orders?${queryParams}`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.ok) {
@@ -104,7 +116,9 @@ export default function OrdersPage() {
         setError('Failed to fetch orders');
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Orders fetch error:', error);
+    }
       setError('Failed to fetch orders');
     } finally {
       setLoading(false);
@@ -118,10 +132,17 @@ export default function OrdersPage() {
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
+      const token = tokenManager.getToken();
+      if (!token) {
+        showError('Authentication required');
+        return;
+      }
+      
       const response = await fetch(`/api/admin/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         credentials: 'include',
         body: JSON.stringify({ status: newStatus, notifyCustomer: true })
@@ -129,12 +150,15 @@ export default function OrdersPage() {
 
       if (response.ok) {
         fetchOrders(); // Refresh the list
+        showSuccess('Order status updated successfully');
       } else {
-        alert('Failed to update order status');
+        showError('Failed to update order status');
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Status update error:', error);
-      alert('Failed to update order status');
+    }
+      showError('Failed to update order status');
     }
   };
 

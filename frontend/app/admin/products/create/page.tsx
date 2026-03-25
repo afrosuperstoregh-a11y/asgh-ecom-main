@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { adminApi } from '../../../../lib/admin-api-client';
+import { useToast } from '../../../../components/admin/Toast';
 import {
   Save,
   X,
@@ -9,10 +12,22 @@ import {
   Trash2,
   Upload,
   Eye,
-  EyeOff
+  EyeOff,
+  ArrowLeft,
+  Package,
+  DollarSign,
+  FileText,
+  Tag,
+  Box
 } from 'lucide-react';
 
-interface ProductFormData {
+interface Category {
+  id: string;
+  name: string;
+  description: string;
+}
+
+interface ProductFormState {
   name: string;
   description: string;
   shortDesc: string;
@@ -33,20 +48,20 @@ interface ProductFormData {
   images: string[];
 }
 
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-}
-
 export default function CreateProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [fetchLoading, setFetchLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
-  const [formData, setFormData] = useState<ProductFormData>({
+  const [skuValidating, setSkuValidating] = useState(false);
+  const [skuValid, setSkuValid] = useState<boolean | null>(null);
+  const [priceError, setPriceError] = useState('');
+  const { showSuccess, showError } = useToast();
+  const [formData, setFormData] = useState<ProductFormState>({
     name: '',
     description: '',
     shortDesc: '',
@@ -73,25 +88,80 @@ export default function CreateProductPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/admin/categories', {
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data.data || []);
+      const result = await adminApi.categories.list();
+      if (result.success && result.data) {
+        const data = result.data as any;
+        setCategories(data.categories || data || []);
       }
     } catch (error) {
-      console.error('Categories fetch error:', error);
+      if (process.env.NODE_ENV === "development") {
+        console.error('Categories fetch error:', error);
+      }
+    }
+  };
+
+  const validateSKU = async (sku: string) => {
+    if (!sku.trim()) {
+      setSkuValid(null);
+      return;
+    }
+
+    try {
+      setSkuValidating(true);
+      const response = await fetch(`/api/admin/products/check-sku?sku=${encodeURIComponent(sku)}&excludeId=`, {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setSkuValid(!result.exists);
+        if (result.exists) {
+          setValidationErrors(prev => ({ ...prev, sku: 'SKU already exists' }));
+        } else {
+          setValidationErrors(prev => ({ ...prev, sku: '' }));
+        }
+      }
+    } catch (error) {
+      console.error('SKU validation error:', error);
+      setSkuValid(null);
+    } finally {
+      setSkuValidating(false);
+    }
+  };
+
+  const validatePrice = (price: string, comparePrice: string) => {
+    const priceNum = parseFloat(price);
+    const compareNum = parseFloat(comparePrice);
+    
+    if (compareNum && priceNum > compareNum) {
+      setPriceError('Sale price must be less than or equal to compare price');
+      setValidationErrors(prev => ({ ...prev, price: 'Sale price must be less than or equal to compare price' }));
+    } else {
+      setPriceError('');
+      setValidationErrors(prev => ({ ...prev, price: '' }));
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+    
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }));
+
+    // Real-time validations
+    if (name === 'sku') {
+      validateSKU(value);
+    }
+    
+    if (name === 'price' || name === 'comparePrice') {
+      const newFormData = {
+        ...formData,
+        [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      };
+      validatePrice(newFormData.price, newFormData.comparePrice);
+    }
   };
 
   const handleAddTag = () => {
@@ -135,42 +205,60 @@ export default function CreateProductPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setValidationErrors({});
 
     try {
+      // Basic validation
+      const errors: Record<string, string> = {};
       
+      if (!formData.name.trim()) {
+        errors.name = 'Product name is required';
+      }
+      
+      if (!formData.sku.trim()) {
+        errors.sku = 'SKU is required';
+      } else if (skuValid === false) {
+        errors.sku = 'SKU already exists';
+      }
+      
+      if (!formData.price || parseFloat(formData.price) <= 0) {
+        errors.price = 'Valid price is required';
+      } else if (priceError) {
+        errors.price = priceError;
+      }
+
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        return;
+      }
+
       // Prepare data for API
       const productData = {
-        ...formData,
-        price: parseFloat(formData.price) || 0,
-        comparePrice: formData.comparePrice ? parseFloat(formData.comparePrice) : null,
-        cost: formData.cost ? parseFloat(formData.cost) : null,
-        stock: parseInt(formData.stock) || 0,
-        weight: formData.weight ? parseFloat(formData.weight) : null,
-        dimensions: (formData.length || formData.width || formData.height) ? {
-          length: parseFloat(formData.length) || null,
-          width: parseFloat(formData.width) || null,
-          height: parseFloat(formData.height) || null
-        } : null
+        name: formData.name.trim(),
+        sku: formData.sku.trim(),
+        price: parseFloat(formData.price),
+        description: formData.description.trim(),
+        category_id: formData.categoryId || null,
+        inventory_quantity: formData.trackInventory ? parseInt(formData.stock) || 0 : 0,
+        status: formData.status.toLowerCase(),
+        featured: formData.featured,
+        image_url: formData.images[0] || null
       };
 
-      const response = await fetch('/api/admin/products', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(productData)
-      });
-
-      if (response.ok) {
-        router.push('/admin/products');
+      // Use adminApi to create product
+      const response = await adminApi.products.create(productData);
+      
+      if (response.success) {
+        showSuccess('Product created successfully!');
+        setTimeout(() => {
+          router.push('/admin/products');
+        }, 1500);
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to create product');
+        setError(response.message || 'Failed to create product');
       }
     } catch (error) {
       console.error('Create product error:', error);
-      setError('An error occurred while creating the product');
+      setError('Failed to create product. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -181,9 +269,18 @@ export default function CreateProductPage() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Create Product</h1>
-            <p className="text-gray-600 mt-2">Add a new product to your catalog</p>
+          <div className="flex items-center space-x-4">
+            <Link
+              href="/admin/products"
+              className="flex items-center text-gray-600 hover:text-gray-900"
+            >
+              <ArrowLeft className="h-5 w-5 mr-1" />
+              Back to Products
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Create Product</h1>
+              <p className="text-gray-600 mt-2">Add a new product to your catalog</p>
+            </div>
           </div>
           <button
             onClick={() => router.push('/admin/products')}
@@ -220,8 +317,13 @@ export default function CreateProductPage() {
                   required
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                    validationErrors.name ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 />
+                {validationErrors.name && (
+                  <p className="mt-1 text-sm text-red-600">{validationErrors.name}</p>
+                )}
               </div>
 
               <div>
@@ -235,8 +337,24 @@ export default function CreateProductPage() {
                   required
                   value={formData.sku}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                    validationErrors.sku ? 'border-red-500' : skuValid === true ? 'border-green-500' : 'border-gray-300'
+                  }`}
                 />
+                <div className="mt-1 flex items-center space-x-2">
+                  {skuValidating && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  )}
+                  {skuValid === true && (
+                    <span className="text-green-600 text-sm">✓ SKU available</span>
+                  )}
+                  {skuValid === false && (
+                    <span className="text-red-600 text-sm">✗ SKU already exists</span>
+                  )}
+                </div>
+                {validationErrors.sku && (
+                  <p className="mt-1 text-sm text-red-600">{validationErrors.sku}</p>
+                )}
               </div>
             </div>
 
@@ -287,7 +405,23 @@ export default function CreateProductPage() {
                     {category.name}
                   </option>
                 ))}
+                <option value="__add_new__" className="text-blue-600 font-medium">
+                  ➕ Add New Category
+                </option>
               </select>
+              {formData.categoryId === '__add_new__' && (
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    Click <button 
+                      type="button"
+                      onClick={() => router.push('/admin/categories/create')}
+                      className="text-blue-600 underline hover:text-blue-800"
+                    >
+                      here
+                    </button> to create a new category first.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>
@@ -356,8 +490,13 @@ export default function CreateProductPage() {
                     min="0"
                     value={formData.price}
                     onChange={handleInputChange}
-                    className="pl-7 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className={`pl-7 block w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                      validationErrors.price ? 'border-red-500' : priceError ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   />
+                  {priceError && (
+                    <p className="mt-1 text-sm text-red-600">{priceError}</p>
+                  )}
                 </div>
               </div>
 
@@ -377,7 +516,9 @@ export default function CreateProductPage() {
                     min="0"
                     value={formData.comparePrice}
                     onChange={handleInputChange}
-                    className="pl-7 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className={`pl-7 block w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                      priceError ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   />
                 </div>
               </div>

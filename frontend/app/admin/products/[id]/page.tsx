@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useConfirmModal } from '../../../../components/admin/ConfirmModal';
+import { useToast } from '../../../../components/admin/Toast';
 import {
   ArrowLeft,
   Edit,
@@ -47,6 +49,8 @@ interface Product {
 
 export default function ViewProductPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { openConfirmModal, ConfirmModalComponent } = useConfirmModal();
+  const { showSuccess, showError } = useToast();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +96,9 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
         setError(errorData.message || 'Failed to fetch product');
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Fetch product error:', error);
+    }
       setError('An error occurred while fetching the product');
     } finally {
       setLoading(false);
@@ -100,25 +106,33 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this product?')) {
-      return;
-    }
+    await openConfirmModal({
+      title: 'Delete Product',
+      message: 'Are you sure you want to delete this product? This action cannot be undone.',
+      type: 'danger',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/admin/products/${productId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+          });
 
-    try {
-      const response = await fetch(`/api/admin/products/${productId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        router.push('/admin/products');
-      } else {
-        alert('Failed to delete product');
-      }
-    } catch (error) {
+          if (response.ok) {
+            showSuccess('Product deleted successfully');
+            router.push('/admin/products');
+          } else {
+            showError('Failed to delete product');
+          }
+        } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Delete error:', error);
-      alert('Failed to delete product');
     }
+          showError('Failed to delete product');
+        }
+      }
+    });
   };
 
   const formatCurrency = (amount: number) => {
@@ -166,6 +180,7 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
   }
 
   return (
+    <>
     <div className="p-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-6">
@@ -398,5 +413,7 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
         </div>
       </div>
     </div>
+    <ConfirmModalComponent />
+    </>
   );
 }

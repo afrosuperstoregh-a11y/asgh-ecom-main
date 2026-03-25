@@ -18,6 +18,7 @@ export default function Footer() {
               alt="AfroSuperstore" 
               width={160}
               height={160}
+              style={{ width: "auto", height: "auto" }}
               className="h-24 sm:h-32 md:h-40 w-auto"
               priority
               unoptimized={process.env.NODE_ENV === 'production'}
@@ -27,6 +28,8 @@ export default function Footer() {
                 const fallbackImg = document.createElement('img');
                 fallbackImg.src = '/logo.png';
                 fallbackImg.alt = 'AfroSuperstore';
+                fallbackImg.style.width = "auto";
+                fallbackImg.style.height = "auto";
                 fallbackImg.className = 'h-24 sm:h-32 md:h-40 w-auto';
                 target.parentNode?.replaceChild(fallbackImg, target);
               }}

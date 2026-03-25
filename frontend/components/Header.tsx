@@ -31,13 +31,13 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
+          <Link href="/" className="flex-shrink-0 flex items-center">
             <Image 
               src="/logo.png" 
               alt="AfroSuperstore" 
-              width={96}
-              height={96}
-              className="h-12 w-auto md:h-16 lg:h-24"
+              width={120}
+              height={40}
+              className="h-10 w-auto md:h-12 lg:h-14 transition-all duration-200 hover:opacity-80"
               priority
               unoptimized={process.env.NODE_ENV === 'production'}
               onError={(e) => {
@@ -46,54 +46,78 @@ export default function Header() {
                 const fallbackImg = document.createElement('img');
                 fallbackImg.src = '/logo.png';
                 fallbackImg.alt = 'AfroSuperstore';
-                fallbackImg.className = 'h-12 w-auto md:h-16 lg:h-24';
+                fallbackImg.className = 'h-10 w-auto md:h-12 lg:h-14 transition-all duration-200 hover:opacity-80';
                 target.parentNode?.replaceChild(fallbackImg, target);
               }}
             />
-            {/* <h1 className="text-2xl font-bold text-red-600">AfroSuperstore</h1> */}
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:block">
+          <nav className="hidden lg:block">
             <ul className="flex items-center space-x-8">
-              <li><Link href="/products" className="text-gray-700 hover:text-indigo-600 transition-colors">Shop</Link></li>
-              <li><Link href="/categories" className="text-gray-700 hover:text-indigo-600 transition-colors">Categories</Link></li>
-              <li><Link href="/deals" className="text-gray-700 hover:text-indigo-600 transition-colors">Deals</Link></li>
-              <li><Link href="/about" className="text-gray-700 hover:text-indigo-600 transition-colors">About</Link></li>
-              <li><Link href="/contact" className="text-gray-700 hover:text-indigo-600 transition-colors">Contact</Link></li>
+              <li><Link href="/products" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">Shop</Link></li>
+              <li><Link href="/categories" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">Categories</Link></li>
+              <li><Link href="/deals" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">Deals</Link></li>
+              <li><Link href="/about" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">About</Link></li>
+              <li><Link href="/contact" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">Contact</Link></li>
             </ul>
           </nav>
 
-          {/* Search and Cart */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* Search and Cart - Tablet View */}
+          <div className="hidden md:flex lg:hidden items-center space-x-3">
+            <Link href={isAuthenticated ? "/account" : "/login"} className="p-2 text-gray-700 hover:text-indigo-600 transition-colors duration-200 rounded-lg hover:bg-gray-100">
+              <User className="h-5 w-5" />
+            </Link>
+            
+            <Link href="/account/wishlist" className="relative p-2 text-gray-700 hover:text-indigo-600 transition-colors duration-200 rounded-lg hover:bg-gray-100">
+              <Heart className="h-5 w-5" />
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+            
+            <Link href="/cart" className="relative p-2 text-gray-700 hover:text-indigo-600 transition-colors duration-200 rounded-lg hover:bg-gray-100">
+              <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          </div>
+
+          {/* Search and Cart - Desktop View */}
+          <div className="hidden lg:flex items-center space-x-4">
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search products..."
-                className="w-32 md:w-48 lg:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-32 md:w-48 lg:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </form>
             
-            <Link href={isAuthenticated ? "/account" : "/login"} className="p-2 text-gray-700 hover:text-indigo-600 transition-colors">
-              <User className="h-6 w-6" />
+            <Link href={isAuthenticated ? "/account" : "/login" } className="p-2 text-gray-700 hover:text-indigo-600 transition-colors duration-200 rounded-lg hover:bg-gray-100">
+              <User className="h-5 w-5" />
             </Link>
             
-            <Link href="/account/wishlist" className="relative p-2 text-gray-700 hover:text-indigo-600 transition-colors">
-              <Heart className="h-6 w-6" />
+            <Link href="/account/wishlist" className="relative p-2 text-gray-700 hover:text-indigo-600 transition-colors duration-200 rounded-lg hover:bg-gray-100">
+              <Heart className="h-5 w-5" />
               {wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
                   {wishlistCount}
                 </span>
               )}
             </Link>
             
-            <Link href="/cart" className="relative p-2 text-gray-700 hover:text-indigo-600 transition-colors">
-              <ShoppingCart className="h-6 w-6" />
+            <Link href="/cart" className="relative p-2 text-gray-700 hover:text-indigo-600 transition-colors duration-200 rounded-lg hover:bg-gray-100">
+              <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
                   {cartCount}
                 </span>
               )}
@@ -101,10 +125,10 @@ export default function Header() {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-md text-gray-700 hover:text-indigo-600 hover:bg-gray-100"
+              className="p-2 rounded-md text-gray-700 hover:text-indigo-600 hover:bg-gray-100 transition-colors duration-200"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -113,7 +137,7 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-200">
+          <div className="lg:hidden bg-white border-t border-gray-200 shadow-lg">
             <div className="px-4 pt-4 pb-6 space-y-2">
               <form onSubmit={handleSearch} className="pb-4">
                 <div className="relative">
@@ -122,40 +146,40 @@ export default function Header() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search products..."
-                    className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
                   />
                   <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
                 </div>
               </form>
               
-              <Link href="/products" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md touch-target" onClick={() => setIsMenuOpen(false)}>Shop</Link>
-              <Link href="/categories" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md touch-target" onClick={() => setIsMenuOpen(false)}>Categories</Link>
-              <Link href="/deals" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md touch-target" onClick={() => setIsMenuOpen(false)}>Deals</Link>
-              <Link href="/about" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md touch-target" onClick={() => setIsMenuOpen(false)}>About</Link>
-              <Link href="/contact" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md touch-target" onClick={() => setIsMenuOpen(false)}>Contact</Link>
+              <Link href="/products" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>Shop</Link>
+              <Link href="/categories" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>Categories</Link>
+              <Link href="/deals" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>Deals</Link>
+              <Link href="/about" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>About</Link>
+              <Link href="/contact" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>Contact</Link>
               
               <div className="pt-4 pb-2 border-t border-gray-200">
                 <div className="flex items-center justify-around space-x-2 px-2">
-                  <Link href={isAuthenticated ? "/account" : "/login"} className="flex flex-col items-center p-3 text-gray-700 hover:text-indigo-600 transition-colors touch-target" onClick={() => setIsMenuOpen(false)}>
+                  <Link href={isAuthenticated ? "/account" : "/login"} className="flex flex-col items-center p-3 text-gray-700 hover:text-indigo-600 transition-colors duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>
                     <User className="h-6 w-6 mb-1" />
-                    <span className="text-xs">Account</span>
+                    <span className="text-xs font-medium">Account</span>
                   </Link>
                   
-                  <Link href="/account/wishlist" className="relative flex flex-col items-center p-3 text-gray-700 hover:text-indigo-600 transition-colors touch-target" onClick={() => setIsMenuOpen(false)}>
+                  <Link href="/account/wishlist" className="relative flex flex-col items-center p-3 text-gray-700 hover:text-indigo-600 transition-colors duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>
                     <Heart className="h-6 w-6 mb-1" />
-                    <span className="text-xs">Wishlist</span>
+                    <span className="text-xs font-medium">Wishlist</span>
                     {wishlistCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
                         {wishlistCount}
                       </span>
                     )}
                   </Link>
                   
-                  <Link href="/cart" className="relative flex flex-col items-center p-3 text-gray-700 hover:text-indigo-600 transition-colors touch-target" onClick={() => setIsMenuOpen(false)}>
+                  <Link href="/cart" className="relative flex flex-col items-center p-3 text-gray-700 hover:text-indigo-600 transition-colors duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>
                     <ShoppingCart className="h-6 w-6 mb-1" />
-                    <span className="text-xs">Cart</span>
+                    <span className="text-xs font-medium">Cart</span>
                     {cartCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
                         {cartCount}
                       </span>
                     )}

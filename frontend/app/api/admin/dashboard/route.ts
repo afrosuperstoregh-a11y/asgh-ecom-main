@@ -3,7 +3,6 @@ import { validateTokenFormat } from '../../../../lib/auth';
 
 // Environment-safe logging
 const isDevelopment = process.env.NODE_ENV === 'development';
-
 const logger = {
   log: (message: string, data?: any) => {
     if (isDevelopment) {
@@ -25,11 +24,13 @@ export async function GET(request: NextRequest) {
     // Validate authentication
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.replace('Bearer ', '');
-
-    console.log('🔍 [DEBUG] Dashboard auth check', { 
+    
+    console.log('🔍 [DEBUG] Dashboard auth check', {
       hasAuthHeader: !!authHeader,
       hasToken: !!token,
-      tokenPrefix: token?.substring(0, 20)
+      tokenPrefix: token?.substring(0, 20),
+      tokenLength: token?.length,
+      fullToken: token
     });
 
     if (!token) {
@@ -41,7 +42,11 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
-    if (!validateTokenFormat(token)) {
+    console.log('🔍 [DEBUG] About to validate token format...');
+    const tokenValidation = validateTokenFormat(token);
+    console.log('🔍 [DEBUG] Token validation result:', tokenValidation);
+
+    if (!tokenValidation) {
       console.log('🔍 [DEBUG] Invalid token format for dashboard');
       logger.log('Unauthorized dashboard access attempt - invalid token');
       return NextResponse.json({
@@ -52,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 [DEBUG] Dashboard authentication successful');
     logger.log('Admin dashboard data request authenticated');
-
+    
     // Real dashboard data - connect to your actual database
     const dashboardData = {
       success: true,

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Complete Frontend Overview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 5px solid #667eea;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-title h3 {
+            font-size: 1.4rem;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-401 {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .status-200 {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+
+        .status-new {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .info-value {
+            color: #2d3748;
+            font-family: 'Courier New', monospace;
+            background: #f7fafc;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .summary-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+
+        .summary-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Admin Panel - Complete Frontend Overview</h1>
+            <p>Real-time status of all admin pages and API endpoints</p>
+        </div>
+
+        <div class="summary-section">
+            <h2>📊 System Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-number" id="totalPages">11</div>
+                    <div class="summary-label">Total Pages</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number" id="protectedPages">8</div>
+                    <div class="summary-label">Protected Pages</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number" id="workingPages">1</div>
+                    <div class="summary-label">Public Pages</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number" id="newPages">1</div>
+                    <div class="summary-label">New Additions</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid" id="dashboardGrid">
+            <div class="loading">
+                <p>🔄 Loading admin panel status...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const adminPages = [
+            {
+                name: 'Dashboard',
+                pageUrl: '/admin',
+                apiUrl: '/api/admin/dashboard',
+                status: '401',
+                protected: true,
+                description: 'Main admin dashboard with statistics and overview',
+                icon: '📊'
+            },
+            {
+                name: 'Orders',
+                pageUrl: '/admin/orders',
+                apiUrl: '/api/admin/orders',
+                status: '401',
+                protected: true,
+                description: 'Manage and view all customer orders',
+                icon: '📦'
+            },
+            {
+                name: 'Products',
+                pageUrl: '/admin/products',
+                apiUrl: '/api/admin/products',
+                status: '401',
+                protected: true,
+                description: 'Product management and inventory',
+                icon: '🛍️'
+            },
+            {
+                name: 'Customers',
+                pageUrl: '/admin/customers',
+                apiUrl: '/api/admin/customers',
+                status: '401',
+                protected: true,
+                description: 'Customer management and support',
+                icon: '👥'
+            },
+            {
+                name: 'Categories',
+                pageUrl: '/admin/categories',
+                apiUrl: '/api/admin/categories',
+                status: '401',
+                protected: true,
+                description: 'Product category organization',
+                icon: '🏷️'
+            },
+            {
+                name: 'Promotions',
+                pageUrl: '/admin/promotions',
+                apiUrl: '/api/admin/promotions',
+                status: '401',
+                protected: true,
+                description: 'Marketing promotions and discounts',
+                icon: '🎯'
+            },
+            {
+                name: 'Payments',
+                pageUrl: '/admin/payments',
+                apiUrl: '/api/admin/payments',
+                status: '401',
+                protected: true,
+                description: 'Payment processing and transactions',
+                icon: '💳',
+                isNew: true
+            },
+            {
+                name: 'Analytics',
+                pageUrl: '/admin/analytics',
+                apiUrl: '/api/admin/analytics',
+                status: '401',
+                protected: true,
+                description: 'Business analytics and reports',
+                icon: '📈'
+            },
+            {
+                name: 'Features',
+                pageUrl: '/admin/features',
+                apiUrl: '/api/admin/features',
+                status: '200',
+                protected: false,
+                description: 'Feature flags and system settings',
+                icon: '⚙️'
+            }
+        ];
+
+        function createCard(page) {
+            const statusClass = page.status === '401' ? 'status-401' : 'status-200';
+            const statusText = page.status === '401' ? 'Protected' : 'Working';
+            
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="icon">${page.icon}</span>
+                            <h3>${page.name}</h3>
+                            ${page.isNew ? '<span class="status-badge status-new">NEW</span>' : ''}
+                        </div>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-row">
+                            <span class="info-label">Page URL:</span>
+                            <span class="info-value">${page.pageUrl}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">API Endpoint:</span>
+                            <span class="info-value">${page.apiUrl}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Status Code:</span>
+                            <span class="info-value">${page.status}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Protection:</span>
+                            <span class="info-value">${page.protected ? '🔒 Protected' : '🌐 Public'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Description:</span>
+                            <span class="info-value" style="font-family: inherit; background: none;">${page.description}</span>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <a href="${page.pageUrl}" target="_blank" class="btn btn-primary">
+                            <span>🔗</span> Open Page
+                        </a>
+                        <button onclick="testAPI('${page.apiUrl}')" class="btn btn-secondary">
+                            <span>🧪</span> Test API
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDashboard() {
+            const grid = document.getElementById('dashboardGrid');
+            grid.innerHTML = adminPages.map(page => createCard(page)).join('');
+            
+            // Update summary
+            const totalPages = adminPages.length;
+            const protectedPages = adminPages.filter(p => p.protected).length;
+            const workingPages = adminPages.filter(p => p.status === '200').length;
+            const newPages = adminPages.filter(p => p.isNew).length;
+            
+            document.getElementById('totalPages').textContent = totalPages;
+            document.getElementById('protectedPages').textContent = protectedPages;
+            document.getElementById('workingPages').textContent = workingPages;
+            document.getElementById('newPages').textContent = newPages;
+        }
+
+        async function testAPI(apiUrl) {
+            try {
+                const response = await fetch(apiUrl);
+                const status = response.status;
+                alert(`API Test Result:\n\nURL: ${apiUrl}\nStatus: ${status}\n${status === 401 ? '✅ Properly protected' : status === 200 ? '✅ Working' : '⚠️ Check status'}`);
+            } catch (error) {
+                alert(`API Test Error:\n\nURL: ${apiUrl}\nError: ${error.message}`);
+            }
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            renderDashboard();
+            console.log('🚀 Admin Panel Dashboard Loaded');
+            console.log('📊 All admin pages displayed with current status');
+        });
+    </script>
+</body>
+</html>

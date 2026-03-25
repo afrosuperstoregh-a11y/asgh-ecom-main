@@ -94,7 +94,9 @@ export default function SettingsPage() {
         setSettings(data.settings);
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Settings fetch error:', error);
+    }
     }
   };
 
@@ -109,7 +111,9 @@ export default function SettingsPage() {
         setTaxZones(data);
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Tax zones fetch error:', error);
+    }
     }
   };
 
@@ -124,7 +128,9 @@ export default function SettingsPage() {
         setShippingZones(data);
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Shipping zones fetch error:', error);
+    }
     } finally {
       setLoading(false);
     }
@@ -158,7 +164,9 @@ export default function SettingsPage() {
         setError('Failed to update setting');
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Setting update error:', error);
+    }
       setError('Failed to update setting');
     } finally {
       setSaving(false);

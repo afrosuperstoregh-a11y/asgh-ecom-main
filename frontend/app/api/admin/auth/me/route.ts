@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
             role: 'super_admin',
             permissions: ['read', 'write', 'delete', 'admin', 'super_admin'],
             emailVerified: true,
-            lastLogin: timestamp ? new Date(parseInt(timestamp)).toISOString() : new Date().toISOString(),
+            lastLogin: timestamp && !isNaN(parseInt(timestamp)) ? new Date(parseInt(timestamp)).toISOString() : new Date().toISOString(),
             sessionActive: true
           }
         };

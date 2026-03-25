@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Authentication Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen py-8">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow p-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">Admin Authentication Test</h1>
+        
+        <div class="space-y-4">
+            <div class="p-4 bg-blue-50 rounded-lg">
+                <h2 class="font-semibold text-blue-900 mb-2">Test Credentials:</h2>
+                <div class="text-sm text-blue-800">
+                    <p><strong>Admin:</strong> admin@afrosuperstore.ca / Admin123!</p>
+                    <p><strong>Staff:</strong> info@afrosuperstore.ca / Iamtech@100</p>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <h3 class="font-semibold text-gray-900">Quick Actions:</h3>
+                
+                <button onclick="testAdminLogin()" class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Test Admin Login
+                </button>
+                
+                <button onclick="testStaffLogin()" class="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Test Staff Login
+                </button>
+                
+                <button onclick="goToLogin()" class="w-full bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                    Go to Login Page
+                </button>
+                
+                <button onclick="checkAuth()" class="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                    Check Current Auth
+                </button>
+                
+                <button onclick="clearAuth()" class="w-full bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                    Clear Authentication
+                </button>
+            </div>
+
+            <div id="result" class="mt-4 p-4 rounded-lg"></div>
+        </div>
+    </div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            const colors = {
+                'success': 'bg-green-50 text-green-800 border-green-200',
+                'error': 'bg-red-50 text-red-800 border-red-200',
+                'info': 'bg-blue-50 text-blue-800 border-blue-200'
+            };
+            
+            resultDiv.className = `mt-4 p-4 rounded-lg border ${colors[type]}`;
+            resultDiv.innerHTML = message;
+        }
+
+        function generateToken() {
+            const timestamp = Date.now();
+            return `prod-jwt-token-admin-${timestamp}`;
+        }
+
+        function testAdminLogin() {
+            const token = generateToken();
+            const userData = {
+                id: 'admin-001',
+                email: 'admin@afrosuperstore.ca',
+                name: 'Super Admin',
+                role: 'super_admin',
+                emailVerified: true,
+                permissions: ['read', 'write', 'delete', 'admin', 'super_admin']
+            };
+
+            localStorage.setItem('adminToken', token);
+            localStorage.setItem('adminUser', JSON.stringify(userData));
+            document.cookie = `admin-token=${token}; path=/; max-age=86400; SameSite=Lax`;
+
+            showResult(`✅ Admin login successful! Token: ${token.substring(0, 30)}...`, 'success');
+        }
+
+        function testStaffLogin() {
+            const token = generateToken();
+            const userData = {
+                id: 'admin-002',
+                email: 'info@afrosuperstore.ca',
+                name: 'Admin User',
+                role: 'admin',
+                emailVerified: true,
+                permissions: ['read', 'write', 'delete', 'admin']
+            };
+
+            localStorage.setItem('adminToken', token);
+            localStorage.setItem('adminUser', JSON.stringify(userData));
+            document.cookie = `admin-token=${token}; path=/; max-age=86400; SameSite=Lax`;
+
+            showResult(`✅ Staff login successful! Token: ${token.substring(0, 30)}...`, 'success');
+        }
+
+        function goToLogin() {
+            window.location.href = '/admin/login';
+        }
+
+        function checkAuth() {
+            const token = localStorage.getItem('adminToken');
+            const userStr = localStorage.getItem('adminUser');
+            const user = userStr ? JSON.parse(userStr) : null;
+
+            let message = '<h4 class="font-semibold mb-2">Current Authentication Status:</h4>';
+            message += `<p><strong>Token:</strong> ${token ? token.substring(0, 30) + '...' : 'NULL'}</p>`;
+            message += `<p><strong>User:</strong> ${user ? user.email + ' (' + user.role + ')' : 'NULL'}</p>`;
+            message += `<p><strong>Valid:</strong> ${token ? 'Yes' : 'No'}</p>`;
+
+            showResult(message, token ? 'success' : 'error');
+        }
+
+        function clearAuth() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            document.cookie = 'admin-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            
+            showResult('✅ Authentication cleared!', 'info');
+        }
+
+        function goToAdmin() {
+            window.location.href = '/admin';
+        }
+
+        // Check auth on page load
+        window.onload = function() {
+            checkAuth();
+        };
+    </script>
+</body>
+</html>

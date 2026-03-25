@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Pages - Complete Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; }
+        .status-200 { color: green; font-weight: bold; }
+        .status-401 { color: orange; font-weight: bold; }
+        .status-error { color: red; font-weight: bold; }
+        button { padding: 8px 16px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Admin Pages - Complete Connection Test</h1>
+    
+    <div class="test-section info">
+        <h2>📋 Test Overview</h2>
+        <p>This page tests all admin pages and API endpoints to ensure they are properly connected and accessible.</p>
+        <p><strong>Server:</strong> http://localhost:3005</p>
+        <p><strong>Authentication:</strong> 401 responses are expected for unauthenticated requests</p>
+    </div>
+
+    <div class="test-section">
+        <h2>🚪 Admin Pages Status</h2>
+        <table id="pagesTable">
+            <thead>
+                <tr>
+                    <th>Page</th>
+                    <th>URL</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="pagesBody">
+                <tr><td colspan="4">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h2>🔌 API Endpoints Status</h2>
+        <table id="apisTable">
+            <thead>
+                <tr>
+                    <th>Endpoint</th>
+                    <th>URL</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="apisBody">
+                <tr><td colspan="4">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Quick Tests</h2>
+        <button onclick="testAllPages()">Test All Pages</button>
+        <button onclick="testAllAPIs()">Test All APIs</button>
+        <button onclick="testAll()">Test Everything</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Navigation Items</h2>
+        <p>All admin pages are now included in the navigation:</p>
+        <ul>
+            <li>✅ Dashboard</li>
+            <li>✅ Orders</li>
+            <li>✅ Products</li>
+            <li>✅ Customers</li>
+            <li>✅ Categories</li>
+            <li>✅ Promotions</li>
+            <li>✅ Payments</li>
+            <li>✅ Analytics</li>
+            <li>✅ Features (NEW)</li>
+            <li>✅ Roles (NEW)</li>
+            <li>✅ Settings</li>
+        </ul>
+    </div>
+
+    <script>
+        const adminPages = [
+            { name: 'Dashboard', url: '/admin' },
+            { name: 'Orders', url: '/admin/orders' },
+            { name: 'Products', url: '/admin/products' },
+            { name: 'Customers', url: '/admin/customers' },
+            { name: 'Categories', url: '/admin/categories' },
+            { name: 'Promotions', url: '/admin/promotions' },
+            { name: 'Payments', url: '/admin/payments' },
+            { name: 'Analytics', url: '/admin/analytics' },
+            { name: 'Features', url: '/admin/features' },
+            { name: 'Roles', url: '/admin/roles' },
+            { name: 'Settings', url: '/admin/settings' }
+        ];
+
+        const adminAPIs = [
+            { name: 'Dashboard', url: '/api/admin/dashboard' },
+            { name: 'Orders', url: '/api/admin/orders' },
+            { name: 'Products', url: '/api/admin/products' },
+            { name: 'Customers', url: '/api/admin/customers' },
+            { name: 'Categories', url: '/api/admin/categories' },
+            { name: 'Promotions', url: '/api/admin/promotions' },
+            { name: 'Payments', url: '/api/admin/payments' },
+            { name: 'Analytics', url: '/api/admin/analytics' },
+            { name: 'Features', url: '/api/admin/features' }
+        ];
+
+        async function testPage(page) {
+            try {
+                const response = await fetch(page.url, { method: 'GET' });
+                return {
+                    name: page.name,
+                    url: page.url,
+                    status: response.status,
+                    success: response.status === 200 || response.status === 401
+                };
+            } catch (error) {
+                return {
+                    name: page.name,
+                    url: page.url,
+                    status: 'ERROR',
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        async function testAPI(api) {
+            try {
+                const response = await fetch(api.url, { method: 'GET' });
+                return {
+                    name: api.name,
+                    url: api.url,
+                    status: response.status,
+                    success: response.status === 200 || response.status === 401
+                };
+            } catch (error) {
+                return {
+                    name: api.name,
+                    url: api.url,
+                    status: 'ERROR',
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        function updatePagesTable(results) {
+            const tbody = document.getElementById('pagesBody');
+            tbody.innerHTML = results.map(result => `
+                <tr>
+                    <td>${result.name}</td>
+                    <td>${result.url}</td>
+                    <td class="${result.status === 200 ? 'status-200' : result.status === 401 ? 'status-401' : 'status-error'}">
+                        ${result.status} ${result.error ? `(${result.error})` : ''}
+                    </td>
+                    <td><button onclick="window.open('${result.url}', '_blank')">Open</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function updateAPITable(results) {
+            const tbody = document.getElementById('apisBody');
+            tbody.innerHTML = results.map(result => `
+                <tr>
+                    <td>${result.name}</td>
+                    <td>${result.url}</td>
+                    <td class="${result.status === 200 ? 'status-200' : result.status === 401 ? 'status-401' : 'status-error'}">
+                        ${result.status} ${result.error ? `(${result.error})` : ''}
+                    </td>
+                    <td><button onclick="testAPI('${result.url}')">Test</button></td>
+                </tr>
+            `).join('');
+        }
+
+        async function testAllPages() {
+            const results = await Promise.all(adminPages.map(testPage));
+            updatePagesTable(results);
+        }
+
+        async function testAllAPIs() {
+            const results = await Promise.all(adminAPIs.map(testAPI));
+            updateAPITable(results);
+        }
+
+        async function testAll() {
+            await testAllPages();
+            await testAllAPIs();
+        }
+
+        function clearResults() {
+            document.getElementById('pagesBody').innerHTML = '<tr><td colspan="4">Cleared</td></tr>';
+            document.getElementById('apisBody').innerHTML = '<tr><td colspan="4">Cleared</td></tr>';
+        }
+
+        // Auto-test on page load
+        window.addEventListener('load', function() {
+            console.log('🧪 Admin Pages Test - Loading...');
+            testAll();
+        });
+    </script>
+</body>
+</html>

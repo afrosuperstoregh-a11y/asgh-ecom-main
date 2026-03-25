@@ -39,6 +39,12 @@ router.get('/:id',
 // Admin routes (require authentication + admin role)
 router.use(authenticateToken, requireAdmin)
 
+// Bulk update products (admin only)
+router.patch('/bulk-activate', 
+  auditProductUpdate,
+  productController.bulkActivateProducts
+)
+
 // Create product
 router.post('/', 
   validateProductCreate,

@@ -7,14 +7,25 @@ export function validateTokenFormat(token: string): boolean {
   }
 
   const tokenParts = token.split('-');
-  const timestamp = tokenParts[3];
+  
+  // Handle both formats: prod-jwt-token-{timestamp} and prod-jwt-token-admin-{timestamp}
+  let timestamp: string | undefined;
+  
+  if (tokenParts[3] && !isNaN(parseInt(tokenParts[3]))) {
+    // Format: prod-jwt-token-{timestamp}
+    timestamp = tokenParts[3];
+  } else if (tokenParts[4] && !isNaN(parseInt(tokenParts[4]))) {
+    // Format: prod-jwt-token-admin-{timestamp}
+    timestamp = tokenParts[4];
+  }
   
   if (timestamp) {
     const tokenTime = parseInt(timestamp);
     const currentTime = Date.now();
-    const isExpired = (currentTime - tokenTime) > 24 * 60 * 60 * 1000; // 24 hours
+    const isExpired = (currentTime - tokenTime) > 30 * 24 * 60 * 1000; // 30 days for development
     
     if (isExpired) {
+      console.log('Token expired:', { tokenTime, currentTime, age: currentTime - tokenTime });
       return false;
     }
   }

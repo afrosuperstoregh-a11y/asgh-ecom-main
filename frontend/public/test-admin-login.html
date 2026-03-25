@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Admin Login Flow Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Login Flow</h2>
+        <button onclick="testLogin()">Test Admin Login</button>
+        <button onclick="checkToken()">Check Stored Token</button>
+        <button onclick="clearToken()">Clear Token</button>
+        <div id="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Dashboard Access</h2>
+        <button onclick="testDashboard()">Test Dashboard Access</button>
+        <div id="dashboard-results"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+
+        function logDashboard(message, type = 'info') {
+            const results = document.getElementById('dashboard-results');
+            const div = document.createElement('div');
+            div.className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+
+        async function testLogin() {
+            log('Testing admin login...');
+            
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@afrosuperstore.ca',
+                        password: 'Admin123!'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log('Login successful! Token should be stored.', 'success');
+                    log(`Response: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    const error = await response.text();
+                    log(`Login failed: ${error}`, 'error');
+                }
+            } catch (error) {
+                log(`Login error: ${error.message}`, 'error');
+            }
+        }
+
+        function checkToken() {
+            const token = localStorage.getItem('adminToken');
+            const user = localStorage.getItem('adminUser');
+            
+            if (token) {
+                log(`Token found: ${token.substring(0, 50)}...`, 'success');
+                log(`User data: ${user}`, 'success');
+            } else {
+                log('No token found in localStorage', 'error');
+            }
+        }
+
+        function clearToken() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            log('Token cleared from localStorage', 'success');
+        }
+
+        async function testDashboard() {
+            logDashboard('Testing dashboard access...');
+            
+            try {
+                const response = await fetch('/api/admin/dashboard', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    logDashboard('Dashboard access successful!', 'success');
+                    logDashboard(`Response: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    const error = await response.text();
+                    logDashboard(`Dashboard access failed: ${response.status} - ${error}`, 'error');
+                }
+            } catch (error) {
+                logDashboard(`Dashboard error: ${error.message}`, 'error');
+            }
+        }
+
+        // Manual token creation test
+        function createManualToken() {
+            const timestamp = Date.now();
+            const token = `prod-jwt-token-admin-${timestamp}`;
+            
+            localStorage.setItem('adminToken', token);
+            localStorage.setItem('adminUser', JSON.stringify({
+                id: 'admin-001',
+                email: 'admin@afrosuperstore.ca',
+                name: 'Super Admin',
+                role: 'super_admin',
+                permissions: ['read', 'write', 'delete', 'admin', 'super_admin']
+            }));
+            
+            log(`Manual token created: ${token}`, 'success');
+        }
+
+        // Add manual token creation button
+        document.addEventListener('DOMContentLoaded', function() {
+            const testSection = document.querySelector('.test-section');
+            const button = document.createElement('button');
+            button.textContent = 'Create Manual Token';
+            button.onclick = createManualToken;
+            testSection.appendChild(button);
+        });
+    </script>
+</body>
+</html>

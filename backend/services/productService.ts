@@ -70,14 +70,17 @@ class ProductService {
         order = 'DESC',
         category,
         search,
-        status = 'active',
+        status, // Removed default 'active' filter
         featured
       } = options
 
-      const offset = (page - 1) * limit
+      // Allow higher limits for getting all products
+      const actualLimit = Math.min(limit, 1000)
 
-      // Create cache key
-      const cacheKey = `${CACHE_CONFIG.PRODUCTS_LIST.key}:${JSON.stringify({ page, limit, sort, order, category, search, status, featured })}`
+      const offset = (page - 1) * actualLimit
+
+      // Create cache key - exclude status to ensure all products are cached together
+      const cacheKey = `${CACHE_CONFIG.PRODUCTS_LIST.key}:${JSON.stringify({ page, limit, sort, order, category, search, featured })}`
 
       // Try to get from cache first
       const cached = await cacheService.get(cacheKey)
@@ -90,13 +93,17 @@ class ProductService {
         .from('products')
         .select(`
           *,
-          categories!inner(name, slug)
+          categories(name, slug)
         `, { count: 'exact' })
 
       // Apply filters
-      if (status) {
-        query = query.eq('status', status)
-      }
+      console.log('DEBUG: Status filter received:', status);
+      // Temporarily bypass status filter to ensure all products are returned
+      // if (status) {
+      //   query = query.eq('status', status)
+      // }
+
+      // Fixed: Removed default status filter to show all products
 
       if (featured !== undefined) {
         query = query.eq('featured', featured)
@@ -110,6 +117,8 @@ class ProductService {
         } else {
           query = query.eq('categories.slug', category)
         }
+        // Since we're using LEFT JOIN, we need to ensure we only get products with matching categories when filtering
+        query = query.not('categories.id', 'is', null)
       }
 
       if (search) {
@@ -120,7 +129,7 @@ class ProductService {
       query = query.order(sort, { ascending: order === 'ASC' })
 
       // Apply pagination
-      query = query.range(offset, offset + limit - 1)
+      query = query.range(offset, offset + actualLimit - 1)
 
       const { data, error, count } = await query
 
@@ -136,10 +145,10 @@ class ProductService {
         products: transformedData,
         pagination: {
           current_page: parseInt(page.toString()),
-          total_pages: Math.ceil((count || 0) / limit),
+          total_pages: Math.ceil((count || 0) / actualLimit),
           total_items: count || 0,
-          items_per_page: parseInt(limit.toString()),
-          has_next: offset + limit < (count || 0),
+          items_per_page: parseInt(actualLimit.toString()),
+          has_next: offset + actualLimit < (count || 0),
           has_prev: page > 1
         }
       }
@@ -447,7 +456,55 @@ class ProductService {
       return result
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-      throw createError(`Failed to fetch categories: ${errorMessage}`, 500, 'CATEGORIES_FETCH_ERROR')
+      throw createError(errorMessage, 500, 'CATEGORIES_ERROR')
+    }
+  }
+
+  // Bulk activate all products
+  async bulkActivateProducts(userId: string) {
+    try {
+      console.log('Starting bulk activation of all products...')
+      
+      // First, get all products that don't have 'active' status
+      const { data: inactiveProducts, error } = await supabase()
+        .from('products')
+        .select('id, name, status')
+        .neq('status', 'active') as { data: { id: string; name: string; status: string }[] | null, error: any }
+
+      if (error) throw error
+
+      console.log(`Found ${inactiveProducts?.length || 0} products to activate`)
+
+      if (!inactiveProducts || inactiveProducts.length === 0) {
+        return {
+          activated: 0,
+          alreadyActive: 0,
+          message: 'All products are already active'
+        }
+      }
+
+      // Update all inactive products to have 'active' status
+      const { data: updatedProducts, error: updateError } = await (supabase() as any)
+        .from('products')
+        .update({ status: 'active' })
+        .in('id', inactiveProducts.map(p => p.id))
+        .select()
+
+      if (updateError) throw updateError
+
+      console.log(`Successfully activated ${updatedProducts.length} products`)
+
+      // Clear cache to ensure fresh data
+      await cacheService.delPattern(`${CACHE_CONFIG.PRODUCTS_LIST.key}:*`)
+
+      return {
+        activated: updatedProducts.length,
+        alreadyActive: 0,
+        message: `Successfully activated ${updatedProducts.length} products`
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(errorMessage, 500, 'BULK_ACTIVATE_ERROR')
     }
   }
 }

@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { adminApi, ProductsListResponse } from '../../../lib/admin-api-client';
+import { useConfirmModal } from '../../../components/admin/ConfirmModal';
+import { useToast } from '../../../components/admin/Toast';
 import { useRouter } from 'next/navigation';
 import {
   Plus,
@@ -73,14 +76,18 @@ export default function ProductsPage() {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [duplicatingProduct, setDuplicatingProduct] = useState<string | null>(null);
+  const [fetching, setFetching] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const { openConfirmModal, ConfirmModalComponent } = useConfirmModal();
+  const { showSuccess, showError } = useToast();
 
-  // Immediate debugging on component mount
-  console.log('🚀 ProductsPage component mounted!');
-  console.log('🍪 Document cookies:', document.cookie);
-  console.log('🌐 Current URL:', window.location.href);
 
   useEffect(() => {
-    console.log('🔄 ProductsPage useEffect triggered');
+    if (process.env.NODE_ENV === "development") {
+      console.log('🔄 ProductsPage useEffect triggered');
+    }
     fetchProducts();
     fetchCategories();
   }, [pagination.page, filters]);
@@ -88,8 +95,10 @@ export default function ProductsPage() {
   // Refresh data when page becomes visible (navigation back from create/edit)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log('Page became visible, refreshing products...');
+      if (document.visibilityState === 'visible' && !fetching) {
+    if (process.env.NODE_ENV === "development") {
+      console.log('Page became visible, refreshing products...');
+    }
         fetchProducts();
         fetchCategories();
       }
@@ -97,9 +106,13 @@ export default function ProductsPage() {
 
     // Also refresh when window gets focus (better detection of navigation)
     const handleFocus = () => {
+      if (!fetching) {
+    if (process.env.NODE_ENV === "development") {
       console.log('Window got focus, refreshing products...');
+    }
       fetchProducts();
       fetchCategories();
+      }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -113,57 +126,103 @@ export default function ProductsPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/admin/categories', {
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data.data || []);
+      const result = await adminApi.categories.list();
+      if (result.success && result.data) {
+        const data = result.data as any;
+        setCategories(data.categories || data || []);
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Categories fetch error:', error);
+    }
     }
   };
 
   const fetchProducts = async () => {
     try {
+      if (fetching) {
+        if (process.env.NODE_ENV === "development") {
+          console.log('🔄 Already fetching, skipping...');
+        }
+        return;
+      }
+      
+      setFetching(true);
       setLoading(true);
       setError(null);
       
+    if (process.env.NODE_ENV === "development") {
       console.log('🛒 Fetching products...');
+    }
       
-      const queryParams = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        ...filters
-      });
+      const queryParams = {
+        page: pagination.page,
+        limit: pagination.limit,
+        ...Object.fromEntries(
+          Object.entries(filters).filter(([_, value]) => value !== '')
+        )
+      };
 
-      console.log('📡 Making request to:', `/api/admin/products?${queryParams}`);
+    if (process.env.NODE_ENV === "development") {
+      console.log('📡 Making request via adminApi:', queryParams);
+    }
       
-      const response = await fetch(`/api/admin/products?${queryParams}`, {
-        credentials: 'include'
-      });
+      const result = await adminApi.products.list(queryParams);
 
-      console.log('📊 Response status:', response.status);
-      console.log('📊 Response headers:', Object.fromEntries(response.headers.entries()));
+    if (process.env.NODE_ENV === "development") {
+      console.log('📊 API result:', result);
+      console.log('📊 API result keys:', Object.keys(result));
+      console.log('📊 API result.success:', result.success);
+      console.log('📊 API result.data:', result.data);
+      console.log('📊 API result.data type:', typeof result.data);
+      console.log('📊 result.data keys:', Object.keys(result.data || {}));
+      console.log('📊 result.data.data:', result.data?.data);
+      console.log('📊 result.data.data.products:', result.data?.data?.products);
+      console.log('📊 result.data.data.products type:', typeof result.data?.data?.products);
+      console.log('📊 result.data.data.products keys:', Object.keys(result.data?.data?.products || {}));
+    }
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Products fetched successfully:', data);
-        setProducts(data.data?.products || data.products || []);
-        setPagination(data.data?.pagination || data.pagination || pagination);
+      if (result.success && result.data) {
+        const data = result.data as ProductsListResponse;
+        // Handle different response structures
+        let products = data.data?.products || data.data || data || [];
+        const paginationData = data.data?.pagination || data.data || data || {};
+        
+        // Convert products object to array if needed
+        if (!Array.isArray(products)) {
+          if (typeof products === 'object' && products !== null) {
+            products = Object.values(products);
+          } else {
+            products = [];
+          }
+        }
+        
+    if (process.env.NODE_ENV === "development") {
+      console.log('✅ Products fetched successfully:', data);
+      console.log('📦 Products array (after conversion):', products);
+      console.log('📊 Products type:', typeof products);
+      console.log('📊 Products isArray:', Array.isArray(products));
+      console.log('📊 Products length:', products?.length);
+      console.log('📊 First product:', products?.[0]);
+      console.log('📊 Pagination:', paginationData);
+    }
+        setProducts(products);
+        setPagination(paginationData);
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.log('❌ Products fetch failed:', errorData);
-        setError(errorData.message || 'Failed to fetch products');
+    if (process.env.NODE_ENV === "development") {
+      console.log('❌ Products fetch failed:', result.error);
+    }
+        setError(result.error?.message || 'Failed to fetch products');
         setProducts([]);
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('❌ Products fetch error:', error);
+    }
       setError('Network error while fetching products');
       setProducts([]);
     } finally {
+      setFetching(false);
       setLoading(false);
     }
   };
@@ -185,13 +244,16 @@ export default function ProductsPage() {
   };
 
   useEffect(() => {
-    const handleClickOutside = () => {
-      setActiveDropdown(null);
+    const handleMouseDown = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.dropdown-menu')) {
+        setActiveDropdown(null);
+      }
     };
 
     if (activeDropdown) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+      document.addEventListener('mousedown', handleMouseDown);
+      return () => document.removeEventListener('mousedown', handleMouseDown);
     }
   }, [activeDropdown]);
 
@@ -220,6 +282,7 @@ export default function ProductsPage() {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
         try {
+          setImporting(true);
           const formData = new FormData();
           formData.append('file', file);
           
@@ -231,15 +294,19 @@ export default function ProductsPage() {
 
           if (response.ok) {
             const result = await response.json();
-            alert(`Successfully imported ${result.imported} products. ${result.errors?.length || 0} errors.`);
+            showSuccess(`Successfully imported ${result.imported} products. ${result.errors?.length || 0} errors.`);
             fetchProducts(); // Refresh the list
           } else {
             const error = await response.json();
-            alert(`Import failed: ${error.message || 'Unknown error'}`);
+            showError(`Import failed: ${error.message || 'Unknown error'}`);
           }
         } catch (error) {
-          console.error('Import error:', error);
-          alert('Import failed due to an error');
+          if (process.env.NODE_ENV === "development") {
+            console.error('Import error:', error);
+          }
+          showError('Import failed due to an error');
+        } finally {
+          setImporting(false);
         }
       }
     };
@@ -248,6 +315,7 @@ export default function ProductsPage() {
 
   const handleExport = async () => {
     try {
+      setExporting(true);
       const response = await fetch('/api/admin/products/export', {
         credentials: 'include'
       });
@@ -262,35 +330,96 @@ export default function ProductsPage() {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        showSuccess('Products exported successfully');
       } else {
-        alert('Export failed');
+        showError('Export failed');
       }
     } catch (error) {
-      console.error('Export error:', error);
-      alert('Export failed due to an error');
+      if (process.env.NODE_ENV === "development") {
+        console.error('Export error:', error);
+      }
+      showError('Export failed due to an error');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleDuplicate = async (productId: string) => {
+    try {
+      setDuplicatingProduct(productId);
+      
+      // Fetch the original product data
+      const response = await fetch(`/api/admin/products/${productId}`, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        showError('Failed to fetch product data');
+        return;
+      }
+      
+      const originalProduct = await response.json();
+      
+      // Prepare duplicate data
+      const duplicateData = {
+        name: `${originalProduct.name} (Copy)`,
+        sku: `${originalProduct.sku}-COPY-${Date.now()}`,
+        price: originalProduct.price,
+        description: originalProduct.description || '',
+        category_id: originalProduct.categoryId || originalProduct.category?.id || null,
+        inventory_quantity: originalProduct.stock || 0,
+        status: 'draft', // Start as draft
+        featured: false, // Don't feature duplicates by default
+        image_url: originalProduct.image_url || originalProduct.image || null
+      };
+      
+      // Create the duplicate
+      const duplicateResponse = await adminApi.products.create(duplicateData);
+      
+      if (duplicateResponse.success) {
+        showSuccess('Product duplicated successfully!');
+        fetchProducts(); // Refresh the list
+        setActiveDropdown(null);
+      } else {
+        showError(duplicateResponse.message || 'Failed to duplicate product');
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error('Duplicate error:', error);
+      }
+      showError('Failed to duplicate product');
+    } finally {
+      setDuplicatingProduct(null);
     }
   };
 
   const handleDelete = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) {
-      return;
-    }
+    const confirmed = await openConfirmModal({
+      title: 'Delete Product',
+      message: 'Are you sure you want to delete this product? This action cannot be undone.',
+      type: 'danger',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/admin/products/${productId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+          });
 
-    try {
-      const response = await fetch(`/api/admin/products/${productId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        fetchProducts(); // Refresh the list
-      } else {
-        alert('Failed to delete product');
-      }
-    } catch (error) {
+          if (response.ok) {
+            fetchProducts(); // Refresh the list
+          } else {
+            showError('Failed to delete product');
+          }
+        } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Delete error:', error);
-      alert('Failed to delete product');
     }
+          showError('Failed to delete product');
+        }
+      }
+    });
   };
 
   const formatCurrency = (amount: number) => {
@@ -338,6 +467,12 @@ export default function ProductsPage() {
   }
 
   return (
+    <>
+    {process.env.NODE_ENV === "development" && console.log('🔄 RENDER: Products state length:', products.length)}
+    {process.env.NODE_ENV === "development" && console.log('🔄 RENDER: Products array:', products)}
+    {process.env.NODE_ENV === "development" && console.log('🔄 RENDER: Products type:', typeof products)}
+    {process.env.NODE_ENV === "development" && console.log('🔄 RENDER: Products isArray:', Array.isArray(products))}
+    {process.env.NODE_ENV === "development" && products.length > 0 && console.log('🔄 RENDER: First product:', products[0])}
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
@@ -350,20 +485,35 @@ export default function ProductsPage() {
             <button 
               onClick={handleRefresh} 
               disabled={refreshing}
-              className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              aria-label="Refresh products"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
               {refreshing ? 'Refreshing...' : 'Refresh'}
             </button>
-            <button onClick={handleImport} className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-              <Upload className="h-4 w-4 mr-2" />
-              Import
+            <button 
+              onClick={handleImport} 
+              disabled={importing}
+              className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              aria-label="Import products"
+            >
+              <Upload className={`h-4 w-4 mr-2 ${importing ? 'animate-spin' : ''}`} />
+              {importing ? 'Importing...' : 'Import'}
             </button>
-            <button onClick={handleExport} className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-              <Download className="h-4 w-4 mr-2" />
-              Export
+            <button 
+              onClick={handleExport} 
+              disabled={exporting}
+              className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              aria-label="Export products"
+            >
+              <Download className={`h-4 w-4 mr-2 ${exporting ? 'animate-spin' : ''}`} />
+              {exporting ? 'Exporting...' : 'Export'}
             </button>
-            <button onClick={handleAddProduct} className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+            <button 
+              onClick={handleAddProduct} 
+              className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              aria-label="Add new product"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Product
             </button>
@@ -389,7 +539,9 @@ export default function ProductsPage() {
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              aria-expanded={showFilters}
+              aria-controls="filters-panel"
             >
               <Filter className="h-4 w-4 mr-2" />
               Filters
@@ -482,7 +634,11 @@ export default function ProductsPage() {
               Get started by creating a new product.
             </p>
             <div className="mt-6">
-              <button onClick={handleAddProduct} className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+              <button
+                onClick={handleAddProduct} 
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                aria-label="Add new product"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Product
               </button>
@@ -570,30 +726,47 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
-                        <button onClick={() => handleViewProduct(product.id)} className="text-blue-600 hover:text-blue-900">
+                        <button 
+                          onClick={() => handleViewProduct(product.id)} 
+                          className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-1 rounded transition-colors duration-200"
+                          aria-label={`View ${product.name}`}
+                        >
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button onClick={() => handleEditProduct(product.id)} className="text-gray-600 hover:text-gray-900">
+                        <button 
+                          onClick={() => handleEditProduct(product.id)} 
+                          className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 p-1 rounded transition-colors duration-200"
+                          aria-label={`Edit ${product.name}`}
+                        >
                           <Edit className="h-4 w-4" />
                         </button>
                         <button 
                           onClick={() => handleDelete(product.id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-600 hover:text-red-900 hover:bg-red-50 p-1 rounded transition-colors duration-200"
+                          aria-label={`Delete ${product.name}`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
-                        <div className="relative">
+                        <div className="relative dropdown-menu">
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
                               toggleDropdown(product.id);
                             }}
-                            className="text-gray-600 hover:text-gray-900"
+                            className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 p-1 rounded transition-colors duration-200"
+                            aria-label="More options"
+                            aria-expanded={activeDropdown === product.id}
+                            aria-controls={`dropdown-${product.id}`}
                           >
                             <MoreVertical className="h-4 w-4" />
                           </button>
                           {activeDropdown === product.id && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                            <div 
+                              id={`dropdown-${product.id}`}
+                              className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200 dropdown-menu" 
+                              role="menu"
+                              aria-orientation="vertical"
+                            >
                               <div className="py-1">
                                 <button
                                   onClick={() => {
@@ -601,6 +774,7 @@ export default function ProductsPage() {
                                     setActiveDropdown(null);
                                   }}
                                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                  role="menuitem"
                                 >
                                   View Details
                                 </button>
@@ -610,17 +784,26 @@ export default function ProductsPage() {
                                     setActiveDropdown(null);
                                   }}
                                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                  role="menuitem"
                                 >
                                   Edit Product
                                 </button>
                                 <button
                                   onClick={() => {
-                                    // Duplicate product functionality
-                                    setActiveDropdown(null);
+                                    handleDuplicate(product.id);
                                   }}
-                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                  disabled={duplicatingProduct === product.id}
+                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  role="menuitem"
                                 >
-                                  Duplicate
+                                  {duplicatingProduct === product.id ? (
+                                    <>
+                                      <div className="inline-block animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600 mr-2"></div>
+                                      Duplicating...
+                                    </>
+                                  ) : (
+                                    'Duplicate'
+                                  )}
                                 </button>
                                 <div className="border-t border-gray-100"></div>
                                 <button
@@ -629,6 +812,7 @@ export default function ProductsPage() {
                                     setActiveDropdown(null);
                                   }}
                                   className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                  role="menuitem"
                                 >
                                   Delete Product
                                 </button>
@@ -716,5 +900,7 @@ export default function ProductsPage() {
         )}
       </div>
     </div>
+    <ConfirmModalComponent />
+    </>
   );
 }

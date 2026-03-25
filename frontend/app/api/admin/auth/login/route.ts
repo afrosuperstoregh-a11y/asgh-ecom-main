@@ -51,10 +51,9 @@ export async function POST(request: NextRequest) {
     const user = adminCredentials.find(cred => cred.email === email && cred.password === password);
 
     if (user) {
-      // Generate more secure production token
+      // Generate admin token in expected format
       const timestamp = Date.now();
-      const randomString = Math.random().toString(36).substring(2, 15);
-      const token = `prod-jwt-token-${timestamp}-${randomString}`;
+      const token = `prod-jwt-token-admin-${timestamp}`;
       
       const response = {
         success: true,

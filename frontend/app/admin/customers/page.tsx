@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { adminApi } from '../../../lib/admin-api-client';
+import { tokenManager } from '../../../lib/token-manager';
+import { useConfirmModal } from '../../../components/admin/ConfirmModal';
+import { useToast } from '../../../components/admin/Toast';
 import {
   Search,
   Filter,
@@ -27,6 +31,7 @@ interface Customer {
   averageOrderValue: number;
   orderCount: number;
   lastOrderDate?: string;
+  role?: string; // Add role field
 }
 
 interface Filters {
@@ -39,6 +44,8 @@ interface Filters {
 }
 
 export default function CustomersPage() {
+  const { openConfirmModal, ConfirmModalComponent } = useConfirmModal();
+  const { showSuccess, showError } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +73,13 @@ export default function CustomersPage() {
     try {
       setLoading(true);
       
+      // Validate token before making request
+      const token = tokenManager.getToken();
+      if (!token || !tokenManager.validateToken(token)) {
+        setError('Authentication required');
+        return;
+      }
+
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
@@ -74,19 +88,19 @@ export default function CustomersPage() {
         )
       });
 
-      const response = await fetch(`/api/admin/customers?${queryParams}`, {
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCustomers(data.data?.customers || data.customers || []);
-        setPagination(data.data?.pagination || data.pagination || pagination);
+      const result = await adminApi.customers.list(Object.fromEntries(queryParams));
+      
+      if (result.success && result.data) {
+        const data = result.data as any;
+        setCustomers(data.customers || []);
+        setPagination(data.pagination || pagination);
       } else {
-        setError('Failed to fetch customers');
+        setError(result.error?.message || 'Failed to fetch customers');
       }
     } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error('Customers fetch error:', error);
+    }
       setError('Failed to fetch customers');
     } finally {
       setLoading(false);
@@ -98,37 +112,45 @@ export default function CustomersPage() {
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
-  const handleBlockCustomer = async (customerId: string, action: 'block' | 'unblock') => {
-    const confirmMessage = action === 'block' 
-      ? 'Are you sure you want to block this customer?'
-      : 'Are you sure you want to unblock this customer?';
+  const handleToggleBlock = async (customerId: string, customerName: string, isBlocked: boolean) => {
+    const action = isBlocked ? 'unblock' : 'block';
+    const confirmMessage = isBlocked
+      ? 'Are you sure you want to unblock this customer?'
+      : 'Are you sure you want to block this customer?';
 
-    if (!confirm(confirmMessage)) {
-      return;
-    }
+    await openConfirmModal({
+      title: `${action.charAt(0).toUpperCase() + action.slice(1)} Customer`,
+      message: confirmMessage,
+      type: 'warning',
+      confirmText: action.charAt(0).toUpperCase() + action.slice(1),
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        try {
+          // Validate token before making request
+          const token = tokenManager.getToken();
+          if (!token || !tokenManager.validateToken(token)) {
+            showError('Authentication required');
+            return;
+          }
 
-    try {
-      const response = await fetch(`/api/admin/customers/${customerId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          action,
-          reason: action === 'block' ? 'Blocked by admin' : 'Unblocked by admin'
-        })
-      });
+          const result = action === 'block' 
+            ? await adminApi.customers.block(customerId, { reason: 'Blocked by admin' })
+            : await adminApi.customers.unblock(customerId, { reason: 'Unblocked by admin' });
 
-      if (response.ok) {
-        fetchCustomers(); // Refresh the list
-      } else {
-        alert(`Failed to ${action} customer`);
-      }
-    } catch (error) {
+          if (result.success) {
+            fetchCustomers(); // Refresh the list
+            showSuccess(`Customer ${action}ed successfully`);
+          } else {
+            showError(result.error?.message || `Failed to ${action} customer`);
+          }
+        } catch (error) {
+    if (process.env.NODE_ENV === "development") {
       console.error(`${action} customer error:`, error);
-      alert(`Failed to ${action} customer`);
     }
+          showError(`Failed to ${action} customer`);
+        }
+      }
+    });
   };
 
   const formatCurrency = (amount: number) => {
@@ -166,6 +188,7 @@ export default function CustomersPage() {
   }
 
   return (
+    <>
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
@@ -374,11 +397,11 @@ export default function CustomersPage() {
                           <Edit className="h-4 w-4" />
                         </button>
                         <button 
-                          onClick={() => handleBlockCustomer(customer.id, 'block')}
-                          className="text-red-600 hover:text-red-900"
-                          title="Block Customer"
+                          onClick={() => handleToggleBlock(customer.id, customer.name || 'Unknown', customer.role === 'blocked')}
+                          className={customer.role === 'blocked' ? 'text-green-600 hover:text-green-900' : 'text-red-600 hover:text-red-900'}
+                          title={customer.role === 'blocked' ? 'Unblock Customer' : 'Block Customer'}
                         >
-                          <Ban className="h-4 w-4" />
+                          {customer.role === 'blocked' ? <CheckCircle className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
                         </button>
                         <button className="text-gray-600 hover:text-gray-900">
                           <MoreVertical className="h-4 w-4" />
@@ -463,5 +486,7 @@ export default function CustomersPage() {
         )}
       </div>
     </div>
+    <ConfirmModalComponent />
+    </>
   );
 }

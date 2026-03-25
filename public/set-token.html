@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Set Admin Token</title>
+</head>
+<body>
+    <h1>Setting Admin Token...</h1>
+    <script>
+        // Set the admin token in localStorage
+        localStorage.setItem('adminToken', 'prod-jwt-token-admin-1714323456789');
+        
+        // Also set as cookie
+        document.cookie = 'admin-token=prod-jwt-token-admin-1714323456789; path=/; max-age=86400; SameSite=Lax';
+        
+        // Set admin user data
+        localStorage.setItem('adminUser', JSON.stringify({
+            id: 'admin-001',
+            email: 'info@afrosuperstore.ca',
+            name: 'Super Admin',
+            role: 'super_admin'
+        }));
+        
+        // Redirect to admin orders page
+        window.location.href = '/admin/orders';
+    </script>
+</body>
+</html>

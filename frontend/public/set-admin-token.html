@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Admin Token</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .success {
+            color: #10b981;
+            margin-top: 15px;
+        }
+        .token {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Admin Token Setup</h2>
+        <p>This will set a fresh admin token and redirect you to the admin dashboard.</p>
+        
+        <button onclick="setAdminToken()">Set Admin Token & Go to Dashboard</button>
+        
+        <div id="result"></div>
+        
+        <div class="token" id="tokenDisplay"></div>
+    </div>
+
+    <script>
+        function setAdminToken() {
+            // Generate fresh admin token
+            const timestamp = Date.now();
+            const token = `prod-jwt-token-admin-${timestamp}`;
+            
+            // Set token in localStorage
+            localStorage.setItem('adminToken', token);
+            
+            // Set token in cookie
+            document.cookie = `admin-token=${token}; path=/; max-age=86400; SameSite=Lax`;
+            
+            // Set user data
+            const userData = {
+                id: 'admin-001',
+                email: 'info@afrosuperstore.ca',
+                name: 'Super Admin',
+                role: 'super_admin',
+                permissions: ['read', 'write', 'delete', 'admin', 'super_admin']
+            };
+            localStorage.setItem('adminUser', JSON.stringify(userData));
+            
+            // Display token
+            document.getElementById('tokenDisplay').textContent = `Token: ${token}`;
+            document.getElementById('result').innerHTML = '<div class="success">✅ Token set successfully! Redirecting...</div>';
+            
+            // Redirect to admin dashboard
+            setTimeout(() => {
+                window.location.href = '/admin';
+            }, 1500);
+        }
+        
+        // Check if already has token
+        window.onload = function() {
+            const existingToken = localStorage.getItem('adminToken');
+            if (existingToken) {
+                document.getElementById('tokenDisplay').textContent = `Existing Token: ${existingToken}`;
+            }
+        };
+    </script>
+</body>
+</html>

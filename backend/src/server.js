@@ -222,7 +222,7 @@ app.use(express.static('public'));
 // app.use('/api/auth', require(path.join(__dirname, 'routes', 'auth'))); // Disabled - using Supabase Auth
 app.use('/api/admin', require(path.join(__dirname, 'routes', 'admin')));
 // app.use('/api/analytics', require(path.join(__dirname, 'routes', 'analytics')));
-app.use('/api/products', require(path.join(__dirname, 'routes', 'products')));
+app.use('/api/products', require(path.join(__dirname, 'routes', 'products'))); // Updated with bulk activate endpoint
 app.use('/api/orders', require(path.join(__dirname, 'routes', 'orders')));
 // app.use('/api/payments', require(path.join(__dirname, 'routes', 'payments')));
 app.use('/api/users', require(path.join(__dirname, 'routes', 'users')));

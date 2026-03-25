@@ -1,0 +1,18 @@
+SUPER ADMIN LOGIN DETAILS:
+
+Super Admin:
+- Email: admin@afrosuperstore.ca
+- Password: Admin123!
+- Role: super_admin
+- ID: admin-001
+
+Admin User:
+- Email: info@afrosuperstore.ca  
+- Password: Iamtech@100
+- Role: admin
+- ID: admin-002
+
+
+Admin Panel Overview:
+http://localhost:3005/admin-panel-complete-overview.html
+ 

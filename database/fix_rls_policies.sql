@@ -4,6 +4,33 @@
 -- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Categories are viewable by everyone" ON categories;
 DROP POLICY IF EXISTS "Products are viewable by everyone" ON products;
+DROP POLICY IF EXISTS "Users can view own profile" ON users;
+DROP POLICY IF EXISTS "Users can update own profile" ON users;
+
+-- Users table policies - Allow users to read and update their own profile
+CREATE POLICY "Users can read own profile" ON users
+FOR SELECT USING (auth.uid()::text = id::text OR email = auth.email());
+
+CREATE POLICY "Admins can read all profiles" ON users
+FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM users 
+    WHERE id = auth.uid() 
+    AND role IN ('admin', 'super_admin')
+  )
+);
+
+CREATE POLICY "Users can update own profile" ON users
+FOR UPDATE USING (auth.uid()::text = id::text OR email = auth.email());
+
+CREATE POLICY "Admins can update all profiles" ON users
+FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM users 
+    WHERE id = auth.uid() 
+    AND role IN ('admin', 'super_admin')
+  )
+);
 
 -- Create new policies with proper public access
 CREATE POLICY "Public categories read" ON categories
@@ -29,5 +56,7 @@ FOR UPDATE USING (auth.role() = 'authenticated' AND status = 'active');
 DO $$
 BEGIN
     RAISE NOTICE 'RLS policies updated successfully!';
+    RAISE NOTICE 'Users can now access their own profiles';
+    RAISE NOTICE 'Admins can access all user profiles';
     RAISE NOTICE 'Public read access enabled for categories and active products';
 END $$;

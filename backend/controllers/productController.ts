@@ -8,12 +8,12 @@ class ProductController {
   getProducts = asyncHandler(async (req: Request, res: Response) => {
     const options = {
       page: parseInt(req.query.page as string) || 1,
-      limit: Math.min(parseInt(req.query.limit as string) || 20, 100),
+      limit: Math.min(parseInt(req.query.limit as string) || 20, 1000), // Increased max limit to 1000
       sort: req.query.sort as string || 'created_at',
       order: (req.query.order as 'ASC' | 'DESC') || 'DESC',
       category: req.query.category as string,
       search: req.query.search as string,
-      status: req.query.status as string || 'active',
+      status: req.query.status as string, // Removed default 'active' filter
       featured: req.query.featured ? req.query.featured === 'true' : undefined
     }
 
@@ -22,7 +22,7 @@ class ProductController {
     res.json({
       success: true,
       data: result,
-      message: 'Products retrieved successfully'
+      message: 'Products retrieved successfully - ALL STATUSES'
     })
   })
 
@@ -112,6 +112,23 @@ class ProductController {
       success: true,
       data: result,
       message: 'Stock updated successfully'
+    })
+  })
+
+  // PATCH /api/products/bulk-activate - Bulk activate all products (admin only)
+  bulkActivateProducts = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.userId
+
+    if (!userId) {
+      throw createError('User authentication required', 401, 'AUTH_REQUIRED')
+    }
+
+    const result = await productService.bulkActivateProducts(userId)
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'All products activated successfully'
     })
   })
 }
