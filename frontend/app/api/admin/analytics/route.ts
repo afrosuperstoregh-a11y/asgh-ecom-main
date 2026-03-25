@@ -1,11 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase admin client with service role key
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Shared token validation logic
 function validateTokenFormat(token: string): boolean {
@@ -79,6 +72,18 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔍 [DEBUG] Analytics API request received');
     
+    // Validate environment variables first
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('🔍 [DEBUG] Missing required environment variables');
+      return NextResponse.json({
+        success: false,
+        message: 'Server configuration error - missing database credentials'
+      }, { status: 500 });
+    }
+    
     // Validate admin token using custom validation
     const validation = await validateAdminToken(request);
     console.log('🔍 [DEBUG] Token validation result:', validation);
@@ -96,8 +101,15 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const range = searchParams.get('range') || '30d';
 
-    // Initialize server-side Supabase client
-    const supabase = supabaseAdmin;
+    // Initialize server-side Supabase client inside the handler
+    let supabase;
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      supabase = createClient(supabaseUrl, supabaseServiceKey);
+    } catch (supabaseError) {
+      console.error('🔍 [DEBUG] Failed to initialize Supabase client:', supabaseError);
+      // Continue without Supabase - we'll use mock data
+    }
 
     // Calculate date range based on range parameter
     const now = new Date();
