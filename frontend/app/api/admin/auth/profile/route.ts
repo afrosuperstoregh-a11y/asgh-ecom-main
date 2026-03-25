@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase admin client with service role key
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Validate Supabase JWT token
-async function validateSupabaseToken(request: NextRequest): Promise<{ valid: boolean; user?: any }> {
+async function validateSupabaseToken(request: NextRequest, supabaseAdmin: any): Promise<{ valid: boolean; user?: any }> {
   try {
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.replace('Bearer ', '');
@@ -43,8 +36,33 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔍 [PROFILE] Profile API called');
     
+    // Validate environment variables first
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('🔍 [PROFILE] Missing required environment variables');
+      return NextResponse.json({
+        success: false,
+        message: 'Server configuration error - missing database credentials'
+      }, { status: 500 });
+    }
+    
+    // Initialize Supabase client inside the handler
+    let supabaseAdmin;
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    } catch (supabaseError) {
+      console.error('🔍 [PROFILE] Failed to initialize Supabase client:', supabaseError);
+      return NextResponse.json({
+        success: false,
+        message: 'Server configuration error - database connection failed'
+      }, { status: 500 });
+    }
+    
     // Validate Supabase token
-    const validation = await validateSupabaseToken(request);
+    const validation = await validateSupabaseToken(request, supabaseAdmin);
     
     if (!validation.valid) {
       return NextResponse.json({
