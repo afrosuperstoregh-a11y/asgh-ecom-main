@@ -1,12 +1,13 @@
 import { supabase } from '../lib/supabase-client'
 
 export async function fetchCategories() {
-  if (!supabase) {
+  const supabaseClient = supabase()
+  if (!supabaseClient) {
     console.error('Supabase client not available')
     return []
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('categories')
     .select('id, name, image_url, created_at, product_count')
     .eq('is_active', true)

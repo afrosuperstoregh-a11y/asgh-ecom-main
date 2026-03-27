@@ -7,7 +7,9 @@ import { supabase } from './supabase-client'
  * @returns The public URL for the file
  */
 export async function getPublicImageUrl(bucket: string, path: string): Promise<string> {
-  if (!supabase) {
+  const supabaseClient = supabase()
+  
+  if (!supabaseClient) {
     console.warn('Supabase client not initialized, returning fallback URL')
     return `/placeholder-${bucket}.svg`
   }
@@ -17,7 +19,7 @@ export async function getPublicImageUrl(bucket: string, path: string): Promise<s
   }
 
   try {
-    const { data } = supabase.storage
+    const { data } = supabaseClient.storage
       .from(bucket)
       .getPublicUrl(path)
 
@@ -107,7 +109,9 @@ export async function processImageUrls(bucket: string, imagePaths: string[]): Pr
  * @returns The signed URL for the file
  */
 export async function getSignedUrl(bucket: string, path: string, expiresIn: number = 3600): Promise<string> {
-  if (!supabase) {
+  const supabaseClient = supabase()
+  
+  if (!supabaseClient) {
     console.warn('Supabase client not initialized, returning fallback URL')
     return `/placeholder-${bucket}.svg`
   }
@@ -117,7 +121,7 @@ export async function getSignedUrl(bucket: string, path: string, expiresIn: numb
   }
 
   try {
-    const { data, error } = await supabase.storage
+    const { data, error } = await supabaseClient.storage
       .from(bucket)
       .createSignedUrl(path, expiresIn)
 
@@ -137,12 +141,14 @@ export async function getSignedUrl(bucket: string, path: string, expiresIn: numb
  * @returns True if the file exists, false otherwise
  */
 export async function fileExists(bucket: string, path: string): Promise<boolean> {
-  if (!supabase || !path || path.trim() === '') {
+  const supabaseClient = supabase()
+  
+  if (!supabaseClient || !path || path.trim() === '') {
     return false
   }
 
   try {
-    const { data, error } = await supabase.storage
+    const { data, error } = await supabaseClient.storage
       .from(bucket)
       .list('', { 
         search: path.split('/').pop() || '',

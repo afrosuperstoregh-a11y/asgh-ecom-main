@@ -1,4 +1,5 @@
 import { supabase } from './supabase-client'
+import type { Database } from '../types/database'
 
 // Simplified API Client for Supabase operations only
 class ApiClient {
@@ -11,11 +12,12 @@ class ApiClient {
     search?: string
     featured?: boolean
   } = {}) {
-    if (!supabase) {
+    const supabaseClient = supabase()
+    if (!supabaseClient) {
       throw new Error('Supabase client not initialized')
     }
 
-    let query = supabase
+    let query = supabaseClient
       .from('products')
       .select(`
         *,
@@ -53,7 +55,7 @@ class ApiClient {
 
     // Process products to add image URLs from Supabase Storage
     const productsWithImages = await Promise.all(
-      (data || []).map(async (product) => {
+      (data || []).map(async (product: Database['public']['Tables']['products']['Row'] & { categories: Database['public']['Tables']['categories']['Row'] }) => {
         const { getProductImageUrl, processImageUrls } = await import('./supabase-storage')
         
         // Handle main image
@@ -99,12 +101,13 @@ class ApiClient {
   }
 
   async getCategoriesFromSupabase() {
-    if (!supabase) {
+    const supabaseClient = supabase()
+    if (!supabaseClient) {
       throw new Error('Supabase client not initialized')
     }
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('categories')
         .select('*')
         .order('sort_order', { ascending: true })
@@ -114,11 +117,11 @@ class ApiClient {
 
       // Get product counts and image URLs for each category
       const categoriesWithCountsAndImages = await Promise.all(
-        (data || []).map(async (category) => {
-          if (!supabase) throw new Error('Supabase client not initialized')
+        (data || []).map(async (category: Database['public']['Tables']['categories']['Row']) => {
+          if (!supabaseClient) throw new Error('Supabase client not initialized')
           
           // Get product count
-          const { count, error: countError } = await supabase
+          const { count, error: countError } = await supabaseClient
             .from('products')
             .select('*', { count: 'exact', head: true })
             .eq('category_id', category.id)

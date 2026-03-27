@@ -13,7 +13,8 @@ const api = axios.create({
 // Request interceptor to add Supabase auth token
 api.interceptors.request.use(
   async (config) => {
-    const { data: { session } } = await supabase.auth.getSession()
+    const supabaseClient = supabase()
+    const { data: { session } } = await supabaseClient.auth.getSession()
     if (session?.access_token) {
       config.headers.Authorization = `Bearer ${session.access_token}`
     }
@@ -30,7 +31,8 @@ api.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       // Handle unauthorized access - sign out user
-      await supabase.auth.signOut()
+      const supabaseClient = supabase()
+      await supabaseClient.auth.signOut()
       window.location.href = '/login'
     }
     return Promise.reject(error)
@@ -58,12 +60,14 @@ export const ordersApi = {
 // Auth API (using Supabase directly)
 export const authApi = {
   login: async (credentials: { email: string; password: string }) => {
-    const { data, error } = await supabase.auth.signInWithPassword(credentials)
+    const supabaseClient = supabase()
+    const { data, error } = await supabaseClient.auth.signInWithPassword(credentials)
     if (error) throw error
     return data
   },
   register: async (userData: { email: string; password: string; first_name?: string; last_name?: string }) => {
-    const { data, error } = await supabase.auth.signUp({
+    const supabaseClient = supabase()
+    const { data, error } = await supabaseClient.auth.signUp({
       email: userData.email,
       password: userData.password,
       options: {
@@ -77,17 +81,20 @@ export const authApi = {
     return data
   },
   logout: async () => {
-    const { error } = await supabase.auth.signOut()
+    const supabaseClient = supabase()
+    const { error } = await supabaseClient.auth.signOut()
     if (error) throw error
   },
   resetPassword: async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const supabaseClient = supabase()
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     })
     if (error) throw error
   },
   getCurrentUser: async () => {
-    const { data: { user }, error } = await supabase.auth.getUser()
+    const supabaseClient = supabase()
+    const { data: { user }, error } = await supabaseClient.auth.getUser()
     if (error) throw error
     return user
   },
@@ -114,7 +121,8 @@ export const categoriesApi = {
 
 // Generic API request function
 export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
-  const { data: { session } } = await supabase.auth.getSession()
+  const supabaseClient = supabase()
+  const { data: { session } } = await supabaseClient.auth.getSession()
   
   const config: RequestInit = {
     headers: {

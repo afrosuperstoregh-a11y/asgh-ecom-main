@@ -35,10 +35,11 @@ const getSupabaseImageUrl = (imageName?: string) => {
   
   // Try Supabase storage as last resort - use category-images bucket
   try {
-    if (!supabase) {
+    const supabaseClient = supabase();
+    if (!supabaseClient) {
       return '/placeholder-category.svg';
     }
-    const { data } = supabase
+    const { data } = supabaseClient
       .storage
       .from('category-images')
       .getPublicUrl(imageName);
