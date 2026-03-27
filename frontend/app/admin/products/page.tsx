@@ -186,7 +186,7 @@ export default function ProductsPage() {
         const data = result.data as ProductsListResponse;
         // Handle different response structures
         let products = data.data?.products || data.data || data || [];
-        const paginationData = data.data?.pagination || data.data || data || {};
+        const paginationData = data.data?.pagination || data.data || data || {} as any;
         
         // Convert products object to array if needed
         if (!Array.isArray(products)) {
@@ -196,6 +196,14 @@ export default function ProductsPage() {
             products = [];
           }
         }
+        
+        // Ensure pagination data has the correct structure
+        const safePaginationData = {
+          page: (paginationData as any).page || 1,
+          limit: (paginationData as any).limit || 20,
+          total: (paginationData as any).total || 0,
+          pages: (paginationData as any).pages || 1
+        };
         
     if (process.env.NODE_ENV === "development") {
       console.log('✅ Products fetched successfully:', data);
@@ -207,7 +215,7 @@ export default function ProductsPage() {
       console.log('📊 Pagination:', paginationData);
     }
         setProducts(products);
-        setPagination(paginationData);
+        setPagination(safePaginationData);
       } else {
     if (process.env.NODE_ENV === "development") {
       console.log('❌ Products fetch failed:', result.error);

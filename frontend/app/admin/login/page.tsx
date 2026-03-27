@@ -81,7 +81,7 @@ export default function AdminLogin() {
         console.log('🔍 [DEBUG] Retrieved user:', tokenManager.getUser());
       }
 
-      logger.info('Admin login successful, redirecting to:', { redirectTo });
+      logger.info('Admin login successful, redirecting to dashboard');
 
       if (process.env.NODE_ENV === "development") {
         console.log('🔍 [DEBUG] Login successful, redirecting to:', redirectTo);

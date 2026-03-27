@@ -145,7 +145,7 @@ export default function AdminLayout({
       logger.info('Admin authentication successful');
     } catch (error) {
       console.error('🚀 [AUTH] Auth check error:', error);
-      logger.error('Authentication check failed', { error: error as Error });
+      logger.error('Authentication check failed');
       tokenManager.removeToken();
       setLoading(false);
       setAuthChecked(true);

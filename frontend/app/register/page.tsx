@@ -22,9 +22,10 @@ export default function RegisterPage() {
     setError('')
 
     try {
-      await signUp(email, password, {
-        first_name: firstName,
-        last_name: lastName,
+      await signUp({
+        name: `${firstName} ${lastName}`,
+        email,
+        password,
       })
       setSuccess(true)
     } catch (error: any) {

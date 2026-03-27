@@ -3,6 +3,7 @@ import ProductPage from './page';
 
 export { generateMetadata };
 
-export default function ProductLayout({ params }: { params: { id: string } }) {
+export default async function ProductLayout({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   return <ProductPage />;
 }

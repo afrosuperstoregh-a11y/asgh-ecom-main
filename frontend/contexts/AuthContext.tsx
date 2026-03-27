@@ -83,22 +83,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ email, password })
       });
 
-      logger.log('Frontend login response status:', response.status);
+      logger.info('Frontend login response status');
       
       if (response.ok) {
         const responseData = await response.json();
-        logger.log('Frontend login response parsed successfully');
+        logger.info('Frontend login response parsed successfully');
         
         // Handle both response formats - direct user data or nested data
         const userData = responseData.data?.user || responseData.user || responseData;
         const token = responseData.data?.token || responseData.token;
         
-        logger.log('Frontend parsed user data and token');
+        logger.info('Frontend parsed user data and token');
         
         if (userData && token) {
           setUser(userData);
           localStorage.setItem('token', token);
-          logger.log('Frontend login successful');
+          logger.info('Frontend login successful');
           return true;
         } else {
           logger.auth('Frontend login failed - missing data', false);

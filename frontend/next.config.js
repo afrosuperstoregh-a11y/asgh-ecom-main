@@ -90,7 +90,7 @@ const nextConfig = {
   
   // Enable strict TypeScript checking
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   
   // Vercel-compatible trailing slash
