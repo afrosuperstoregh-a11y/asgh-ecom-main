@@ -4,5 +4,5 @@ export { EmailService } from './email-service';
 export * from './redis';
 export { sendEmail, emailTemplates } from './sendgrid';
 export { supabase as clientSupabase, supabaseAdmin as clientSupabaseAdmin } from './supabase-client';
-export { supabase as serverSupabase, supabaseAdmin as serverSupabaseAdmin } from './supabase-server';
+export { supabase as serverSupabase, getSupabaseAdmin as serverSupabaseAdmin } from './supabase-server';
 export * from './utils';
