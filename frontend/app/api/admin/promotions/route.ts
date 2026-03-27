@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateTokenFormat } from '../../../../lib/auth';
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase admin client with service role key
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getSupabaseServer } from '@/lib/supabase-server';
 
 // Validate admin token server-side
 async function validateAdminToken(request: NextRequest): Promise<{ valid: boolean; user?: any }> {
@@ -71,7 +65,7 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [DEBUG] Admin authenticated:', validation.user?.email);
     
     // Initialize server-side Supabase client
-    const supabase = supabaseAdmin;
+    const supabase = getSupabaseServer();
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);

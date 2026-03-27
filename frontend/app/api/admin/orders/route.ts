@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase admin client with service role key
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getSupabaseServer } from '@/lib/supabase-server';
 
 // Shared token validation logic
 function validateTokenFormat(token: string): boolean {
@@ -81,7 +75,7 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [DEBUG] Admin authenticated:', validation.user?.email);
     
     // Initialize server-side Supabase client
-    const supabase = supabaseAdmin;
+    const supabase = getSupabaseServer();
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);
@@ -262,7 +256,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Initialize server-side Supabase client
-    const supabase = supabaseAdmin;
+    const supabase = getSupabaseServer();
 
     // Update order status
     const { data: order, error } = await supabase

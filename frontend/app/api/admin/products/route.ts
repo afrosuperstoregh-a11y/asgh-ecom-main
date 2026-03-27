@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseServer } from '@/lib/supabase-server';
 import { validateTokenFormat } from '@/lib/auth';
 
 // Helper function to validate admin token
@@ -65,10 +65,7 @@ export async function GET(request: NextRequest) {
 
     // Initialize Supabase client with SERVICE ROLE KEY for admin operations
     console.log(' [DEBUG] Initializing Supabase client...');
-    const supabaseClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabaseClient = getSupabaseServer();
     
     console.log(' [DEBUG] Supabase client initialized:', {
       url: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -198,10 +195,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Initialize Supabase client with SERVICE ROLE KEY for admin operations
-    const supabaseClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabaseClient = getSupabaseServer();
     
     // Insert product
     const { data, error } = await supabaseClient
@@ -277,10 +271,7 @@ export async function PUT(request: NextRequest) {
     const { name, sku, price, description, category_id, inventory_quantity, status, featured, image_url } = body;
     
     // Initialize Supabase client with SERVICE ROLE KEY for admin operations
-    const supabaseClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabaseClient = getSupabaseServer();
     
     // Update product
     const { data, error } = await supabaseClient
@@ -351,10 +342,7 @@ export async function DELETE(request: NextRequest) {
     }
     
     // Initialize Supabase client with SERVICE ROLE KEY for admin operations
-    const supabaseClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabaseClient = getSupabaseServer();
     
     // Delete product
     const { error } = await supabaseClient
