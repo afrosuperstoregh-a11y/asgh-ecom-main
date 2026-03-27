@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateTokenFormat } from '../../../../lib/auth';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '../../../../lib/supabase-server';
 
 // Environment-safe logging
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -17,12 +17,6 @@ const logger = {
     }
   }
 };
-
-// Initialize Supabase client with SERVICE ROLE for admin operations
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Admin categories endpoint
 export async function GET(request: NextRequest) {
@@ -62,6 +56,9 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 [DEBUG] Categories authentication successful');
     logger.log('Admin categories data request authenticated');
+
+    // Initialize Supabase client inside the handler
+    const supabase = getSupabaseAdmin();
 
     // Fetch categories from Supabase
     const { data: categories, error } = await supabase
