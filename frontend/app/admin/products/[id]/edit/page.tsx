@@ -246,7 +246,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     try {
       // Upload files to Supabase Storage
       console.log('Starting image upload for', files.length, 'files');
-      const imageUrls = await uploadFiles('products', Array.from(files));
+      const imageUrls = await uploadFiles('product-images', Array.from(files));
       console.log('Image upload successful:', imageUrls);
       
       // Add uploaded image URLs to form data

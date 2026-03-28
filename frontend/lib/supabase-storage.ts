@@ -67,11 +67,11 @@ export function fixImageUrl(imageUrl?: string): string {
 
 /**
  * Gets the public URL for a product image
- * @param imagePath - The image path within the 'products' bucket
+ * @param imagePath - The image path within the 'product-images' bucket
  * @returns The public URL for the product image
  */
 export async function getProductImageUrl(imagePath?: string): Promise<string> {
-  return getPublicImageUrl('products', imagePath || '')
+  return getPublicImageUrl('product-images', imagePath || '')
 }
 
 /**
