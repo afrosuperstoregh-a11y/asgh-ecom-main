@@ -1,5 +1,4 @@
 import { supabase } from './supabase-client'
-import { getSupabaseAdmin } from './supabase-server'
 
 /**
  * Gets the public URL for a file in Supabase Storage
@@ -136,56 +135,57 @@ export async function getSignedUrl(bucket: string, path: string, expiresIn: numb
 }
 
 /**
- * Uploads a file to Supabase Storage using admin service role (bypasses RLS)
+ * Uploads a file to Supabase Storage using secure API route (server-side)
  * @param bucket - The bucket name (e.g., 'product-images', 'categories')
  * @param file - The file to upload
  * @param path - Optional custom path within the bucket (if not provided, generates unique path)
  * @returns The public URL of the uploaded file
  */
 export async function uploadFileAdmin(bucket: string, file: File, path?: string): Promise<string> {
-  const supabaseAdmin = getSupabaseAdmin()
-  
-  if (!supabaseAdmin) {
-    throw new Error('Supabase admin client not initialized')
-  }
-
   if (!file) {
     throw new Error('No file provided')
   }
 
   try {
-    // Generate unique file path if not provided
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-    const filePath = path || fileName  // Don't add bucket prefix here, bucket is specified separately
-
-    // Upload file using admin client (bypasses RLS)
-    const { data, error } = await supabaseAdmin.storage
-      .from(bucket)
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      })
-
-    if (error) {
-      console.error(`Error uploading file to ${bucket}/${filePath} (admin):`, error)
-      throw error
+    // Get admin token for authentication
+    const token = localStorage.getItem('admin-token') || sessionStorage.getItem('admin-token');
+    
+    if (!token) {
+      throw new Error('No authentication token found')
     }
 
-    // Get public URL
-    const { data: publicUrlData } = supabaseAdmin.storage
-      .from(bucket)
-      .getPublicUrl(filePath)
+    // Create form data for the API request
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('bucket', bucket);
+    if (path) {
+      formData.append('pathPrefix', path);
+    }
 
-    return publicUrlData.publicUrl
+    // Call secure upload API route
+    const response = await fetch('/api/admin/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Failed to upload file');
+    }
+
+    return result.data.publicUrl;
   } catch (error) {
-    console.error(`Error uploading file to ${bucket} (admin):`, error)
-    throw error
+    console.error(`Error uploading file to ${bucket} (via API):`, error);
+    throw error;
   }
 }
 
 /**
- * Uploads multiple files to Supabase Storage using admin service role (bypasses RLS)
+ * Uploads multiple files to Supabase Storage using secure API route (server-side)
  * @param bucket - The bucket name (e.g., 'product-images', 'categories')
  * @param files - Array of files to upload
  * @param pathPrefix - Optional prefix for file paths (e.g., 'product-123')
@@ -205,7 +205,7 @@ export async function uploadFilesAdmin(bucket: string, files: File[], pathPrefix
     const urls = await Promise.all(uploadPromises)
     return urls
   } catch (error) {
-    console.error('Error uploading files (admin):', error)
+    console.error('Error uploading files (via API):', error)
     throw error
   }
 }
