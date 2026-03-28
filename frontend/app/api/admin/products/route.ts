@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabase-server';
 import { validateTokenFormat } from '@/lib/auth';
 
+export const runtime = "nodejs";
+
 // Helper function to validate admin token
 function validateAdminToken(request: NextRequest) {
   try {

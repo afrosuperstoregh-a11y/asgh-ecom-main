@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateTokenFormat } from '../../../../lib/auth';
 import { getSupabaseServer } from '@/lib/supabase-server';
 
+export const runtime = "nodejs";
+
 // Validate admin token server-side
 async function validateAdminToken(request: NextRequest): Promise<{ valid: boolean; user?: any }> {
   try {

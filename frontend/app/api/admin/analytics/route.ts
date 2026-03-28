@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = "nodejs";
+
 // Shared token validation logic
 function validateTokenFormat(token: string): boolean {
   if (!token.startsWith('prod-jwt-token-')) {

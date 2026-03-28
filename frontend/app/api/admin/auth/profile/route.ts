@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = "nodejs";
+
 // Validate Supabase JWT token
 async function validateSupabaseToken(request: NextRequest, supabaseAdmin: any): Promise<{ valid: boolean; user?: any }> {
   try {

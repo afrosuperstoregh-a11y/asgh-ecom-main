@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateTokenFormat } from '../../../../lib/auth';
 import { getSupabaseAdmin } from '../../../../lib/supabase-server';
 
+export const runtime = "nodejs";
+
 // Environment-safe logging
 const isDevelopment = process.env.NODE_ENV === 'development';
 

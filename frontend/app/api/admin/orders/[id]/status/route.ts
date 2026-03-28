@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabase-server';
 
+export const runtime = "nodejs";
+
 // Shared token validation logic
 function validateTokenFormat(token: string): boolean {
   if (!token.startsWith('prod-jwt-token-')) {
