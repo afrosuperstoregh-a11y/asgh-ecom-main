@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { adminApi } from '../../../../lib/admin-api-client';
 import { useToast } from '../../../../components/admin/Toast';
+import { uploadFiles } from '../../../../lib/supabase-storage';
 import {
   Save,
   X,
@@ -60,6 +61,7 @@ export default function CreateProductPage() {
   const [skuValidating, setSkuValidating] = useState(false);
   const [skuValid, setSkuValid] = useState<boolean | null>(null);
   const [priceError, setPriceError] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
   const { showSuccess, showError } = useToast();
   const [formData, setFormData] = useState<ProductFormState>({
     name: '',
@@ -181,16 +183,30 @@ export default function CreateProductPage() {
     }));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files) {
-      // In a real implementation, you would upload these to a server
-      // For now, we'll just create object URLs
-      const newImages = Array.from(files).map(file => URL.createObjectURL(file));
+    if (!files || files.length === 0) return;
+
+    setImageUploading(true);
+    
+    try {
+      // Upload files to Supabase Storage
+      const imageUrls = await uploadFiles('products', Array.from(files));
+      
+      // Add uploaded image URLs to form data
       setFormData(prev => ({
         ...prev,
-        images: [...prev.images, ...newImages]
+        images: [...prev.images, ...imageUrls]
       }));
+      
+      showSuccess(`${files.length} image(s) uploaded successfully`);
+    } catch (error) {
+      console.error('Image upload error:', error);
+      showError('Failed to upload images. Please try again.');
+    } finally {
+      setImageUploading(false);
+      // Clear the file input
+      e.target.value = '';
     }
   };
 
@@ -242,7 +258,7 @@ export default function CreateProductPage() {
         inventory_quantity: formData.trackInventory ? parseInt(formData.stock) || 0 : 0,
         status: formData.status.toLowerCase(),
         featured: formData.featured,
-        image_url: formData.images[0] || null
+        images: formData.images.length > 0 ? JSON.stringify(formData.images) : null
       };
 
       // Use adminApi to create product
@@ -638,11 +654,20 @@ export default function CreateProductPage() {
               <div className="flex items-center justify-center w-full">
                 <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload className="w-8 h-8 mb-4 text-gray-500" />
-                    <p className="mb-2 text-sm text-gray-500">
-                      <span className="font-semibold">Click to upload</span> or drag and drop
-                    </p>
-                    <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                    {imageUploading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+                        <p className="mb-2 text-sm text-gray-500">Uploading images...</p>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 mb-4 text-gray-500" />
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                      </>
+                    )}
                   </div>
                   <input
                     type="file"
@@ -650,6 +675,7 @@ export default function CreateProductPage() {
                     multiple
                     accept="image/*"
                     onChange={handleImageUpload}
+                    disabled={imageUploading}
                   />
                 </label>
               </div>

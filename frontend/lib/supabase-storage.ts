@@ -135,6 +135,81 @@ export async function getSignedUrl(bucket: string, path: string, expiresIn: numb
 }
 
 /**
+ * Uploads a file to Supabase Storage
+ * @param bucket - The bucket name (e.g., 'products', 'categories')
+ * @param file - The file to upload
+ * @param path - Optional custom path within the bucket (if not provided, generates unique path)
+ * @returns The public URL of the uploaded file
+ */
+export async function uploadFile(bucket: string, file: File, path?: string): Promise<string> {
+  const supabaseClient = supabase()
+  
+  if (!supabaseClient) {
+    throw new Error('Supabase client not initialized')
+  }
+
+  if (!file) {
+    throw new Error('No file provided')
+  }
+
+  try {
+    // Generate unique file path if not provided
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+    const filePath = path || `${bucket}/${fileName}`
+
+    // Upload file
+    const { data, error } = await supabaseClient.storage
+      .from(bucket)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      })
+
+    if (error) {
+      console.error(`Error uploading file to ${bucket}/${filePath}:`, error)
+      throw error
+    }
+
+    // Get public URL
+    const { data: publicUrlData } = supabaseClient.storage
+      .from(bucket)
+      .getPublicUrl(filePath)
+
+    return publicUrlData.publicUrl
+  } catch (error) {
+    console.error(`Error uploading file to ${bucket}:`, error)
+    throw error
+  }
+}
+
+/**
+ * Uploads multiple files to Supabase Storage
+ * @param bucket - The bucket name (e.g., 'products', 'categories')
+ * @param files - Array of files to upload
+ * @param pathPrefix - Optional prefix for file paths (e.g., 'product-123')
+ * @returns Array of public URLs of the uploaded files
+ */
+export async function uploadFiles(bucket: string, files: File[], pathPrefix?: string): Promise<string[]> {
+  if (!files || files.length === 0) {
+    return []
+  }
+
+  const uploadPromises = files.map(async (file, index) => {
+    const path = pathPrefix ? `${pathPrefix}/${file.name}` : undefined
+    return uploadFile(bucket, file, path)
+  })
+
+  try {
+    const urls = await Promise.all(uploadPromises)
+    return urls
+  } catch (error) {
+    console.error('Error uploading files:', error)
+    throw error
+  }
+}
+
+/**
  * Checks if a file exists in the bucket
  * @param bucket - The bucket name
  * @param path - The file path within the bucket

@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
     
     // Parse request body
     const body = await request.json();
-    const { name, sku, price, description, category_id, inventory_quantity, status, featured, image_url } = body;
+    const { name, sku, price, description, category_id, inventory_quantity, status, featured, images } = body;
     
     // Generate slug from name
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
         inventory_quantity: inventory_quantity || 0,
         status: status || 'draft',
         featured: featured || false,
-        images: image_url ? JSON.stringify([image_url]) : null,
+        images: images || null,
         created_at: new Date().toISOString()
       })
       .select()
@@ -270,7 +270,7 @@ export async function PUT(request: NextRequest) {
     
     // Parse request body
     const body = await request.json();
-    const { name, sku, price, description, category_id, inventory_quantity, status, featured, image_url } = body;
+    const { name, sku, price, description, category_id, inventory_quantity, status, featured, images } = body;
     
     // Initialize Supabase client with SERVICE ROLE KEY for admin operations
     const supabaseClient = getSupabaseServer();
@@ -287,7 +287,7 @@ export async function PUT(request: NextRequest) {
         inventory_quantity: inventory_quantity || 0,
         status: status || 'draft',
         featured: featured || false,
-        images: image_url ? JSON.stringify([image_url]) : null
+        images: images || null
       })
       .eq('id', id)
       .select()
