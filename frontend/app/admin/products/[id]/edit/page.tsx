@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminApi } from '../../../../../lib/admin-api-client';
-import { uploadFiles } from '../../../../../lib/supabase-storage';
+import { uploadFilesAdmin } from '../../../../../lib/supabase-storage';
 import { tokenManager } from '../../../../../lib/token-manager';
 import {
   Save,
@@ -246,7 +246,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     try {
       // Upload files to Supabase Storage
       console.log('Starting image upload for', files.length, 'files');
-      const imageUrls = await uploadFiles('product-images', Array.from(files));
+      const imageUrls = await uploadFilesAdmin('product-images', Array.from(files));
       console.log('Image upload successful:', imageUrls);
       
       // Add uploaded image URLs to form data

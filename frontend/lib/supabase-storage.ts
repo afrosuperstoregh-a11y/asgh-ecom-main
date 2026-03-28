@@ -1,4 +1,5 @@
 import { supabase } from './supabase-client'
+import { getSupabaseAdmin } from './supabase-server'
 
 /**
  * Gets the public URL for a file in Supabase Storage
@@ -131,6 +132,81 @@ export async function getSignedUrl(bucket: string, path: string, expiresIn: numb
   } catch (error) {
     console.error(`Error creating signed URL for ${bucket}/${path}:`, error)
     return `/placeholder-${bucket}.svg`
+  }
+}
+
+/**
+ * Uploads a file to Supabase Storage using admin service role (bypasses RLS)
+ * @param bucket - The bucket name (e.g., 'product-images', 'categories')
+ * @param file - The file to upload
+ * @param path - Optional custom path within the bucket (if not provided, generates unique path)
+ * @returns The public URL of the uploaded file
+ */
+export async function uploadFileAdmin(bucket: string, file: File, path?: string): Promise<string> {
+  const supabaseAdmin = getSupabaseAdmin()
+  
+  if (!supabaseAdmin) {
+    throw new Error('Supabase admin client not initialized')
+  }
+
+  if (!file) {
+    throw new Error('No file provided')
+  }
+
+  try {
+    // Generate unique file path if not provided
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+    const filePath = path || fileName  // Don't add bucket prefix here, bucket is specified separately
+
+    // Upload file using admin client (bypasses RLS)
+    const { data, error } = await supabaseAdmin.storage
+      .from(bucket)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      })
+
+    if (error) {
+      console.error(`Error uploading file to ${bucket}/${filePath} (admin):`, error)
+      throw error
+    }
+
+    // Get public URL
+    const { data: publicUrlData } = supabaseAdmin.storage
+      .from(bucket)
+      .getPublicUrl(filePath)
+
+    return publicUrlData.publicUrl
+  } catch (error) {
+    console.error(`Error uploading file to ${bucket} (admin):`, error)
+    throw error
+  }
+}
+
+/**
+ * Uploads multiple files to Supabase Storage using admin service role (bypasses RLS)
+ * @param bucket - The bucket name (e.g., 'product-images', 'categories')
+ * @param files - Array of files to upload
+ * @param pathPrefix - Optional prefix for file paths (e.g., 'product-123')
+ * @returns Array of public URLs of the uploaded files
+ */
+export async function uploadFilesAdmin(bucket: string, files: File[], pathPrefix?: string): Promise<string[]> {
+  if (!files || files.length === 0) {
+    return []
+  }
+
+  const uploadPromises = files.map(async (file, index) => {
+    const path = pathPrefix ? `${pathPrefix}/${file.name}` : undefined
+    return uploadFileAdmin(bucket, file, path)
+  })
+
+  try {
+    const urls = await Promise.all(uploadPromises)
+    return urls
+  } catch (error) {
+    console.error('Error uploading files (admin):', error)
+    throw error
   }
 }
 
