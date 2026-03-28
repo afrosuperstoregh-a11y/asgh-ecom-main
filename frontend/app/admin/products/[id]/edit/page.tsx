@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminApi } from '../../../../../lib/admin-api-client';
 import { uploadFiles } from '../../../../../lib/supabase-storage';
+import { tokenManager } from '../../../../../lib/token-manager';
 import {
   Save,
   X,
@@ -151,18 +152,30 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
     try {
       setSkuValidating(true);
-      const response = await fetch(`/api/admin/products/check-sku?sku=${encodeURIComponent(sku)}&excludeId=${excludeId || ''}`, {
+      const queryParams = new URLSearchParams({ sku: encodeURIComponent(sku) });
+      if (excludeId) {
+        queryParams.append('excludeId', excludeId);
+      }
+      
+      const response = await fetch(`/api/admin/products/check-sku?${queryParams}`, {
+        headers: {
+          'Authorization': `Bearer ${tokenManager.getToken()}`
+        },
         credentials: 'include'
       });
       
       if (response.ok) {
         const result = await response.json();
-        setSkuValid(!result.exists);
-        if (result.exists) {
+        setSkuValid(!result.data.exists);
+        if (result.data.exists) {
           setValidationErrors(prev => ({ ...prev, sku: 'SKU already exists' }));
         } else {
           setValidationErrors(prev => ({ ...prev, sku: '' }));
         }
+      } else {
+        console.error('SKU validation failed:', response.status, response.statusText);
+        setSkuValid(null);
+        setValidationErrors(prev => ({ ...prev, sku: 'Failed to validate SKU' }));
       }
     } catch (error) {
       console.error('SKU validation error:', error);
@@ -232,7 +245,9 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     
     try {
       // Upload files to Supabase Storage
+      console.log('Starting image upload for', files.length, 'files');
       const imageUrls = await uploadFiles('products', Array.from(files));
+      console.log('Image upload successful:', imageUrls);
       
       // Add uploaded image URLs to form data
       setFormData(prev => ({
@@ -243,7 +258,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       console.log(`${files.length} image(s) uploaded successfully`);
     } catch (error) {
       console.error('Image upload error:', error);
-      setError('Failed to upload images. Please try again.');
+      setError(`Failed to upload images: ${(error as Error)?.message || 'Unknown error'}`);
     } finally {
       setImageUploading(false);
       // Clear the file input

@@ -1,39 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { validateTokenFormat } from '@/lib/auth';
+import { getSupabaseServer } from '@/lib/supabase-server';
+import { validateAdminToken } from '@/lib/auth';
 
 export const runtime = "nodejs";
-
-// Helper function to validate admin token
-function validateAdminToken(request: NextRequest) {
-  try {
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return { valid: false };
-    }
-
-    const token = authHeader.substring(7);
-    const isValidFormat = validateTokenFormat(token);
-    
-    if (isValidFormat) {
-      return {
-        valid: true,
-        user: {
-          id: 'admin-001',
-          email: 'info@afrosuperstore.ca',
-          name: 'Super Admin',
-          role: 'super_admin'
-        }
-      };
-    }
-
-    return { valid: false };
-  } catch (error) {
-    console.error('Token validation error:', error);
-    return { valid: false };
-  }
-}
 
 // GET - Check if SKU exists
 export async function GET(request: NextRequest) {
@@ -41,13 +10,16 @@ export async function GET(request: NextRequest) {
     console.log(' [DEBUG] === CHECK SKU API ROUTE CALLED ===');
     
     // Validate admin token
-    const validation = validateAdminToken(request);
+    const validation = await validateAdminToken(request);
     if (!validation.valid) {
+      console.log(' [DEBUG] Token validation failed');
       return NextResponse.json({
         success: false,
         message: 'Unauthorized - Invalid admin token'
       }, { status: 401 });
     }
+    
+    console.log(' [DEBUG] Token validation successful for user:', validation.user?.email);
     
     // Get query parameters
     const { searchParams } = new URL(request.url);
@@ -55,6 +27,7 @@ export async function GET(request: NextRequest) {
     const excludeId = searchParams.get('excludeId');
     
     if (!sku) {
+      console.log(' [DEBUG] Missing SKU parameter');
       return NextResponse.json({
         success: false,
         message: 'SKU parameter is required'
@@ -63,11 +36,8 @@ export async function GET(request: NextRequest) {
     
     console.log(' [DEBUG] Checking SKU:', { sku, excludeId });
     
-    // Initialize Supabase client with SERVICE ROLE KEY for admin operations
-    const supabaseClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // Initialize Supabase client
+    const supabaseClient = getSupabaseServer();
     
     // Build query to check if SKU exists
     let query = supabaseClient

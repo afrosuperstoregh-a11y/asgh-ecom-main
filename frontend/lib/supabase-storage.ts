@@ -156,7 +156,7 @@ export async function uploadFile(bucket: string, file: File, path?: string): Pro
     // Generate unique file path if not provided
     const fileExt = file.name.split('.').pop()
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-    const filePath = path || `${bucket}/${fileName}`
+    const filePath = path || fileName  // Don't add bucket prefix here, bucket is specified separately
 
     // Upload file
     const { data, error } = await supabaseClient.storage

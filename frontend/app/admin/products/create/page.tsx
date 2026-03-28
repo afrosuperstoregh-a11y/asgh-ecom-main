@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { adminApi } from '../../../../lib/admin-api-client';
 import { useToast } from '../../../../components/admin/Toast';
 import { uploadFiles } from '../../../../lib/supabase-storage';
+import { tokenManager } from '../../../../lib/token-manager';
 import {
   Save,
   X,
@@ -110,18 +111,27 @@ export default function CreateProductPage() {
 
     try {
       setSkuValidating(true);
-      const response = await fetch(`/api/admin/products/check-sku?sku=${encodeURIComponent(sku)}&excludeId=`, {
+      const queryParams = new URLSearchParams({ sku: encodeURIComponent(sku) });
+      
+      const response = await fetch(`/api/admin/products/check-sku?${queryParams}`, {
+        headers: {
+          'Authorization': `Bearer ${tokenManager.getToken()}`
+        },
         credentials: 'include'
       });
       
       if (response.ok) {
         const result = await response.json();
-        setSkuValid(!result.exists);
-        if (result.exists) {
+        setSkuValid(!result.data.exists);
+        if (result.data.exists) {
           setValidationErrors(prev => ({ ...prev, sku: 'SKU already exists' }));
         } else {
           setValidationErrors(prev => ({ ...prev, sku: '' }));
         }
+      } else {
+        console.error('SKU validation failed:', response.status, response.statusText);
+        setSkuValid(null);
+        setValidationErrors(prev => ({ ...prev, sku: 'Failed to validate SKU' }));
       }
     } catch (error) {
       console.error('SKU validation error:', error);
@@ -191,7 +201,9 @@ export default function CreateProductPage() {
     
     try {
       // Upload files to Supabase Storage
+      console.log('Starting image upload for', files.length, 'files');
       const imageUrls = await uploadFiles('products', Array.from(files));
+      console.log('Image upload successful:', imageUrls);
       
       // Add uploaded image URLs to form data
       setFormData(prev => ({
@@ -202,7 +214,7 @@ export default function CreateProductPage() {
       showSuccess(`${files.length} image(s) uploaded successfully`);
     } catch (error) {
       console.error('Image upload error:', error);
-      showError('Failed to upload images. Please try again.');
+      showError(`Failed to upload images: ${(error as Error)?.message || 'Unknown error'}`);
     } finally {
       setImageUploading(false);
       // Clear the file input
