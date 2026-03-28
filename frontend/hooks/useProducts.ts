@@ -49,7 +49,18 @@ export function useProducts(params: {
       console.log('useProducts - Full API Response:', result)
 
       if (result.success) {
-        console.log('useProducts - Products found:', result.data?.products?.length || 0)
+        console.log('=== USEPRODUCTS DEBUG ===');
+        console.log('Products found:', result.data?.products?.length || 0);
+        console.log('Pagination info:', result.data?.pagination);
+        console.log('Debug info:', result.data?.debug);
+        console.log('Sample product:', result.data?.products?.[0] ? {
+          id: result.data.products[0].id,
+          name: result.data.products[0].name,
+          status: result.data.products[0].status,
+          images: result.data.products[0].images?.length || 0
+        } : 'No products');
+        console.log('========================');
+        
         setProducts(result.data.products || [])
         setPagination(result.data.pagination)
       } else if (result.error) {

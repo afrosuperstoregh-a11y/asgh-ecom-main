@@ -476,6 +476,22 @@ export async function GET(request: Request) {
       })
     }
 
+    console.log('=== PRODUCT FETCH DEBUG ===');
+    console.log('Environment variables valid:', hasValidEnv);
+    console.log('Database available:', databaseAvailable);
+    console.log('Total products found:', products?.length || 0);
+    console.log('Total items count:', count);
+    console.log('Limit applied:', shouldLimit ? limit : 'No limit');
+    console.log('Filters applied:', { category, search, featured, minPrice, maxPrice });
+    console.log('Sample product data:', products?.[0] ? {
+      id: products[0].id,
+      name: products[0].name,
+      status: products[0].status,
+      images: products[0].images,
+      categories: products[0].categories
+    } : 'No products');
+    console.log('==========================');
+
     const totalItems = count || 0;
     const totalPages = shouldLimit && limit ? Math.ceil(totalItems / limit) : 1;
     const itemsPerPage = shouldLimit ? limit : totalItems;
@@ -492,6 +508,13 @@ export async function GET(request: Request) {
           items_per_page: itemsPerPage,
           has_next: shouldLimit ? page < totalPages : false,
           has_prev: shouldLimit ? page > 1 : false
+        },
+        debug: {
+          database_available: databaseAvailable,
+          raw_product_count: products?.length || 0,
+          processed_product_count: processedProducts.length,
+          total_items_from_count: count,
+          filters_applied: { category, search, featured, minPrice, maxPrice }
         }
       }
     }), {
@@ -514,4 +537,4 @@ export async function GET(request: Request) {
       headers: { 'Content-Type': 'application/json' }
     })
   }
-}
+}                                         

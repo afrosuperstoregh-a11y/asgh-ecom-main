@@ -57,6 +57,7 @@ interface ProductData {
   track_inventory?: boolean
   weight?: number
   tags?: string[]
+  images?: string[] | null
 }
 
 class ProductService {
@@ -138,7 +139,9 @@ class ProductService {
       // Transform image URLs to full Supabase URLs
       const transformedData = (data || []).map((product: any) => ({
         ...product,
-        image_url: getSupabaseImageUrl(product.image_url)
+        images: product.images ? product.images.map((img: string) => getSupabaseImageUrl(img) || img) : [],
+        // Keep backward compatibility with old image_url field
+        image_url: product.image_url ? getSupabaseImageUrl(product.image_url) : (product.images && product.images.length > 0 ? getSupabaseImageUrl(product.images[0]) : null)
       }))
 
       const result = {
@@ -182,10 +185,12 @@ class ProductService {
         throw error
       }
 
-      // Transform image URL to full Supabase URL
+      // Transform image URLs to full Supabase URLs
       const transformedData = data ? {
         ...(data as any),
-        image_url: getSupabaseImageUrl((data as any).image_url)
+        images: (data as any).images ? (data as any).images.map((img: string) => getSupabaseImageUrl(img) || img) : [],
+        // Keep backward compatibility with old image_url field
+        image_url: getSupabaseImageUrl((data as any).image_url) || ((data as any).images && (data as any).images.length > 0 ? getSupabaseImageUrl((data as any).images[0]) : null)
       } : data
 
       return transformedData
@@ -215,7 +220,8 @@ class ProductService {
         inventory_quantity = 10,
         track_inventory = true,
         weight = 0,
-        tags = []
+        tags = [],
+        images
       } = productData
 
       // Generate slug from name
@@ -237,6 +243,7 @@ class ProductService {
         inventory_quantity: parseInt(inventory_quantity.toString()),
         track_inventory,
         weight: parseFloat(weight.toString()),
+        images: images && images.length > 0 ? images : [],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -289,6 +296,7 @@ class ProductService {
       if (productData.inventory_quantity !== undefined) updateData.inventory_quantity = parseInt(productData.inventory_quantity.toString())
       if (productData.track_inventory !== undefined) updateData.track_inventory = productData.track_inventory
       if (productData.weight !== undefined) updateData.weight = parseFloat(productData.weight.toString())
+      if (productData.images !== undefined) updateData.images = productData.images && productData.images.length > 0 ? productData.images : []
 
       const { data, error } = await (supabase() as any)
         .from('products')

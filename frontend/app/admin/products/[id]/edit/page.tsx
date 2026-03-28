@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminApi } from '../../../../../lib/admin-api-client';
+import { uploadFiles } from '../../../../../lib/supabase-storage';
 import {
   Save,
   X,
@@ -53,6 +54,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [skuValid, setSkuValid] = useState<boolean | null>(null);
   const [priceError, setPriceError] = useState('');
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [imageUploading, setImageUploading] = useState(false);
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
@@ -222,16 +224,30 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     }));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files) {
-      // In a real implementation, you would upload these to a server
-      // For now, we'll just create object URLs
-      const newImages = Array.from(files).map(file => URL.createObjectURL(file));
+    if (!files || files.length === 0) return;
+
+    setImageUploading(true);
+    
+    try {
+      // Upload files to Supabase Storage
+      const imageUrls = await uploadFiles('products', Array.from(files));
+      
+      // Add uploaded image URLs to form data
       setFormData(prev => ({
         ...prev,
-        images: [...prev.images, ...newImages]
+        images: [...prev.images, ...imageUrls]
       }));
+      
+      console.log(`${files.length} image(s) uploaded successfully`);
+    } catch (error) {
+      console.error('Image upload error:', error);
+      setError('Failed to upload images. Please try again.');
+    } finally {
+      setImageUploading(false);
+      // Clear the file input
+      e.target.value = '';
     }
   };
 
@@ -275,17 +291,26 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       
       // Prepare data for API
       const productData = {
-        ...formData,
+        name: formData.name.trim(),
+        sku: formData.sku.trim(),
         price: parseFloat(formData.price) || 0,
+        description: formData.description.trim(),
+        shortDesc: formData.shortDesc.trim(),
         comparePrice: formData.comparePrice ? parseFloat(formData.comparePrice) : null,
         cost: formData.cost ? parseFloat(formData.cost) : null,
+        category_id: formData.categoryId || null,
+        trackInventory: formData.trackInventory,
         stock: parseInt(formData.stock) || 0,
         weight: formData.weight ? parseFloat(formData.weight) : null,
         dimensions: (formData.length || formData.width || formData.height) ? {
           length: parseFloat(formData.length) || null,
           width: parseFloat(formData.width) || null,
           height: parseFloat(formData.height) || null
-        } : null
+        } : null,
+        status: formData.status.toLowerCase(),
+        featured: formData.featured,
+        tags: formData.tags,
+        images: formData.images.length > 0 ? formData.images : null
       };
 
       const response = await fetch(`/api/admin/products/${productId}`, {
@@ -690,11 +715,23 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               <div className="flex items-center justify-center w-full">
                 <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload className="w-8 h-8 mb-4 text-gray-500" />
-                    <p className="mb-2 text-sm text-gray-500">
-                      <span className="font-semibold">Click to upload</span> or drag and drop
-                    </p>
-                    <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                    {imageUploading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">Uploading...</span>
+                        </p>
+                        <p className="text-xs text-gray-500">Please wait</p>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 mb-4 text-gray-500" />
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                      </>
+                    )}
                   </div>
                   <input
                     type="file"
@@ -702,6 +739,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                     multiple
                     accept="image/*"
                     onChange={handleImageUpload}
+                    disabled={imageUploading}
                   />
                 </label>
               </div>
