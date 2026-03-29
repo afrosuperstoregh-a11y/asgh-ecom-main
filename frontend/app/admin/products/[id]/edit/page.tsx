@@ -105,12 +105,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const fetchProduct = async (id: string) => {
     try {
       setFetchLoading(true);
-      const response = await fetch(`/api/admin/products/${id}`, {
-        credentials: 'include'
-      });
+      const result = await adminApi.products.get(id);
 
-      if (response.ok) {
-        const product = await response.json();
+      if (result.success && result.data) {
+        const product = result.data as any;
         setFormData({
           name: product.name || '',
           description: product.description || '',
@@ -132,7 +130,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           images: product.images || []
         });
       } else {
-        setError('Failed to fetch product');
+        setError(result.error?.message || 'Failed to fetch product');
       }
     } catch (error) {
     if (process.env.NODE_ENV === "development") {
@@ -328,20 +326,12 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         images: formData.images.length > 0 ? formData.images : null
       };
 
-      const response = await fetch(`/api/admin/products/${productId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(productData)
-      });
+      const result = await adminApi.products.update(productId, productData);
 
-      if (response.ok) {
+      if (result.success) {
         router.push('/admin/products');
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to update product');
+        setError(result.error?.message || 'Failed to update product');
       }
     } catch (error) {
     if (process.env.NODE_ENV === "development") {

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useConfirmModal } from '../../../../components/admin/ConfirmModal';
 import { useToast } from '../../../../components/admin/Toast';
+import { adminApi } from '../../../../lib/admin-api-client';
 import {
   ArrowLeft,
   Edit,
@@ -84,16 +85,12 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
         return;
       }
       
-      const response = await fetch(`/api/admin/products/${id}`, {
-        credentials: 'include'
-      });
+      const result = await adminApi.products.get(id);
 
-      if (response.ok) {
-        const data = await response.json();
-        setProduct(data.data || data);
+      if (result.success && result.data) {
+        setProduct(result.data as Product);
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        setError(errorData.message || 'Failed to fetch product');
+        setError(result.error?.message || 'Failed to fetch product');
       }
     } catch (error) {
     if (process.env.NODE_ENV === "development") {
@@ -114,16 +111,13 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {
-          const response = await fetch(`/api/admin/products/${productId}`, {
-            method: 'DELETE',
-            credentials: 'include'
-          });
+          const result = await adminApi.products.delete(productId);
 
-          if (response.ok) {
+          if (result.success) {
             showSuccess('Product deleted successfully');
             router.push('/admin/products');
           } else {
-            showError('Failed to delete product');
+            showError(result.error?.message || 'Failed to delete product');
           }
         } catch (error) {
     if (process.env.NODE_ENV === "development") {
