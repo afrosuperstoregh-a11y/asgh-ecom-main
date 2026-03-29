@@ -1,6 +1,6 @@
 export interface Product {
   id: string;
-  name: string;
+  name: string; // Required field
   description?: string;
   price: number;
   compare_price?: number;
@@ -17,12 +17,12 @@ export interface Product {
   category_id?: string;
   category?: {
     id: string;
-    name: string;
+    name: string; // Required field
     slug?: string;
   };
   categories?: {
     id: string;
-    name: string;
+    name: string; // Required field
     slug?: string;
   };
   created_at: string;
@@ -48,7 +48,7 @@ export interface Product {
 
 export interface Category {
   id: string;
-  name: string;
+  name: string; // Required field
   slug?: string;
   description?: string;
   image_url?: string;
@@ -77,19 +77,26 @@ export interface ProductsResponse {
 
 // Helper functions for product data normalization
 export const normalizeProduct = (product: any): Product => {
+  if (!product || !product.id) {
+    throw new Error('Invalid product: missing required fields');
+  }
+  
   return {
     ...product,
-    // Normalize field names
+    // Normalize field names with defensive defaults
+    name: product.name || 'Unnamed Product',
+    description: product.description || '',
     stock_quantity: product.stock_quantity || product.stock || product.inventory_quantity || 0,
-    compare_price: product.compare_price || product.comparePrice || product.compare_price || undefined,
-    category_name: product.category_name || product.category?.name || product.categories?.name,
+    compare_price: product.compare_price || product.comparePrice || undefined,
+    category_name: product.category_name || product.category?.name || product.categories?.name || 'Uncategorized',
     image: product.image || (product.images && product.images[0]) || '/placeholder-product.jpg',
     image_url: product.image_url || product.image || (product.images && product.images[0]) || '/placeholder-product.jpg',
     image_path: product.image_path || product.image,
-    videos: product.videos || (product.video_url ? [product.video_url] : []),
+    videos: Array.isArray(product.videos) ? product.videos : (product.video_url ? [product.video_url] : []),
+    images: Array.isArray(product.images) ? product.images : [],
     rating: product.rating || 0,
     reviews: product.reviews || product.reviewCount || 0,
-    createdAt: product.createdAt || product.created_at,
+    createdAt: product.createdAt || product.created_at || new Date().toISOString(),
     // Computed fields
     inStock: (product.inventory_quantity > 0 || product.allow_backorder) ?? false,
   };
@@ -117,10 +124,12 @@ export const getStockStatus = (product: Product): string => {
 };
 
 export const getProductImage = (product: Product, index: number = 0): string => {
-  if (product.images && product.images.length > index) {
+  if (!product) return '/placeholder-product.jpg';
+  
+  if (Array.isArray(product.images) && product.images.length > index && product.images[index]) {
     return product.images[index];
   }
-  return product.image || '/placeholder-product.jpg';
+  return product.image || product.image_url || '/placeholder-product.jpg';
 };
 
 export const hasDiscount = (product: Product): boolean => {
@@ -130,4 +139,54 @@ export const hasDiscount = (product: Product): boolean => {
 export const getDiscountPercentage = (product: Product): number => {
   if (!hasDiscount(product)) return 0;
   return Math.round(((product.compare_price! - product.price) / product.compare_price!) * 100);
+};
+
+// Validation utilities
+export const validateProduct = (product: any): product is Product => {
+  return (
+    product &&
+    typeof product === 'object' &&
+    typeof product.id === 'string' &&
+    typeof product.name === 'string' &&
+    typeof product.price === 'number' &&
+    typeof product.sku === 'string' &&
+    typeof product.status === 'string' &&
+    typeof product.featured === 'boolean' &&
+    typeof product.stock_quantity === 'number' &&
+    typeof product.inventory_quantity === 'number' &&
+    typeof product.track_inventory === 'boolean' &&
+    typeof product.allow_backorder === 'boolean' &&
+    Array.isArray(product.images) &&
+    typeof product.created_at === 'string'
+  );
+};
+
+export const validateCategory = (category: any): category is Category => {
+  return (
+    category &&
+    typeof category === 'object' &&
+    typeof category.id === 'string' &&
+    typeof category.name === 'string' &&
+    typeof category.sort_order === 'number' &&
+    typeof category.is_active === 'boolean' &&
+    typeof category.created_at === 'string'
+  );
+};
+
+export const safeProductMap = <T>(
+  products: any[], 
+  mapper: (product: Product) => T
+): T[] => {
+  return products
+    .filter(validateProduct)
+    .map(mapper);
+};
+
+export const safeCategoryMap = <T>(
+  categories: any[], 
+  mapper: (category: Category) => T
+): T[] => {
+  return categories
+    .filter(validateCategory)
+    .map(mapper);
 };

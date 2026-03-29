@@ -482,9 +482,9 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select a category</option>
-                {categories.map((category) => (
+                {categories.filter(category => category && category.id).map((category) => (
                   <option key={category.id} value={category.id}>
-                    {category.name}
+                    {category.name || 'Unnamed Category'}
                   </option>
                 ))}
                 <option value="__add_new__" className="text-blue-600 font-medium">
@@ -511,7 +511,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 Tags
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
-                {formData.tags.map((tag, index) => (
+                {formData.tags.filter(tag => tag).map((tag, index) => (
                   <span
                     key={index}
                     className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
@@ -752,22 +752,26 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
             {formData.images.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {formData.images.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={image}
-                      alt={`Product image ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage(index)}
-                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
+              {formData.images.filter(image => image).map((image, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={image}
+                    alt={`Product image ${index + 1}`}
+                    className="w-full h-32 object-cover rounded-lg"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/placeholder-product.jpg';
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
               </div>
             )}
           </div>

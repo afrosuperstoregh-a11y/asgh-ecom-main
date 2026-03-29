@@ -148,12 +148,12 @@ export default function Categories({ categories: propCategories }: CategoriesPro
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl font-bold text-center mb-12">Featured Categories</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {categories.map((category) => (
+          {categories.filter(category => category && category.id).map((category) => (
             <div key={category.id} className="group cursor-pointer">
               <div className="relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow">
                 <Image
                   src={getSupabaseImageUrl(category.image_url || category.image)}
-                  alt={category.name}
+                  alt={category.name || 'Category'}
                   width={400}
                   height={300}
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
@@ -164,7 +164,7 @@ export default function Categories({ categories: propCategories }: CategoriesPro
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-30 transition-opacity"></div>
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                  <h3 className="text-xl font-semibold mb-1">{category.name}</h3>
+                  <h3 className="text-xl font-semibold mb-1">{category.name || 'Unnamed Category'}</h3>
                   <p className="text-sm opacity-90">
                     {category.product_count || category.productCount || category.count || 0} products
                   </p>

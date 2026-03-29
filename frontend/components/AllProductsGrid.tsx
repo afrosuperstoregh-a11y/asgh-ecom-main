@@ -59,33 +59,35 @@ export default function AllProductsGrid() {
       console.log(`Fetched ${data.length} products from Supabase`);
 
       // Transform Supabase data to match our Product interface
-      const transformedProducts: Product[] = data.map((item: any): Product => ({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        price: item.price,
-        compare_price: item.compare_price,
-        sku: item.sku,
-        status: item.status,
-        featured: item.featured,
-        stock_quantity: item.stock_quantity,
-        inventory_quantity: item.inventory_quantity,
-        track_inventory: item.track_inventory,
-        allow_backorder: item.allow_backorder,
-        images: item.images || [],
-        video_url: item.video_url,
-        videos: item.videos,
-        category_id: item.category_id,
-        category: item.category,
-        categories: item.categories,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        rating: item.rating || 0,
-        reviews: item.reviews || 0,
-        image_url: item.image_url || (item.images && item.images[0]) || '/placeholder-product.jpg',
-        category_name: item.category?.name || item.categories?.name,
-        inStock: (item.inventory_quantity > 0 || item.allow_backorder) ?? false,
-      }));
+      const transformedProducts: Product[] = data
+        .filter((item: any) => item && item.id) // Filter out undefined items
+        .map((item: any): Product => ({
+          id: item.id,
+          name: item.name || 'Unnamed Product',
+          description: item.description || '',
+          price: item.price || 0,
+          compare_price: item.compare_price,
+          sku: item.sku || '',
+          status: item.status || 'DRAFT',
+          featured: item.featured || false,
+          stock_quantity: item.stock_quantity || 0,
+          inventory_quantity: item.inventory_quantity || 0,
+          track_inventory: item.track_inventory || false,
+          allow_backorder: item.allow_backorder || false,
+          images: Array.isArray(item.images) ? item.images : [],
+          video_url: item.video_url,
+          videos: Array.isArray(item.videos) ? item.videos : [],
+          category_id: item.category_id,
+          category: item.category,
+          categories: item.categories,
+          created_at: item.created_at || new Date().toISOString(),
+          updated_at: item.updated_at,
+          rating: item.rating || 0,
+          reviews: item.reviews || 0,
+          image_url: item.image_url || (Array.isArray(item.images) && item.images[0]) || '/placeholder-product.jpg',
+          category_name: item.category?.name || item.categories?.name || 'Uncategorized',
+          inStock: (item.inventory_quantity > 0 || item.allow_backorder) ?? false,
+        }));
 
       setProducts(transformedProducts);
 
@@ -188,7 +190,7 @@ export default function AllProductsGrid() {
         {/* Products Grid */}
         {products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 w-full overflow-x-hidden">
-            {products.map((product) => (
+            {products.filter(product => product && product.id).map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

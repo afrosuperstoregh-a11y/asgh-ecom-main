@@ -43,7 +43,9 @@ export default function CategoryPage() {
           limit: 50
         });
         
-        setProducts(productsResponse.data || []);
+        // Filter out any undefined products and set products
+        const validProducts = (productsResponse.data || []).filter(product => product && product.id);
+        setProducts(validProducts);
         
       } catch (err) {
         console.error('Error loading category data:', err);
@@ -98,16 +100,17 @@ export default function CategoryPage() {
         <div className="relative h-64 md:h-80 bg-gray-100">
           <img
             src={category.image_url}
-            alt={category.name}
+            alt={category.name || 'Category'}
             className="w-full h-full object-cover"
             onError={(e) => {
               // Fallback to placeholder if image fails to load
-              (e.target as HTMLImageElement).src = '/placeholder-category.svg';
+              const target = e.target as HTMLImageElement;
+              target.src = '/placeholder-category.svg';
             }}
           />
           <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
             <div className="text-center text-white">
-              <h1 className="text-4xl md:text-5xl font-bold mb-2">{category.name}</h1>
+              <h1 className="text-4xl md:text-5xl font-bold mb-2">{category.name || 'Unnamed Category'}</h1>
               {category.description && (
                 <p className="text-lg md:text-xl max-w-2xl mx-auto px-4">
                   {category.description}
@@ -124,7 +127,7 @@ export default function CategoryPage() {
         {!category.image_url && (
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              {category.name}
+              {category.name || 'Unnamed Category'}
             </h1>
             {category.description && (
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -137,37 +140,30 @@ export default function CategoryPage() {
         {/* Products Count */}
         <div className="mb-6">
           <p className="text-gray-600">
-            {products.length} product{products.length !== 1 ? 's' : ''} in {category.name}
+            {products.length} product{products.length !== 1 ? 's' : ''} in {category.name || 'this category'}
           </p>
         </div>
 
         {/* Products Grid */}
         {products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
+            {products.filter(product => product && product.id).map((product) => (
               <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow w-[275px] h-[375px] flex flex-col">
                 {/* Product Image */}
                 <div className="relative flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-lg" style={{ height: '200px' }}>
                   <img
                     src={getProductImage(product)}
-                    alt={product.name}
+                    alt={product.name || 'Product'}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
                     }}
                   />
-                  {product.compare_price && product.compare_price > product.price && (
-                    <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded text-sm font-semibold">
-                      {Math.round(((product.compare_price - product.price) / product.compare_price) * 100)}% OFF
-                    </div>
-                  )}
                 </div>
-
-                {/* Product Info */}
                 <div className="p-4 flex-1 flex flex-col justify-between overflow-hidden">
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 overflow-hidden">
-                      {product.name}
+                      {product.name || 'Unnamed Product'}
                     </h3>
                     
                     {/* Price */}
@@ -209,7 +205,7 @@ export default function CategoryPage() {
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
             <p className="text-gray-600">
-              There are currently no products in the {category.name} category.
+              There are currently no products in the {category.name || 'this category'} category.
             </p>
           </div>
         )}

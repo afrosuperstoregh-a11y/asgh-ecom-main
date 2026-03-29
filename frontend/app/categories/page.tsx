@@ -12,8 +12,10 @@ export default function CategoriesPage() {
 
   // Filter categories based on search query
   const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    category.slug?.toLowerCase().includes(searchQuery.toLowerCase())
+    category && (
+      category.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      category.slug?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
   );
 
   return (
@@ -105,7 +107,7 @@ export default function CategoriesPage() {
                       <div className="aspect-square bg-gray-100 overflow-hidden">
                         <img
                           src={category.image_url || '/placeholder-category.svg'}
-                          alt={category.name}
+                          alt={category.name || 'Category'}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
@@ -117,7 +119,7 @@ export default function CategoriesPage() {
                       {/* Category Info */}
                       <div className="p-4 text-center">
                         <h3 className="text-base md:text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-200 mb-2">
-                          {category.name}
+                          {category.name || 'Unnamed Category'}
                         </h3>
                         {category.product_count !== undefined && (
                           <p className="text-sm text-gray-500 mb-2">
@@ -149,7 +151,7 @@ export default function CategoriesPage() {
                         <div className="flex-shrink-0">
                           <img
                             src={category.image_url || '/placeholder-category.svg'}
-                            alt={category.name}
+                            alt={category.name || 'Category'}
                             className="w-20 h-20 object-cover rounded-lg"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
@@ -161,7 +163,7 @@ export default function CategoriesPage() {
                         {/* Category Info */}
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-200 mb-2">
-                            {category.name}
+                            {category.name || 'Unnamed Category'}
                           </h3>
                           {category.product_count !== undefined && (
                             <p className="text-sm text-gray-500 mb-3">

@@ -93,7 +93,9 @@ export async function fetchFromSupabase<T>(
 // Specific function for fetching products
 export async function fetchAllProducts() {
   return fetchFromSupabase<any>('products', {
-    select: '*', // Select all columns
+    select: `*,
+      categories!inner(id, name, slug),
+      category!left(id, name, slug)`, // Include both category relations
     orderBy: 'created_at.desc' // Order by newest first
   });
 }
@@ -107,7 +109,9 @@ export async function fetchProductsWithPagination(
   
   const [products, countResult] = await Promise.all([
     fetchFromSupabase<any>('products', {
-      select: '*',
+      select: `*,
+        categories!inner(id, name, slug),
+        category!left(id, name, slug)`, // Include both category relations
       limit,
       offset,
       orderBy: 'created_at.desc'

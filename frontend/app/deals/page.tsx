@@ -52,35 +52,38 @@ export default function DealsPage() {
     // Apply search filter
     if (filters.searchTerm) {
       filtered = filtered.filter(deal =>
-        deal.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        deal.brand.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        deal.category.toLowerCase().includes(filters.searchTerm.toLowerCase())
+        deal && (
+          deal.name?.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+          deal.brand?.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+          deal.category?.toLowerCase().includes(filters.searchTerm.toLowerCase())
+        )
       );
     }
 
     // Apply category filter
     if (filters.category && filters.category !== 'all-products') {
       filtered = filtered.filter(deal =>
-        deal.category.toLowerCase() === filters.category.toLowerCase()
+        deal && deal.category && deal.category.toLowerCase() === filters.category.toLowerCase()
       );
     }
 
     // Apply price range filter
     if (filters.priceRange.min) {
-      filtered = filtered.filter(deal => deal.discountedPrice >= parseFloat(filters.priceRange.min));
+      filtered = filtered.filter(deal => deal && deal.discountedPrice >= parseFloat(filters.priceRange.min));
     }
     if (filters.priceRange.max) {
-      filtered = filtered.filter(deal => deal.discountedPrice <= parseFloat(filters.priceRange.max));
+      filtered = filtered.filter(deal => deal && deal.discountedPrice <= parseFloat(filters.priceRange.max));
     }
 
     // Apply discount range filter
     if (filters.discountRange) {
-      filtered = filtered.filter(deal => deal.discount >= parseInt(filters.discountRange));
+      filtered = filtered.filter(deal => deal && deal.discount >= parseInt(filters.discountRange));
     }
 
     // Apply sorting
     if (sortBy) {
       filtered.sort((a, b) => {
+        if (!a || !b) return 0;
         switch (sortBy) {
           case 'discount-high':
             return b.discount - a.discount;
@@ -90,10 +93,10 @@ export default function DealsPage() {
             return a.discountedPrice - b.discountedPrice;
           case 'price-high':
             return b.discountedPrice - a.discountedPrice;
-          case 'rating':
-            return b.rating - a.rating;
-          case 'ending-soon':
-            return new Date(a.dealEnds).getTime() - new Date(b.dealEnds).getTime();
+          case 'name-asc':
+            return (a.name || '').localeCompare(b.name || '');
+          case 'name-desc':
+            return (b.name || '').localeCompare(a.name || '');
           default:
             return 0;
         }
@@ -117,13 +120,13 @@ export default function DealsPage() {
 
   const stats = useMemo(() => {
     const totalSavings = filteredDeals.reduce((acc, deal) => 
-      acc + (deal.originalPrice - deal.discountedPrice), 0
+      acc + ((deal?.originalPrice || 0) - (deal?.discountedPrice || 0)), 0
     );
     const avgDiscount = filteredDeals.length > 0 
-      ? filteredDeals.reduce((acc, deal) => acc + deal.discount, 0) / filteredDeals.length 
+      ? filteredDeals.reduce((acc, deal) => acc + (deal?.discount || 0), 0) / filteredDeals.length 
       : 0;
     const avgRating = filteredDeals.length > 0
-      ? filteredDeals.reduce((acc, deal) => acc + deal.rating, 0) / filteredDeals.length
+      ? filteredDeals.reduce((acc, deal) => acc + (deal?.rating || 0), 0) / filteredDeals.length
       : 0;
 
     return {
@@ -215,7 +218,7 @@ export default function DealsPage() {
               ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
               : 'space-y-4'
           }>
-            {filteredDeals.map((deal) => (
+            {filteredDeals.filter(deal => deal && deal.id).map((deal) => (
               <DealProductCard
                 key={deal.id}
                 product={deal}
