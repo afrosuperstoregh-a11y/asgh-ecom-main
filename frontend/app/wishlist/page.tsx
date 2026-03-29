@@ -29,10 +29,10 @@ export default function WishlistPage() {
     const { addToCart: addToCartAction } = useCart();
     addToCartAction({
       id: product.id,
-      name: product.name,
-      price: product.compare_price || product.price,
+      name: product.name || 'Unnamed Product',
+      price: product.compare_price || product.price || 0,
       image: product.images?.[0] || '/placeholder-product.jpg',
-      category: product.category_name
+      category: product.category_name || 'Uncategorized'
     });
   };
 
@@ -48,14 +48,17 @@ export default function WishlistPage() {
 
         {wishlistItems.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {wishlistItems.map((item) => (
+            {wishlistItems.filter(item => item && item.id).map((item) => (
               <div key={item.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
                 <div className="relative">
                   <Link href={`/product/${item.id}`}>
                     <img
-                      src={item.images[0] || '/placeholder-product.jpg'}
-                      alt={item.name}
+                      src={item.images?.[0] || '/placeholder-product.jpg'}
+                      alt={item.name || 'Product'}
                       className="w-full h-48 object-cover rounded-t-lg"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+                      }}
                     />
                   </Link>
                   <button
@@ -66,7 +69,7 @@ export default function WishlistPage() {
                   </button>
                 </div>
                 <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">{item.name}</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">{item.name || 'Unnamed Product'}</h3>
                   <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
                   <div className="flex items-center mb-2">
                     <div className="flex items-center">

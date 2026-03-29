@@ -206,14 +206,17 @@ export default function VendorProducts() {
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {products.map((product) => (
+        {products.filter(product => product && product.id).map((product) => (
           <Card key={product.id} className="overflow-hidden">
             <div className="aspect-square bg-gray-100 relative">
-              {product.product.images && product.product.images.length > 0 ? (
+              {product.product?.images && product.product.images.length > 0 ? (
                 <img
                   src={product.product.images[0]}
-                  alt={product.product.name}
+                  alt={product.product.name || 'Product'}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+                  }}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -236,10 +239,10 @@ export default function VendorProducts() {
               <div className="space-y-2">
                 <div>
                   <h3 className="font-semibold text-gray-900 truncate">
-                    {product.product.name}
+                    {product.product?.name || 'Unnamed Product'}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    {product.product.category.name}
+                    {product.product?.category?.name || 'Uncategorized'}
                   </p>
                 </div>
                 <div className="flex items-center justify-between">

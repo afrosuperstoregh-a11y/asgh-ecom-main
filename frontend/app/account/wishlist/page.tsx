@@ -99,16 +99,19 @@ const AccountWishlistPage = () => {
   const filteredAndSortedItems = wishlistItems
     .filter(item => selectedCategory === 'all-products' || item.category === selectedCategory)
     .sort((a, b) => {
+      // Defensive guards for sorting
+      if (!a || !b) return 0;
+      
       switch (sortBy) {
         case 'priceLow':
-          return a.price - b.price;
+          return (a.price || 0) - (b.price || 0);
         case 'priceHigh':
-          return b.price - a.price;
+          return (b.price || 0) - (a.price || 0);
         case 'name':
-          return a.name.localeCompare(b.name);
+          return (a.name || '').localeCompare(b.name || '');
         case 'dateAdded':
         default:
-          return new Date(b.addedDate).getTime() - new Date(a.addedDate).getTime();
+          return new Date(b.addedDate || Date.now()).getTime() - new Date(a.addedDate || Date.now()).getTime();
       }
     });
 
@@ -319,13 +322,16 @@ const AccountWishlistPage = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredAndSortedItems.map((item) => (
+                {filteredAndSortedItems.filter(item => item && item.id).map((item) => (
                   <div key={item.id} className="bg-white shadow-lg rounded-lg overflow-hidden group hover:shadow-xl transition-shadow w-[275px] h-[375px] flex flex-col">
                     <div className="relative flex-shrink-0 overflow-hidden rounded-t-lg" style={{ height: '200px' }}>
                       <img
-                        src={item.image}
-                        alt={item.name}
+                        src={item.image || '/placeholder-product.jpg'}
+                        alt={item.name || 'Product'}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+                        }}
                       />
                       {item.discount > 0 && (
                         <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-medium">
@@ -349,7 +355,7 @@ const AccountWishlistPage = () => {
                     
                     <div className="p-4 flex-1 flex flex-col justify-between overflow-hidden">
                       <div>
-                        <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 overflow-hidden">{item.name}</h3>
+                        <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 overflow-hidden">{item.name || 'Unnamed Product'}</h3>
                         
                         <div className="flex items-center mb-2">
                           <div className="flex items-center">
