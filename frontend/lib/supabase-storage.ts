@@ -1,4 +1,5 @@
 import { supabase } from './supabase-client'
+import { tokenManager } from './token-manager'
 
 /**
  * Gets the public URL for a file in Supabase Storage
@@ -147,8 +148,8 @@ export async function uploadFileAdmin(bucket: string, file: File, path?: string)
   }
 
   try {
-    // Get admin token for authentication
-    const token = localStorage.getItem('admin-token') || sessionStorage.getItem('admin-token');
+    // Get admin token for authentication using centralized token manager
+    const token = tokenManager.getToken();
     
     if (!token) {
       throw new Error('No authentication token found')
