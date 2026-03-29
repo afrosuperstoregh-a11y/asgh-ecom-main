@@ -71,12 +71,12 @@ function ProductGridComponent({ products: propProducts, loading: propLoading }: 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl font-bold text-center mb-12">Best Sellers</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
+          {products.filter(product => product && product.id).map((product) => (
             <div key={product.id} className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow">
               <div className="relative aspect-square">
                 <Image
                   src={product.images?.[0] || product.image || '/placeholder-product.jpg'}
-                  alt={product.name}
+                  alt={product.name || 'Product'}
                   fill
                   className="object-cover rounded-t-lg"
                   sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
@@ -87,8 +87,8 @@ function ProductGridComponent({ products: propProducts, loading: propLoading }: 
                 </span>
               </div>
               <div className="p-4">
-                <h3 className="text-lg font-semibold mb-2 line-clamp-2">{product.name}</h3>
-                <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+                <h3 className="text-lg font-semibold mb-2 line-clamp-2">{product.name || 'Unnamed Product'}</h3>
+                <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description || ''}</p>
                 <div className="flex items-center mb-3">
                   <div className="flex text-yellow-400">
                     {[...Array(5)].map((_, i) => (

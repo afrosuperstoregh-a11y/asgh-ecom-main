@@ -87,7 +87,7 @@ export default function ShopByCategory() {
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {categories.map((category) => (
+          {categories.filter(category => category && category.id).map((category) => (
             <Link 
               key={category.id} 
               href={`/products?category=${category.slug || category.id}`}
@@ -98,7 +98,7 @@ export default function ShopByCategory() {
                 <div className="aspect-square bg-gray-100 overflow-hidden">
                   <img
                     src={category.image_url || '/placeholder-category.svg'}
-                    alt={category.name}
+                    alt={category.name || 'Category'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
                       // Fallback to placeholder if image fails to load
@@ -111,7 +111,7 @@ export default function ShopByCategory() {
                 {/* Category Name */}
                 <div className="p-4 text-center">
                   <h3 className="text-base md:text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
-                    {category.name}
+                    {category.name || 'Unnamed Category'}
                   </h3>
                   {category.product_count !== undefined && (
                     <p className="text-sm text-gray-500 mt-1">

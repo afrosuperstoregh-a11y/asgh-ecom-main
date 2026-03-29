@@ -112,43 +112,36 @@ export default function AdminSidebar({ isOpen = true, onClose, isMobile = false 
             const hasSubItems = item.subItems && item.subItems.length > 0;
             
             return (
-              <li key={item.name}>
+              <li key={item.name || 'item'}>
                 <Link
-                  href={item.href}
+                  href={item.href || '#'}
                   className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 whitespace-nowrap overflow-hidden ${
                     active
                       ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } focus:outline-none focus:ring-2 focus:ring-black`}
-                  onClick={() => {
-                    if (isMobile && onClose) {
-                      onClose();
-                    }
-                  }}
                   tabIndex={0}
                   role="button"
-                  title={collapsed ? item.name : undefined}
+                  title={collapsed ? (item.name || 'Menu') : undefined}
                 >
                   <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
                   {!collapsed && (
                     <>
-                      <span className="flex-1 overflow-hidden text-ellipsis">{item.name}</span>
+                      <span className="flex-1 overflow-hidden text-ellipsis">{item.name || 'Menu Item'}</span>
                       {hasSubItems && (
                         <ChevronRight className="h-4 w-4 transition-transform group-hover:rotate-90" />
                       )}
                     </>
                   )}
                 </Link>
-                
-                {/* Sub-items for Products - Always visible */}
                 {hasSubItems && !collapsed && (
-                  <ul className="mt-1 pl-6 space-y-2">
+                  <ul className="mt-1 ml-4 space-y-1">
                     {item.subItems?.map((subItem) => {
                       const subActive = isSubActive(subItem.href);
                       return (
-                        <li key={subItem.name}>
+                        <li key={subItem.name || 'subitem'}>
                           <Link
-                            href={subItem.href}
+                            href={subItem.href || '#'}
                             className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 whitespace-nowrap overflow-hidden ${
                               subActive
                                 ? 'bg-blue-50 text-blue-600'
@@ -161,10 +154,10 @@ export default function AdminSidebar({ isOpen = true, onClose, isMobile = false 
                             }}
                             tabIndex={0}
                             role="button"
-                            title={collapsed ? subItem.name : undefined}
+                            title={collapsed ? (subItem.name || 'Sub Item') : undefined}
                           >
                             {subItem.name === 'Add Product' && <Plus className="mr-2 h-4 w-4 flex-shrink-0" />}
-                            <span className="overflow-hidden text-ellipsis">{subItem.name}</span>
+                            <span className="overflow-hidden text-ellipsis">{subItem.name || 'Sub Item'}</span>
                           </Link>
                         </li>
                       );

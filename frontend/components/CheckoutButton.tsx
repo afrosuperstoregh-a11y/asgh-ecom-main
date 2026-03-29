@@ -63,11 +63,11 @@ export function CheckoutButton({
           ...(token && { 'Authorization': `Bearer ${token}` }),
         },
         body: JSON.stringify({
-          items: cartItems.map((item: CartItem) => ({
+          items: cartItems.filter(item => item && item.id).map((item: CartItem) => ({
             id: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
+            name: item.name || 'Unnamed Item',
+            price: item.price || 0,
+            quantity: item.quantity || 1,
           })),
           successUrl: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${window.location.origin}/cart`,

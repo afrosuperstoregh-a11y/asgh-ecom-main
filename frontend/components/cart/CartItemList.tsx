@@ -24,11 +24,11 @@ export default function CartItemList({
 }: CartItemListProps) {
   return (
     <div className="space-y-4">
-      {items.map((item) => (
+      {items.filter(item => item && item.id).map((item) => (
         <CartItem
           key={item.id}
           id={item.id}
-          name={item.name}
+          name={item.name || 'Unnamed Item'}
           image={item.image}
           price={item.price}
           quantity={item.quantity}
