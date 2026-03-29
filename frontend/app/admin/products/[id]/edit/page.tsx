@@ -93,7 +93,16 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       const result = await adminApi.categories.list();
       if (result.success && result.data) {
         const data = result.data as any;
-        setCategories(data.categories || data || []);
+        // Defensive guards for categories data
+        const categoriesData = Array.isArray(data.categories) ? data.categories : (Array.isArray(data) ? data : []);
+        const filteredCategories = categoriesData
+          .filter((cat: any) => cat && cat.id && cat.name)
+          .map((cat: any) => ({
+            id: cat.id,
+            name: cat.name || 'Unnamed Category',
+            description: cat.description || ''
+          }));
+        setCategories(filteredCategories);
       }
     } catch (error) {
       if (process.env.NODE_ENV === "development") {
@@ -109,25 +118,27 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
       if (result.success && result.data) {
         const product = result.data as any;
+        
+        // Defensive guards for all product properties
         setFormData({
           name: product.name || '',
           description: product.description || '',
           shortDesc: product.shortDesc || '',
           sku: product.sku || '',
-          price: product.price?.toString() || '',
-          comparePrice: product.comparePrice?.toString() || '',
-          cost: product.cost?.toString() || '',
-          categoryId: product.categoryId || '',
+          price: (product.price || 0).toString(),
+          comparePrice: (product.comparePrice || 0).toString(),
+          cost: (product.cost || 0).toString(),
+          categoryId: product.categoryId || product.category?.id || '',
           trackInventory: product.trackInventory ?? true,
-          stock: product.stock?.toString() || '0',
-          weight: product.weight?.toString() || '',
-          length: product.dimensions?.length?.toString() || '',
-          width: product.dimensions?.width?.toString() || '',
-          height: product.dimensions?.height?.toString() || '',
+          stock: (product.stock || product.inventory_quantity || 0).toString(),
+          weight: (product.weight || 0).toString(),
+          length: (product.dimensions?.length || 0).toString(),
+          width: (product.dimensions?.width || 0).toString(),
+          height: (product.dimensions?.height || 0).toString(),
           status: product.status || 'DRAFT',
           featured: product.featured || false,
-          tags: product.tags || [],
-          images: product.images || []
+          tags: Array.isArray(product.tags) ? product.tags : [],
+          images: Array.isArray(product.images) ? product.images : []
         });
       } else {
         setError(result.error?.message || 'Failed to fetch product');

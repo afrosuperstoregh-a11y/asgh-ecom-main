@@ -78,13 +78,14 @@ export async function GET(
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
     });
 
-    // Fetch single product with category information
+    // Fetch single product with ALL relational information
     console.log(' [DEBUG] Fetching product from database...');
     const { data: product, error } = await supabaseClient
       .from('products')
       .select(`
         *,
-        category:categories(id, name)
+        category:categories(id, name, slug),
+        categories!left(id, name, slug)
       `)
       .eq('id', productId)
       .maybeSingle(); // Use maybeSingle() to handle not found gracefully
@@ -107,20 +108,21 @@ export async function GET(
 
     console.log(' [DEBUG] Product fetched successfully:', product.id);
 
-    // Transform the data to match the expected format
+    // Transform the data to match the expected format with defensive guards
     const transformedProduct = {
       id: product.id,
-      name: product.name,
-      sku: product.sku,
-      price: product.price,
-      description: product.description,
-      status: product.status,
-      featured: product.featured,
+      name: product.name || 'Unnamed Product',
+      sku: product.sku || '',
+      price: product.price || 0,
+      description: product.description || '',
+      status: product.status || 'DRAFT',
+      featured: product.featured || false,
       stock: product.inventory_quantity || 0,
-      category: product.category || { id: '', name: 'Uncategorized' },
+      category: product.category || { id: '', name: 'Uncategorized', slug: '' },
+      categories: product.categories || { id: '', name: 'Uncategorized', slug: '' },
       category_id: product.category_id,
-      images: product.images || [],
-      slug: product.slug,
+      images: Array.isArray(product.images) ? product.images : [],
+      slug: product.slug || '',
       createdAt: product.created_at,
       updatedAt: product.updated_at,
       _count: {
