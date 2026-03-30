@@ -56,10 +56,10 @@ export async function compressImage(file: File, maxSize: number = 1000, quality:
 /**
  * Validates file before upload
  * @param file - File to validate
- * @param maxSize - Maximum size in bytes (default: 5MB)
+ * @param maxSize - Maximum size in bytes (default: 10MB)
  * @returns Validation result
  */
-export function validateFile(file: File, maxSize: number = 5 * 1024 * 1024): { valid: boolean; error?: string } {
+export function validateFile(file: File, maxSize: number = 10 * 1024 * 1024): { valid: boolean; error?: string } {
   // Check file size
   if (file.size > maxSize) {
     return {

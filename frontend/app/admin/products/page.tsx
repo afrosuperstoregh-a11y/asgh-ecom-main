@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { adminApi, ProductsListResponse } from '../../../lib/admin-api-client';
 import { useConfirmModal } from '../../../components/admin/ConfirmModal';
 import { useToast } from '../../../components/admin/Toast';
@@ -106,7 +106,7 @@ export default function ProductsPage() {
 
     // Also refresh when window gets focus (better detection of navigation)
     const handleFocus = () => {
-      if (!fetching) {
+      if (!fetching && document.visibilityState === 'visible') {
     if (process.env.NODE_ENV === "development") {
       console.log('Window got focus, refreshing products...');
     }

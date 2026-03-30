@@ -64,11 +64,13 @@ class AdminApiClient {
       // Get admin token and validate it
       const token = tokenManager.getToken();
       
-      console.log(' [DEBUG] Token check:', { 
-        hasToken: !!token, 
-        tokenPreview: token ? `${token.substring(0, 20)}...` : 'none',
-        tokenValid: token ? tokenManager.validateToken(token) : false
-      });
+      if (process.env.NODE_ENV === "development") {
+        console.log(' [DEBUG] Token check:', { 
+          hasToken: !!token, 
+          tokenPreview: token ? `${token.substring(0, 20)}...` : 'none',
+          tokenValid: token ? tokenManager.validateToken(token) : false
+        });
+      }
       
       if (!token) {
         throw new Error('No authentication token found');
@@ -99,15 +101,21 @@ class AdminApiClient {
         requestOptions.body = JSON.stringify(data);
       }
 
-      console.log(' [DEBUG] API Request:', { url, method, hasAuth: !!(requestOptions.headers as any)?.Authorization });
+      if (process.env.NODE_ENV === "development") {
+        console.log(' [DEBUG] API Request:', { url, method, hasAuth: !!(requestOptions.headers as any)?.Authorization });
+      }
 
       const response = await fetch(url, requestOptions);
 
-      console.log(' [DEBUG] API Response:', { status: response.status, ok: response.ok });
+      if (process.env.NODE_ENV === "development") {
+        console.log(' [DEBUG] API Response:', { status: response.status, ok: response.ok });
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.log(' [DEBUG] API Error:', errorData);
+        if (process.env.NODE_ENV === "development") {
+          console.log(' [DEBUG] API Error:', errorData);
+        }
         const error = new Error(errorData.message || `HTTP ${response.status}`);
         (error as any).status = response.status;
         (error as any).data = errorData;
@@ -121,7 +129,9 @@ class AdminApiClient {
       }
 
       const responseData = await response.json();
-      console.log(' [DEBUG] API Success Data:', responseData);
+      if (process.env.NODE_ENV === "development") {
+        console.log(' [DEBUG] API Success Data:', responseData);
+      }
       return responseData;
     };
 

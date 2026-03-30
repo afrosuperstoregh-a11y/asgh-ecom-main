@@ -58,7 +58,7 @@ export function useEnhancedUpload() {
       bucket,
       pathPrefix,
       maxFiles = 10,
-      maxSize = 5 * 1024 * 1024, // 5MB
+      maxSize = 10 * 1024 * 1024, // 10MB
       compress = true,
       onProgress,
       onSuccess,
