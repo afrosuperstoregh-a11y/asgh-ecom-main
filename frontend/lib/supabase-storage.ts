@@ -2,6 +2,117 @@ import { supabase } from './supabase-client'
 import { tokenManager } from './token-manager'
 
 /**
+ * Compresses an image file before upload
+ * @param file - The image file to compress
+ * @param maxSize - Maximum size in KB (default: 1000KB = 1MB)
+ * @param quality - Quality 0-1 (default: 0.8)
+ * @returns Compressed file
+ */
+export async function compressImage(file: File, maxSize: number = 1000, quality: number = 0.8): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      // Calculate new dimensions
+      let { width, height } = img;
+      const maxDimension = 1920; // Max width/height
+      
+      if (width > maxDimension || height > maxDimension) {
+        const ratio = Math.min(maxDimension / width, maxDimension / height);
+        width *= ratio;
+        height *= ratio;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Draw and compress
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, {
+              type: file.type,
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          } else {
+            reject(new Error('Failed to compress image'));
+          }
+        },
+        file.type,
+        quality
+      );
+    };
+    
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/**
+ * Validates file before upload
+ * @param file - File to validate
+ * @param maxSize - Maximum size in bytes (default: 5MB)
+ * @returns Validation result
+ */
+export function validateFile(file: File, maxSize: number = 5 * 1024 * 1024): { valid: boolean; error?: string } {
+  // Check file size
+  if (file.size > maxSize) {
+    return {
+      valid: false,
+      error: `File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`
+    };
+  }
+  
+  // Check file type
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+  if (!allowedTypes.includes(file.type)) {
+    return {
+      valid: false,
+      error: `Invalid file type. Allowed types: ${allowedTypes.join(', ')}`
+    };
+  }
+  
+  return { valid: true };
+}
+
+/**
+ * Safe JSON parsing with error handling
+ * @param response - Fetch response object
+ * @returns Parsed JSON or error
+ */
+async function safeJsonParse(response: Response): Promise<any> {
+  try {
+    const text = await response.text();
+    
+    // Check if response is empty
+    if (!text.trim()) {
+      throw new Error('Empty response from server');
+    }
+    
+    // Try to parse as JSON
+    try {
+      return JSON.parse(text);
+    } catch (parseError) {
+      // If JSON parsing fails, check if it's an HTML error page
+      if (text.includes('<!DOCTYPE') || text.includes('<html>')) {
+        throw new Error('Server returned HTML instead of JSON. This may indicate a server error.');
+      }
+      
+      // Return the raw text if it's not JSON
+      throw new Error(`Invalid JSON response: ${text.substring(0, 100)}...`);
+    }
+  } catch (error) {
+    console.error('Response parsing error:', error);
+    throw error;
+  }
+}
+
+/**
  * Gets the public URL for a file in Supabase Storage
  * @param bucket - The bucket name (e.g., 'products', 'categories')
  * @param path - The file path within the bucket
@@ -136,18 +247,37 @@ export async function getSignedUrl(bucket: string, path: string, expiresIn: numb
 }
 
 /**
- * Uploads a file to Supabase Storage using secure API route (server-side)
+ * Uploads a file to Supabase Storage using secure API route (server-side) with enhanced error handling
  * @param bucket - The bucket name (e.g., 'product-images', 'categories')
  * @param file - The file to upload
  * @param path - Optional custom path within the bucket (if not provided, generates unique path)
+ * @param compress - Whether to compress the image before upload (default: true)
  * @returns The public URL of the uploaded file
  */
-export async function uploadFileAdmin(bucket: string, file: File, path?: string): Promise<string> {
+export async function uploadFileAdmin(bucket: string, file: File, path?: string, compress: boolean = true): Promise<string> {
   if (!file) {
     throw new Error('No file provided')
   }
 
   try {
+    // Validate file before upload
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      throw new Error(validation.error);
+    }
+
+    // Compress image if enabled and it's an image file
+    let processedFile = file;
+    if (compress && file.type.startsWith('image/')) {
+      try {
+        processedFile = await compressImage(file);
+        console.log('Image compressed:', { original: file.size, compressed: processedFile.size });
+      } catch (compressError) {
+        console.warn('Image compression failed, using original file:', compressError);
+        // Continue with original file if compression fails
+      }
+    }
+
     // Get admin token for authentication using centralized token manager
     const token = tokenManager.getToken();
     
@@ -157,7 +287,7 @@ export async function uploadFileAdmin(bucket: string, file: File, path?: string)
 
     // Create form data for the API request
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', processedFile);
     formData.append('bucket', bucket);
     if (path) {
       formData.append('pathPrefix', path);
@@ -172,7 +302,8 @@ export async function uploadFileAdmin(bucket: string, file: File, path?: string)
       body: formData
     });
 
-    const result = await response.json();
+    // Use safe JSON parsing
+    const result = await safeJsonParse(response);
 
     if (!response.ok || !result.success) {
       throw new Error(result.message || 'Failed to upload file');
@@ -186,20 +317,29 @@ export async function uploadFileAdmin(bucket: string, file: File, path?: string)
 }
 
 /**
- * Uploads multiple files to Supabase Storage using secure API route (server-side)
+ * Uploads multiple files to Supabase Storage using secure API route (server-side) with enhanced error handling
  * @param bucket - The bucket name (e.g., 'product-images', 'categories')
  * @param files - Array of files to upload
  * @param pathPrefix - Optional prefix for file paths (e.g., 'product-123')
+ * @param compress - Whether to compress images before upload (default: true)
  * @returns Array of public URLs of the uploaded files
  */
-export async function uploadFilesAdmin(bucket: string, files: File[], pathPrefix?: string): Promise<string[]> {
+export async function uploadFilesAdmin(bucket: string, files: File[], pathPrefix?: string, compress: boolean = true): Promise<string[]> {
   if (!files || files.length === 0) {
     return []
   }
 
+  // Validate all files before starting upload
+  for (const file of files) {
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      throw new Error(`File "${file.name}" validation failed: ${validation.error}`);
+    }
+  }
+
   const uploadPromises = files.map(async (file, index) => {
     const path = pathPrefix ? `${pathPrefix}/${file.name}` : undefined
-    return uploadFileAdmin(bucket, file, path)
+    return uploadFileAdmin(bucket, file, path, compress)
   })
 
   try {

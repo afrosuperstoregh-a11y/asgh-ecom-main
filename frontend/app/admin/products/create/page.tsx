@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { adminApi } from '../../../../lib/admin-api-client';
 import { useToast } from '../../../../components/admin/Toast';
-import { uploadFilesAdmin } from '../../../../lib/supabase-storage';
+import { uploadFilesAdmin, validateFile } from '../../../../lib/supabase-storage';
 import { tokenManager } from '../../../../lib/token-manager';
 import {
   Save,
@@ -197,12 +197,33 @@ export default function CreateProductPage() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    // Prevent duplicate uploads
+    if (imageUploading) {
+      console.log('Upload already in progress, ignoring duplicate call');
+      return;
+    }
+
     setImageUploading(true);
     
     try {
-      // Upload files to Supabase Storage
+      // Validate files before upload
+      const fileArray = Array.from(files);
+      const validationErrors: string[] = [];
+      
+      for (const file of fileArray) {
+        const validation = validateFile(file);
+        if (!validation.valid) {
+          validationErrors.push(`${file.name}: ${validation.error}`);
+        }
+      }
+      
+      if (validationErrors.length > 0) {
+        throw new Error(validationErrors.join('; '));
+      }
+
+      // Upload files to Supabase Storage with compression
       console.log('Starting image upload for', files.length, 'files');
-      const imageUrls = await uploadFilesAdmin('product-images', Array.from(files));
+      const imageUrls = await uploadFilesAdmin('product-images', fileArray, undefined, true);
       console.log('Image upload successful:', imageUrls);
       
       // Add uploaded image URLs to form data

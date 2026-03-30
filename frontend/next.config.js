@@ -11,6 +11,14 @@ const nextConfig = {
   // Enable React Strict Mode for better development practices
   reactStrictMode: true,
   
+  // Configure API route body size limit for file uploads
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb', // Increased from default 1mb to handle larger image uploads
+    },
+    responseLimit: '10mb',
+  },
+  
   // Configure image optimization
   images: {
     remotePatterns: [
