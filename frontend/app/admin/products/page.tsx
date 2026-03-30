@@ -410,15 +410,15 @@ export default function ProductsPage() {
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {
-          const response = await fetch(`/api/admin/products/${productId}`, {
-            method: 'DELETE',
-            credentials: 'include'
-          });
+          console.log(' [DEBUG] Deleting product via adminApi:', productId);
+          const response = await adminApi.products.delete(productId);
 
-          if (response.ok) {
+          if (response.success) {
+            showSuccess('Product deleted successfully!');
             fetchProducts(); // Refresh the list
+            setActiveDropdown(null);
           } else {
-            showError('Failed to delete product');
+            showError(response.message || 'Failed to delete product');
           }
         } catch (error) {
     if (process.env.NODE_ENV === "development") {

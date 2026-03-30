@@ -300,6 +300,14 @@ export const adminApi = {
     }
   },
 
+  // Features
+  features: {
+    list: () => adminApiClient.get('/features'),
+    getStats: () => adminApiClient.get('/features/stats'),
+    update: (id: string, data: any) => adminApiClient.put(`/features/${id}`, data),
+    delete: (id: string) => adminApiClient.delete(`/features/${id}`),
+  },
+
   // Dashboard
   dashboard: {
     getStats: () => adminApiClient.get('/dashboard'),

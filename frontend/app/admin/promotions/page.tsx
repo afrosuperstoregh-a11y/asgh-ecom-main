@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { adminApi } from '../../../lib/admin-api-client';
 import { tokenManager } from '../../../lib/token-manager';
 import { useConfirmModal } from '../../../components/admin/ConfirmModal';
 import { useToast } from '../../../components/admin/Toast';
@@ -134,24 +135,14 @@ export default function PromotionsPage() {
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {
-          const token = tokenManager.getToken();
-          if (!token) {
-            showError('No authentication token found');
-            return;
-          }
-          const response = await fetch(`/api/admin/promotions/${promotionId}`, {
-            method: 'DELETE',
-            credentials: 'include',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
+          console.log(' [DEBUG] Deleting promotion via adminApi:', promotionId);
+          const response = await adminApi.promotions.delete(promotionId);
 
-          if (response.ok) {
+          if (response.success) {
             fetchPromotions(); // Refresh the list
             showSuccess('Promotion deleted successfully');
           } else {
-            showError('Failed to delete promotion');
+            showError(response.message || 'Failed to delete promotion');
           }
         } catch (error) {
     if (process.env.NODE_ENV === "development") {

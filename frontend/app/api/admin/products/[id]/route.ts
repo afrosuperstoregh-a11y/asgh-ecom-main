@@ -47,9 +47,21 @@ export async function GET(
     const resolvedParams = await params;
     console.log(' [DEBUG] Product ID from params:', resolvedParams.id);
     
+    // Log authentication headers for debugging
+    const authHeader = request.headers.get('authorization');
+    console.log(' [DEBUG] Auth header:', { 
+      hasAuth: !!authHeader, 
+      authPreview: authHeader ? `${authHeader.substring(0, 20)}...` : 'none',
+      method: request.method,
+      url: request.url
+    });
+    
     // Validate admin token
     const validation = validateAdminToken(request);
+    console.log(' [DEBUG] Token validation result:', validation);
+    
     if (!validation.valid) {
+      console.log(' [DEBUG] Authentication failed - returning 401');
       return NextResponse.json({
         success: false,
         message: 'Unauthorized - Invalid admin token'
@@ -246,9 +258,21 @@ export async function DELETE(
     const resolvedParams = await params;
     console.log(' [DEBUG] Product ID from params:', resolvedParams.id);
     
+    // Log authentication headers for debugging
+    const authHeader = request.headers.get('authorization');
+    console.log(' [DEBUG] Auth header:', { 
+      hasAuth: !!authHeader, 
+      authPreview: authHeader ? `${authHeader.substring(0, 20)}...` : 'none',
+      method: request.method,
+      url: request.url
+    });
+    
     // Validate admin token
     const validation = validateAdminToken(request);
+    console.log(' [DEBUG] Token validation result:', validation);
+    
     if (!validation.valid) {
+      console.log(' [DEBUG] Authentication failed - returning 401');
       return NextResponse.json({
         success: false,
         message: 'Unauthorized - Invalid admin token'

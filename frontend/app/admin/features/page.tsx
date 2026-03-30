@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { adminApi } from '../../../lib/admin-api-client';
 import {
   Plus,
   Edit,
@@ -17,7 +18,6 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-import { apiRequest } from '@/lib/api';
 
 interface Feature {
   id: string;
@@ -71,8 +71,10 @@ export default function FeaturesManager() {
   const fetchFeatures = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest('/admin/features');
-      setFeatures(data.features || []);
+      const response = await adminApi.features.list();
+      if (response.success) {
+        setFeatures((response.data as any)?.features || []);
+      }
     } catch (error) {
       console.error('Error fetching features:', error);
       setError('Failed to fetch features');
@@ -83,8 +85,10 @@ export default function FeaturesManager() {
 
   const fetchStats = async () => {
     try {
-      const data = await apiRequest('/admin/features/stats');
-      setStats(data.stats);
+      const response = await adminApi.features.getStats();
+      if (response.success) {
+        setStats(response.data as FeatureStats);
+      }
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -119,16 +123,16 @@ export default function FeaturesManager() {
 
   const toggleFeatureStatus = async (featureId: string, isActive: boolean) => {
     try {
-      await apiRequest(`/admin/features/${featureId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ is_active: isActive })
-      });
+      const response = await adminApi.features.update(featureId, { is_active: isActive });
       
-      setFeatures(features.map(f => 
-        f.id === featureId ? { ...f, is_active: isActive } : f
-      ));
-      
-      fetchStats();
+      if (response.success) {
+        setFeatures(features.map(f => 
+          f.id === featureId ? { ...f, is_active: isActive } : f
+        ));
+        fetchStats();
+      } else {
+        setError('Failed to update feature status');
+      }
     } catch (error) {
       console.error('Error toggling feature status:', error);
       setError('Failed to update feature status');
@@ -139,12 +143,15 @@ export default function FeaturesManager() {
     if (!confirm('Are you sure you want to delete this feature?')) return;
     
     try {
-      await apiRequest(`/admin/features/${featureId}`, {
-        method: 'DELETE'
-      });
+      console.log(' [DEBUG] Deleting feature via adminApi:', featureId);
+      const response = await adminApi.features.delete(featureId);
       
-      setFeatures(features.filter(f => f.id !== featureId));
-      fetchStats();
+      if (response.success) {
+        setFeatures(features.filter(f => f.id !== featureId));
+        fetchStats();
+      } else {
+        setError('Failed to delete feature');
+      }
     } catch (error) {
       console.error('Error deleting feature:', error);
       setError('Failed to delete feature');

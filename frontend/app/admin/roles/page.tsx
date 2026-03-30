@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { adminApi } from '../../../lib/admin-api-client';
 import { useConfirmModal } from '../../../components/admin/ConfirmModal';
 import { useToast } from '../../../components/admin/Toast';
 import {
@@ -130,17 +131,14 @@ export default function RolesPage() {
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {
-          const response = await fetch(`/api/admin/roles/${roleId}`, {
-            method: 'DELETE',
-            credentials: 'include'
-          });
+          console.log(' [DEBUG] Deleting role via adminApi:', roleId);
+          const response = await adminApi.roles.delete(roleId);
 
-          if (response.ok) {
+          if (response.success) {
             fetchRoles(); // Refresh the list
             showSuccess('Role deleted successfully');
           } else {
-            const errorData = await response.json();
-            showError(errorData.message || 'Failed to delete role');
+            showError(response.message || 'Failed to delete role');
           }
         } catch (error) {
     if (process.env.NODE_ENV === "development") {
@@ -161,17 +159,14 @@ export default function RolesPage() {
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {
-          const response = await fetch(`/api/admin/roles/users/${userId}`, {
-            method: 'DELETE',
-            credentials: 'include'
-          });
+          console.log(' [DEBUG] Deleting user via adminApi:', userId);
+          const response = await adminApi.roles.users.delete(userId);
 
-          if (response.ok) {
+          if (response.success) {
             fetchUsers(); // Refresh the list
             showSuccess('User deleted successfully');
           } else {
-            const errorData = await response.json();
-            showError(errorData.message || 'Failed to delete user');
+            showError(response.message || 'Failed to delete user');
           }
         } catch (error) {
     if (process.env.NODE_ENV === "development") {

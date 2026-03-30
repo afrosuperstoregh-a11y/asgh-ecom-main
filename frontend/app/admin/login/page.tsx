@@ -9,7 +9,7 @@ import { logger } from '../../../lib/logger';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('admin@afrosuperstore.ca');
-  const [password, setPassword] = useState('Admin123!');
+  const [password, setPassword] = useState('admin123');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
