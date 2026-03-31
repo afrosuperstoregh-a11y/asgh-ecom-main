@@ -7,6 +7,7 @@ import { Search, ShoppingCart, Heart, Menu, X, User } from 'lucide-react';
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../contexts/AuthContext";
+import { Button } from './ui/Button';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -126,12 +127,15 @@ export default function Header() {
 
           {/* Mobile menu button */}
           <div className="lg:hidden">
-            <button
+            <Button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              variant="ghost"
+              size="icon"
               className="p-2 rounded-md text-gray-700 hover:text-indigo-600 hover:bg-gray-100 transition-colors duration-200"
+              aria-label="Toggle mobile menu"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+            </Button>
           </div>
         </div>
 

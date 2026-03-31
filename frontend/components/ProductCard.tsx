@@ -14,6 +14,8 @@ import { useWishlist } from '../context/WishlistContext';
 
 import { fixImageUrl } from '../lib/supabase-storage';
 
+import { Button } from './ui/Button';
+
 
 
 interface ProductCardProps {
@@ -156,17 +158,21 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Wishlist Button */}
 
-        <button
+        <Button
 
           onClick={handleWishlist}
 
           aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
 
+          variant="ghost"
+
+          size="icon"
+
           className={`absolute top-2 right-2 p-3 sm:p-2 rounded-full transition-colors ${
 
             isWishlisted 
 
-              ? 'bg-red-500 text-white' 
+              ? 'bg-red-500 text-white hover:bg-red-600' 
 
               : 'bg-white text-gray-600 hover:text-red-500'
 
@@ -176,13 +182,13 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
 
-        </button>
+        </Button>
 
 
 
         {/* Quick Add to Cart */}
 
-        <button
+        <Button
 
           onClick={handleAddToCart}
 
@@ -191,6 +197,10 @@ export default function ProductCard({ product }: ProductCardProps) {
           aria-label={inStock ? 'Add product to cart' : 'Product out of stock'}
 
           data-cart-id={product.id}
+
+          variant="secondary"
+
+          size="icon"
 
           className={`absolute bottom-2 right-2 p-3 sm:p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-colors z-10 ${
 
@@ -202,7 +212,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           <ShoppingCart className={`w-4 h-4 ${!inStock ? 'text-gray-400' : 'text-gray-700'}`} />
 
-        </button>
+        </Button>
 
       </div>
 
@@ -320,27 +330,23 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         <div className="mt-auto">
 
-          <button
+          <Button
 
             onClick={handleAddToCart}
 
             disabled={!inStock}
 
-            className={`w-full py-2.5 px-4 sm:py-2.5 sm:px-4 rounded-lg font-medium text-sm sm:text-sm transition-colors ${
+            variant={inStock ? "primary" : "secondary"}
 
-              inStock
+            size="md"
 
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-
-            }`}
+            className="w-full py-2.5 px-4 sm:py-2.5 sm:px-4 rounded-lg font-medium text-sm sm:text-sm transition-colors"
 
           >
 
             {inStock ? 'Add to Cart' : 'Out of Stock'}
 
-          </button>
+          </Button>
 
         </div>
 

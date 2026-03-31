@@ -103,6 +103,9 @@ export function CheckoutButton({
         onClick={handleCheckout}
         className={className}
         disabled={cartItems.length === 0}
+        loading={isLoading}
+        variant="primary"
+        size="md"
       >
         {children}
       </Button>

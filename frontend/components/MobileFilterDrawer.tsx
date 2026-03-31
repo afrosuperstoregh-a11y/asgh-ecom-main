@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { brands, allColors, allSizes } from '@/data/products';
 import { useCategories } from '@/hooks/useCategories';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Button } from './ui/Button';
 
 interface MobileFilterDrawerProps {
   isOpen: boolean;
@@ -96,25 +97,30 @@ export default function MobileFilterDrawer({
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
-            <button
+            <Button
               onClick={onClose}
+              variant="ghost"
+              size="icon"
               className="p-2 text-gray-400 hover:text-gray-500"
+              aria-label="Close filters"
             >
               <X className="h-6 w-6" />
-            </button>
+            </Button>
           </div>
 
           {/* Filters Content */}
           <div className="flex-1 overflow-y-auto p-4">
             {/* Categories */}
             <div className="mb-6">
-              <button
+              <Button
                 onClick={() => toggleSection('category')}
-                className="flex items-center justify-between w-full mb-3 text-left"
+                variant="ghost"
+                size="sm"
+                className="flex items-center justify-between w-full mb-3 text-left p-0 hover:bg-transparent"
               >
                 <h3 className="font-medium text-gray-900">Category</h3>
                 {expandedSections.category ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </button>
+              </Button>
               {expandedSections.category && (
                 <div className="space-y-2">
                   {categories.map((category) => (
@@ -137,13 +143,15 @@ export default function MobileFilterDrawer({
 
             {/* Price Range */}
             <div className="mb-6">
-              <button
+              <Button
                 onClick={() => toggleSection('price')}
-                className="flex items-center justify-between w-full mb-3 text-left"
+                variant="ghost"
+                size="sm"
+                className="flex items-center justify-between w-full mb-3 text-left p-0 hover:bg-transparent"
               >
                 <h3 className="font-medium text-gray-900">Price Range</h3>
                 {expandedSections.price ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </button>
+              </Button>
               {expandedSections.price && (
                 <div className="space-y-3">
                   <div>
@@ -172,13 +180,15 @@ export default function MobileFilterDrawer({
 
             {/* Brand */}
             <div className="mb-6">
-              <button
+              <Button
                 onClick={() => toggleSection('brand')}
-                className="flex items-center justify-between w-full mb-3 text-left"
+                variant="ghost"
+                size="sm"
+                className="flex items-center justify-between w-full mb-3 text-left p-0 hover:bg-transparent"
               >
                 <h3 className="font-medium text-gray-900">Brand</h3>
                 {expandedSections.brand ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </button>
+              </Button>
               {expandedSections.brand && (
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {brands.map((brand) => (
@@ -199,13 +209,15 @@ export default function MobileFilterDrawer({
 
             {/* Color */}
             <div className="mb-6">
-              <button
+              <Button
                 onClick={() => toggleSection('color')}
-                className="flex items-center justify-between w-full mb-3 text-left"
+                variant="ghost"
+                size="sm"
+                className="flex items-center justify-between w-full mb-3 text-left p-0 hover:bg-transparent"
               >
                 <h3 className="font-medium text-gray-900">Color</h3>
                 {expandedSections.color ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </button>
+              </Button>
               {expandedSections.color && (
                 <div className="space-y-2">
                   <div className="grid grid-cols-6 gap-2">
@@ -226,13 +238,15 @@ export default function MobileFilterDrawer({
 
             {/* Size */}
             <div className="mb-6">
-              <button
+              <Button
                 onClick={() => toggleSection('size')}
-                className="flex items-center justify-between w-full mb-3 text-left"
+                variant="ghost"
+                size="sm"
+                className="flex items-center justify-between w-full mb-3 text-left p-0 hover:bg-transparent"
               >
                 <h3 className="font-medium text-gray-900">Size</h3>
                 {expandedSections.size ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </button>
+              </Button>
               {expandedSections.size && (
                 <div className="space-y-2">
                   <div className="grid grid-cols-3 gap-2">
@@ -256,13 +270,15 @@ export default function MobileFilterDrawer({
 
             {/* Rating */}
             <div className="mb-6">
-              <button
+              <Button
                 onClick={() => toggleSection('rating')}
-                className="flex items-center justify-between w-full mb-3 text-left"
+                variant="ghost"
+                size="sm"
+                className="flex items-center justify-between w-full mb-3 text-left p-0 hover:bg-transparent"
               >
                 <h3 className="font-medium text-gray-900">Rating</h3>
                 {expandedSections.rating ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </button>
+              </Button>
               {expandedSections.rating && (
                 <div className="space-y-2">
                   {[4, 3, 2, 1].map((rating) => (
@@ -291,13 +307,15 @@ export default function MobileFilterDrawer({
 
             {/* Availability */}
             <div className="mb-6">
-              <button
+              <Button
                 onClick={() => toggleSection('availability')}
-                className="flex items-center justify-between w-full mb-3 text-left"
+                variant="ghost"
+                size="sm"
+                className="flex items-center justify-between w-full mb-3 text-left p-0 hover:bg-transparent"
               >
                 <h3 className="font-medium text-gray-900">Availability</h3>
                 {expandedSections.availability ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </button>
+              </Button>
               {expandedSections.availability && (
                 <div className="space-y-2">
                   <label className="flex items-center cursor-pointer">
@@ -325,21 +343,25 @@ export default function MobileFilterDrawer({
 
           {/* Footer Actions */}
           <div className="p-4 border-t border-gray-200 space-y-3">
-            <button
+            <Button
               onClick={onClearFilters}
+              variant="secondary"
+              size="md"
               className="w-full py-2 px-4 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors duration-200"
             >
               Clear All
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => {
                 onApplyFilters();
                 onClose();
               }}
+              variant="primary"
+              size="md"
               className="w-full py-2 px-4 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition-colors duration-200"
             >
               Apply Filters
-            </button>
+            </Button>
           </div>
         </div>
       </div>

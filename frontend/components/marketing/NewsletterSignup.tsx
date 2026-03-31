@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Mail, CheckCircle, AlertCircle } from 'lucide-react';
+import { Button } from '../ui/Button';
 
 interface NewsletterSignupProps {
   className?: string;
@@ -104,13 +105,16 @@ export default function NewsletterSignup({
             className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={isLoading}
           />
-          <button
+          <Button
             type="submit"
             disabled={isLoading}
+            loading={isLoading}
+            variant="primary"
+            size="md"
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? 'Subscribing...' : buttonText}
-          </button>
+          </Button>
         </form>
         {status !== 'idle' && (
           <div className={`mt-2 text-sm ${status === 'success' ? 'text-green-600' : 'text-red-600'}`}>
@@ -137,13 +141,16 @@ export default function NewsletterSignup({
               className="flex-1 px-3 py-1 border-b border-gray-300 focus:outline-none focus:border-blue-500 bg-transparent"
               disabled={isLoading}
             />
-            <button
+            <Button
               type="submit"
               disabled={isLoading}
+              loading={isLoading}
+              variant="ghost"
+              size="sm"
               className="text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               {isLoading ? '...' : buttonText}
-            </button>
+            </Button>
           </form>
         </div>
         {status !== 'idle' && (
@@ -191,13 +198,16 @@ export default function NewsletterSignup({
                 />
               )}
               
-              <button
+              <Button
                 type="submit"
                 disabled={isLoading}
+                loading={isLoading}
+                variant="secondary"
+                size="md"
                 className="px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? 'Subscribing...' : buttonText}
-              </button>
+              </Button>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 text-sm">

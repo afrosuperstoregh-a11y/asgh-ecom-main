@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { Minus, Plus, X } from 'lucide-react';
+import { Button } from '../ui/Button';
 
 interface CartItemProps {
   id: number;
@@ -68,34 +69,40 @@ export default function CartItem({
               {/* Quantity Controls */}
               <div className="flex items-center gap-3">
                 <div className="flex items-center border border-gray-300 rounded-lg">
-                  <button
+                  <Button
                     onClick={() => updateQuantity(id, quantity - 1)}
                     disabled={quantity <= 1}
+                    variant="ghost"
+                    size="icon"
                     className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     aria-label="Decrease quantity"
                   >
                     <Minus className="h-4 w-4" />
-                  </button>
+                  </Button>
                   <span className="px-3 py-1 text-gray-900 font-medium min-w-[3rem] text-center">
                     {quantity}
                   </span>
-                  <button
+                  <Button
                     onClick={() => updateQuantity(id, quantity + 1)}
+                    variant="ghost"
+                    size="icon"
                     className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
                     aria-label="Increase quantity"
                   >
                     <Plus className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Remove Button */}
-                <button
+                <Button
                   onClick={() => removeItem(id)}
+                  variant="ghost"
+                  size="icon"
                   className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                   aria-label="Remove item"
                 >
                   <X className="h-5 w-5" />
-                </button>
+                </Button>
               </div>
 
               {/* Unit Price (Mobile) */}
