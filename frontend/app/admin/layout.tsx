@@ -198,6 +198,7 @@ export default function AdminLayout({
       current: pathname.startsWith('/admin/products'),
       subItems: [
         { name: 'All Products', href: '/admin/products' },
+        { name: 'Food & Beverages', href: '/admin/products/food-beverages' },
         { name: 'Add Product', href: '/admin/products/create' }
       ]
     },
