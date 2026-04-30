@@ -119,10 +119,10 @@ export default function CustomersPage() {
       : 'Are you sure you want to block this customer?';
 
     await openConfirmModal({
-      title: `${action.charAt(0).toUpperCase() + action.slice(1)} Customer`,
+      title: `${(action || '').charAt(0).toUpperCase() + (action || '').slice(1)} Customer`,
       message: confirmMessage,
       type: 'warning',
-      confirmText: action.charAt(0).toUpperCase() + action.slice(1),
+      confirmText: (action || '').charAt(0).toUpperCase() + (action || '').slice(1),
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {

@@ -159,7 +159,7 @@ export default function AdminLayoutWrapper({ children, title }: AdminLayoutProps
                   </div>
                   <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
                     <span className="text-white text-sm font-medium">
-                      {(user?.name || 'Admin').charAt(0).toUpperCase()}
+                      {((user?.name) || 'Admin').charAt(0).toUpperCase()}
                     </span>
                   </div>
                 </div>

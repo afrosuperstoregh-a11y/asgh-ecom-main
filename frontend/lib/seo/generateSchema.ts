@@ -48,7 +48,7 @@ export function generateSchema({
 
   const baseSchema = {
     '@context': 'https://schema.org',
-    '@type': type.charAt(0).toUpperCase() + type.slice(1),
+    '@type': (type || '').charAt(0).toUpperCase() + (type || '').slice(1),
     name: title || siteConfig.title,
     description: description || siteConfig.description,
     url: fullUrl,

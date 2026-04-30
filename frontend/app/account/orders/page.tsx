@@ -97,7 +97,7 @@ export default function OrdersPage() {
                   </div>
                   <div className="flex items-center space-x-3">
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      {(order.status || '').charAt(0).toUpperCase() + (order.status || '').slice(1)}
                     </span>
                     <span className="text-lg font-bold text-gray-900">${order.total}</span>
                   </div>

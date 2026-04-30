@@ -184,7 +184,7 @@ export default function RolesPage() {
 
   const getPermissionGroups = (): PermissionGroup[] => {
     return Object.entries(permissions).map(([group, perms]) => ({
-      name: group.charAt(0).toUpperCase() + group.slice(1),
+      name: (group || '').charAt(0).toUpperCase() + (group || '').slice(1),
       permissions: perms.map(perm => ({
         key: perm,
         label: perm.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),

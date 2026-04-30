@@ -49,7 +49,7 @@ export const FilterSortBar: React.FC<FilterSortBarProps> = ({
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                  {(category || '').charAt(0).toUpperCase() + (category || '').slice(1)}
                 </button>
               ))}
             </div>

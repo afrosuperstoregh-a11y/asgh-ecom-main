@@ -268,7 +268,7 @@ export default function FeaturesManager() {
               >
                 {categories.map(category => (
                   <option key={category} value={category}>
-                    {category === 'all' ? 'All Categories' : category.charAt(0).toUpperCase() + category.slice(1)}
+                    {category === 'all' ? 'All Categories' : (category || '').charAt(0).toUpperCase() + (category || '').slice(1)}
                   </option>
                 ))}
               </select>

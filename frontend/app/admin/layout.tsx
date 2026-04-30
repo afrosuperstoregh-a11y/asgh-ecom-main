@@ -354,7 +354,7 @@ export default function AdminLayout({
                 >
                   <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                     <span className="text-white font-medium">
-                      {user?.name?.charAt(0).toUpperCase() || 'A'}
+                      {(user?.name ? user.name.charAt(0).toUpperCase() : 'A')}
                     </span>
                   </div>
                   <span className="font-medium text-gray-700">{user?.name}</span>

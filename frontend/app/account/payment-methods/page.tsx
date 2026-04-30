@@ -120,7 +120,7 @@ export default function PaymentMethodsPage() {
                     <div>
                       <div className="flex items-center space-x-2">
                         <h3 className="font-semibold text-gray-900">
-                          {method.brand.charAt(0).toUpperCase() + method.brand.slice(1)} ending in {method.last4}
+                          {(method.brand || '').charAt(0).toUpperCase() + (method.brand || '').slice(1)} ending in {method.last4}
                         </h3>
                         {method.isDefault && (
                           <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Default</span>
