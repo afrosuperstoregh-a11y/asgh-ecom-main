@@ -162,10 +162,10 @@ export default function CartPage() {
                         <button
                           onClick={() => handleRemoveFromCart(item.id.toString())}
                           disabled={updatingItemId === item.id.toString()}
-                          className="p-2 text-red-500 hover:text-red-700 transition-colors touch-target disabled:opacity-50"
+                          className="p-2 text-red-500 hover:text-red-700 transition-colors touch-target disabled:opacity-50 flex items-center justify-center"
                           aria-label="Remove item"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-5 w-5 min-h-[20px] min-w-[20px]" />
                         </button>
                       </div>
                     </div>
