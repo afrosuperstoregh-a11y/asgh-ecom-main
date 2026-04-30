@@ -210,7 +210,7 @@ export async function GET() {
 
           // Process image URL for production
           let imageUrl = category.image_url;
-          if (imageUrl) {
+          if (imageUrl && typeof imageUrl === 'string') {
             // If it's already a full URL, return as is
             if (!imageUrl.startsWith('http')) {
               // If it's a Supabase storage path, construct full URL

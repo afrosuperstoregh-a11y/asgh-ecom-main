@@ -90,15 +90,15 @@ export default function ShopByCategory() {
           {categories.filter(category => category && category.id).map((category) => (
             <Link 
               key={category.id} 
-              href={`/products?category=${category.slug || category.id}`}
+              href={`/products?category=${String(category.slug || category.id)}`}
               className="group block"
             >
               <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 {/* Category Image */}
                 <div className="aspect-square bg-gray-100 overflow-hidden">
                   <img
-                    src={category.image_url || '/placeholder-category.svg'}
-                    alt={category.name || 'Category'}
+                    src={String(category.image_url) || '/placeholder-category.svg'}
+                    alt={String(category.name) || 'Category'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
                       // Fallback to placeholder if image fails to load
@@ -111,11 +111,11 @@ export default function ShopByCategory() {
                 {/* Category Name */}
                 <div className="p-4 text-center">
                   <h3 className="text-base md:text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
-                    {category.name || 'Unnamed Category'}
+                    {String(category.name) || 'Unnamed Category'}
                   </h3>
                   {category.product_count !== undefined && (
                     <p className="text-sm text-gray-500 mt-1">
-                      {category.product_count} products
+                      {String(category.product_count)} products
                     </p>
                   )}
                 </div>
