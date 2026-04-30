@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { safeCapitalize } from '@/lib/utils';
 import { adminApi } from '../../../lib/admin-api-client';
 import { useConfirmModal } from '../../../components/admin/ConfirmModal';
 import { useToast } from '../../../components/admin/Toast';
@@ -184,7 +185,7 @@ export default function RolesPage() {
 
   const getPermissionGroups = (): PermissionGroup[] => {
     return Object.entries(permissions).map(([group, perms]) => ({
-      name: (group || '').charAt(0).toUpperCase() + (group || '').slice(1),
+      name: safeCapitalize(group),
       permissions: perms.map(perm => ({
         key: perm,
         label: perm.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),

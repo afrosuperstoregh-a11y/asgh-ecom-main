@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { safeCapitalize } from '@/lib/utils';
 import { adminApi } from '../../../lib/admin-api-client';
 import {
   Plus,
@@ -268,7 +269,7 @@ export default function FeaturesManager() {
               >
                 {categories.map(category => (
                   <option key={category} value={category}>
-                    {category === 'all' ? 'All Categories' : (category || '').charAt(0).toUpperCase() + (category || '').slice(1)}
+                    {category === 'all' ? 'All Categories' : safeCapitalize(category)}
                   </option>
                 ))}
               </select>

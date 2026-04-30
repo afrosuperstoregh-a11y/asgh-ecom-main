@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { safeCapitalize } from '@/lib/utils';
 
 interface FilterSortBarProps {
   categories: string[];
@@ -49,7 +50,7 @@ export const FilterSortBar: React.FC<FilterSortBarProps> = ({
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  {(category || '').charAt(0).toUpperCase() + (category || '').slice(1)}
+                  {safeCapitalize(category)}
                 </button>
               ))}
             </div>

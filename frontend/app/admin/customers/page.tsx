@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { safeCapitalize } from '@/lib/utils';
 import { adminApi } from '../../../lib/admin-api-client';
 import { tokenManager } from '../../../lib/token-manager';
 import { useConfirmModal } from '../../../components/admin/ConfirmModal';
@@ -119,10 +120,10 @@ export default function CustomersPage() {
       : 'Are you sure you want to block this customer?';
 
     await openConfirmModal({
-      title: `${(action || '').charAt(0).toUpperCase() + (action || '').slice(1)} Customer`,
+      title: `${safeCapitalize(action)} Customer`,
       message: confirmMessage,
       type: 'warning',
-      confirmText: (action || '').charAt(0).toUpperCase() + (action || '').slice(1),
+      confirmText: safeCapitalize(action),
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {

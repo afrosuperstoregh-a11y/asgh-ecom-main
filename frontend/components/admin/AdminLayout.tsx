@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
+import { safeCapitalize } from '@/lib/utils';
 import AdminSidebar from './AdminSidebar';
 import { Menu, X, LogOut, Bell } from 'lucide-react';
 import { tokenManager } from '@/lib/token-manager';
@@ -159,7 +160,7 @@ export default function AdminLayoutWrapper({ children, title }: AdminLayoutProps
                   </div>
                   <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
                     <span className="text-white text-sm font-medium">
-                      {((user?.name) || 'Admin').charAt(0).toUpperCase()}
+                      {safeCapitalize(user?.name || 'Admin').charAt(0)}
                     </span>
                   </div>
                 </div>

@@ -39,3 +39,15 @@ export function generateId(): string {
 export function cn(...inputs: (string | undefined | null | false)[]): string {
   return inputs.filter(Boolean).join(' ');
 }
+
+/**
+ * Safely capitalizes the first character of a string
+ * @param str - The string to capitalize (can be any type)
+ * @returns Capitalized string or empty string if input is invalid
+ */
+export function safeCapitalize(str: any): string {
+  if (typeof str !== 'string' || !str) {
+    return '';
+  }
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}

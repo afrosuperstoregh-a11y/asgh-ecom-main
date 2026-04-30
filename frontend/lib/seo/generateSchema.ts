@@ -1,5 +1,6 @@
 import siteConfig from './config';
 import { Metadata } from 'next';
+import { safeCapitalize } from '@/lib/utils';
 
 type SchemaType = 'website' | 'article' | 'product' | 'organization' | 'breadcrumb';
 
@@ -48,7 +49,7 @@ export function generateSchema({
 
   const baseSchema = {
     '@context': 'https://schema.org',
-    '@type': (type || '').charAt(0).toUpperCase() + (type || '').slice(1),
+    '@type': safeCapitalize(type),
     name: title || siteConfig.title,
     description: description || siteConfig.description,
     url: fullUrl,

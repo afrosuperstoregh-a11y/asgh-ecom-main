@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { safeCapitalize } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -354,7 +355,7 @@ export default function AdminLayout({
                 >
                   <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                     <span className="text-white font-medium">
-                      {(user?.name ? user.name.charAt(0).toUpperCase() : 'A')}
+                      {user?.name ? safeCapitalize(user.name).charAt(0) : 'A'}
                     </span>
                   </div>
                   <span className="font-medium text-gray-700">{user?.name}</span>
