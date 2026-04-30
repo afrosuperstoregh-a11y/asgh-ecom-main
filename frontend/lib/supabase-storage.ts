@@ -152,8 +152,8 @@ export function fixImageUrl(imageUrl?: string): string {
     return '/placeholder-product.jpg'
   }
 
-  // If it's already a full Supabase URL, return it as is
-  if (imageUrl.includes('supabase.co/storage/v1/object/public')) {
+  // If it's already a full HTTP/HTTPS URL, return it as is (defensive safeguard)
+  if (imageUrl.startsWith('http')) {
     return imageUrl
   }
 
@@ -162,6 +162,14 @@ export function fixImageUrl(imageUrl?: string): string {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     if (supabaseUrl) {
       return `${supabaseUrl}/storage/v1/object/public/${imageUrl}`
+    }
+  }
+
+  // If it's a category-specific relative path (like food&beverages/), convert to full Supabase URL
+  if (imageUrl.includes('/') && !imageUrl.startsWith('http') && !imageUrl.startsWith('product-images/')) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (supabaseUrl) {
+      return `${supabaseUrl}/storage/v1/object/public/product-images/${imageUrl}`
     }
   }
 
