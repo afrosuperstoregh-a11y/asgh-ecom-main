@@ -19,6 +19,7 @@ export default function CartPage() {
   const [mounted, setMounted] = useState(false);
   const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   useEffect(() => {
     setMounted(true);
@@ -28,6 +29,8 @@ export default function CartPage() {
     try {
       setUpdatingItemId(id);
       removeFromCart(id);
+      setSuccessMessage('Item removed from cart');
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
       setError('Failed to remove item from cart');
       console.error('Remove from cart error:', err);
@@ -40,6 +43,8 @@ export default function CartPage() {
     try {
       setUpdatingItemId(id);
       updateQuantity(id, quantity);
+      setSuccessMessage('Quantity updated');
+      setTimeout(() => setSuccessMessage(null), 2000);
     } catch (err) {
       setError('Failed to update item quantity');
       console.error('Update quantity error:', err);
@@ -97,6 +102,13 @@ export default function CartPage() {
           </p>
         </div>
 
+        {/* Success Display */}
+        {successMessage && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-green-800 text-sm">{successMessage}</p>
+          </div>
+        )}
+
         {/* Error Display */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -138,19 +150,19 @@ export default function CartPage() {
                         <button
                           onClick={() => handleUpdateQuantity(item.id.toString(), item.quantity - 1)}
                           disabled={updatingItemId === item.id.toString()}
-                          className="p-2 text-gray-400 hover:text-gray-600 transition-colors touch-target disabled:opacity-50"
+                          className="icon-button p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors touch-target disabled:opacity-50 disabled:hover:bg-transparent"
                           aria-label="Decrease quantity"
                         >
-                          <Minus className="h-4 w-4" />
+                          <Minus className="h-5 w-5" />
                         </button>
                         <span className="w-8 text-center font-medium">{item.quantity}</span>
                         <button
                           onClick={() => handleUpdateQuantity(item.id.toString(), item.quantity + 1)}
                           disabled={updatingItemId === item.id.toString()}
-                          className="p-2 text-gray-400 hover:text-gray-600 transition-colors touch-target disabled:opacity-50"
+                          className="icon-button p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors touch-target disabled:opacity-50 disabled:hover:bg-transparent"
                           aria-label="Increase quantity"
                         >
-                          <Plus className="h-4 w-4" />
+                          <Plus className="h-5 w-5" />
                         </button>
                       </div>
                       
@@ -162,10 +174,10 @@ export default function CartPage() {
                         <button
                           onClick={() => handleRemoveFromCart(item.id.toString())}
                           disabled={updatingItemId === item.id.toString()}
-                          className="p-2 text-red-500 hover:text-red-700 transition-colors touch-target disabled:opacity-50 flex items-center justify-center"
+                          className="icon-button p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors touch-target disabled:opacity-50 disabled:hover:bg-transparent flex items-center justify-center"
                           aria-label="Remove item"
                         >
-                          <Trash2 className="h-5 w-5 min-h-[20px] min-w-[20px]" />
+                          <Trash2 className="h-5 w-5" />
                         </button>
                       </div>
                     </div>
