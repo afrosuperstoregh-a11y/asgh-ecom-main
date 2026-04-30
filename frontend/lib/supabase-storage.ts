@@ -126,7 +126,7 @@ export async function getPublicImageUrl(bucket: string, path: string): Promise<s
     return `/placeholder-${bucket}.svg`
   }
 
-  if (!path || path.trim() === '') {
+  if (!path || typeof path !== 'string' || path.trim() === '') {
     return `/placeholder-${bucket}.svg`
   }
 
@@ -148,7 +148,7 @@ export async function getPublicImageUrl(bucket: string, path: string): Promise<s
  * @returns The fixed image URL
  */
 export function fixImageUrl(imageUrl?: string): string {
-  if (!imageUrl || imageUrl.trim() === '') {
+  if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
     return '/placeholder-product.jpg'
   }
 
@@ -228,7 +228,7 @@ export async function getSignedUrl(bucket: string, path: string, expiresIn: numb
     return `/placeholder-${bucket}.svg`
   }
 
-  if (!path || path.trim() === '') {
+  if (!path || typeof path !== 'string' || path.trim() === '') {
     return `/placeholder-${bucket}.svg`
   }
 
@@ -435,7 +435,7 @@ export async function uploadFiles(bucket: string, files: File[], pathPrefix?: st
 export async function fileExists(bucket: string, path: string): Promise<boolean> {
   const supabaseClient = supabase()
   
-  if (!supabaseClient || !path || path.trim() === '') {
+  if (!supabaseClient || !path || typeof path !== 'string' || path.trim() === '') {
     return false
   }
 
