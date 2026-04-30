@@ -21,7 +21,7 @@ interface CategoriesProps {
 }
 
 const getSupabaseImageUrl = (imageName?: string) => {
-  if (!imageName) return '/placeholder-category.svg';
+  if (!imageName || typeof imageName !== 'string') return '/placeholder-category.svg';
   
   // If it's already a full URL (like Unsplash or Supabase), return as is
   if (imageName.startsWith('http')) {
@@ -153,7 +153,7 @@ export default function Categories({ categories: propCategories }: CategoriesPro
               <div className="relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow">
                 <Image
                   src={getSupabaseImageUrl(category.image_url || category.image)}
-                  alt={category.name || 'Category'}
+                  alt={String(category.name) || 'Category'}
                   width={400}
                   height={300}
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
@@ -164,14 +164,14 @@ export default function Categories({ categories: propCategories }: CategoriesPro
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-30 transition-opacity"></div>
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                  <h3 className="text-xl font-semibold mb-1">{category.name || 'Unnamed Category'}</h3>
+                  <h3 className="text-xl font-semibold mb-1">{String(category.name) || 'Unnamed Category'}</h3>
                   <p className="text-sm opacity-90">
-                    {category.product_count || category.productCount || category.count || 0} products
+                    {String(category.product_count || category.productCount || category.count || 0)} products
                   </p>
                 </div>
               </div>
               {category.description && (
-                <p className="mt-2 text-gray-600 text-sm">{category.description}</p>
+                <p className="mt-2 text-gray-600 text-sm">{String(category.description)}</p>
               )}
             </div>
           ))}
