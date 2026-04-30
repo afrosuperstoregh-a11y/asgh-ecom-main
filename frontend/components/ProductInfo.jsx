@@ -2,14 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { ShoppingCart, Heart, Truck, Shield, RefreshCw, Star, Minus, Plus } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+import { useRouter } from 'next/navigation';
 
 export default function ProductInfo({ product }) {
+  const { addToCart } = useCart();
+  const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState({
     color: null,
     size: null,
   });
   const [showStickyBar, setShowStickyBar] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
 
   // Handle missing variants data gracefully
   const variants = product.variants || { colors: null, sizes: null };
@@ -43,24 +49,81 @@ export default function ProductInfo({ product }) {
     }));
   };
 
-  const handleAddToCart = () => {
-    console.log('Added to cart:', {
-      productId: product.id,
-      quantity,
-      selectedOptions,
-    });
+  const handleAddToCart = async () => {
+    if (!product || isAddingToCart) return;
+    
+    try {
+      setIsAddingToCart(true);
+      
+      await addToCart({
+        id: product.id.toString(),
+        name: product.name,
+        price: product.compare_price || product.price,
+        image: product.image_url || product.image || '/placeholder-product.svg',
+        category: product.categories?.name || 'Uncategorized'
+      });
+      
+      // Optional: Show success message
+      setTimeout(() => setIsAddingToCart(false), 1000);
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+      setIsAddingToCart(false);
+    }
   };
 
-  const handleBuyNow = () => {
-    console.log('Buy now:', {
-      productId: product.id,
-      quantity,
-      selectedOptions,
-    });
+  const handleBuyNow = async () => {
+    if (!product) return;
+    
+    try {
+      // Add to cart first
+      await addToCart({
+        id: product.id.toString(),
+        name: product.name,
+        price: product.compare_price || product.price,
+        image: product.image_url || product.image || '/placeholder-product.svg',
+        category: product.categories?.name || 'Uncategorized'
+      });
+      
+      // Redirect to checkout
+      router.push('/checkout');
+    } catch (error) {
+      console.error('Failed to process buy now:', error);
+    }
   };
 
-  const handleWishlist = () => {
-    console.log('Added to wishlist:', product.id);
+  const handleWishlist = async () => {
+    if (!product || isAddingToWishlist) return;
+    
+    try {
+      setIsAddingToWishlist(true);
+      
+      // Get existing wishlist from localStorage
+      const existingWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      
+      // Check if product is already in wishlist
+      if (!existingWishlist.find((item) => item.id === product.id)) {
+        // Add to wishlist
+        const wishlistItem = {
+          id: product.id,
+          name: product.name,
+          price: product.compare_price || product.price,
+          image: product.image_url || product.image || '/placeholder-product.svg',
+          category: product.categories?.name || 'Uncategorized',
+          addedAt: new Date().toISOString()
+        };
+        
+        existingWishlist.push(wishlistItem);
+        localStorage.setItem('wishlist', JSON.stringify(existingWishlist));
+        
+        // Optional: Show success message
+        setTimeout(() => setIsAddingToWishlist(false), 1000);
+      } else {
+        setIsAddingToWishlist(false);
+      }
+    } catch (error) {
+      console.error('Failed to add to wishlist:', error);
+      setIsAddingToWishlist(false);
+    }
   };
 
   const renderStars = (rating) => {
@@ -102,10 +165,10 @@ export default function ProductInfo({ product }) {
               <button
                 onClick={handleAddToCart}
                 className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 ml-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!(product.inventory_quantity > 0 || product.allow_backorder)}
+                disabled={!(product.inventory_quantity > 0 || product.allow_backorder) || isAddingToCart}
               >
                 <ShoppingCart className="h-4 w-4" />
-                <span>Add to Cart</span>
+                <span>{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
               </button>
             </div>
           </div>
@@ -250,10 +313,10 @@ export default function ProductInfo({ product }) {
           <button
             onClick={handleAddToCart}
             className="w-full bg-blue-600 text-white py-4 px-6 rounded-xl font-semibold hover:bg-blue-700 active:bg-blue-800 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-            disabled={!(product.inventory_quantity > 0 || product.allow_backorder)}
+            disabled={!(product.inventory_quantity > 0 || product.allow_backorder) || isAddingToCart}
           >
             <ShoppingCart className="h-5 w-5" />
-            <span className="text-lg">Add to Cart</span>
+            <span className="text-lg">{isAddingToCart ? 'Adding to Cart...' : 'Add to Cart'}</span>
           </button>
           
           <button
@@ -267,9 +330,10 @@ export default function ProductInfo({ product }) {
           <button
             onClick={handleWishlist}
             className="w-full border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-400 active:bg-gray-100 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-3"
+            disabled={isAddingToWishlist}
           >
-            <Heart className="h-5 w-5" />
-            <span>Add to Wishlist</span>
+            <Heart className={`h-5 w-5 ${isAddingToWishlist ? 'fill-red-500 text-red-500' : ''}`} />
+            <span>{isAddingToWishlist ? 'Adding to Wishlist...' : 'Add to Wishlist'}</span>
           </button>
         </div>
       </div>
