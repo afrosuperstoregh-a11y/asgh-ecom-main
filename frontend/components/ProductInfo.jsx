@@ -16,9 +16,18 @@ export default function ProductInfo({ product }) {
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
+  const [isInWishlist, setIsInWishlist] = useState(false);
 
   // Handle missing variants data gracefully
   const variants = product.variants || { colors: null, sizes: null };
+  
+  // Check if product is in wishlist on component mount and when product changes
+  useEffect(() => {
+    if (product) {
+      const existingWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      setIsInWishlist(existingWishlist.some((item) => item.id === product.id));
+    }
+  }, [product]);
   
   // Sticky bar scroll detection
   useEffect(() => {
@@ -55,15 +64,20 @@ export default function ProductInfo({ product }) {
     try {
       setIsAddingToCart(true);
       
-      await addToCart({
-        id: product.id.toString(),
-        name: product.name,
-        price: product.compare_price || product.price,
-        image: product.image_url || product.image || '/placeholder-product.svg',
-        category: product.categories?.name || 'Uncategorized'
-      });
+      // Add the specified quantity to cart
+      for (let i = 0; i < quantity; i++) {
+        await addToCart({
+          id: product.id.toString(),
+          name: product.name,
+          price: product.compare_price || product.price,
+          image: product.image_url || product.image || '/placeholder-product.svg',
+          category: product.categories?.name || 'Uncategorized'
+        });
+      }
       
-      // Optional: Show success message
+      // Reset quantity to 1 after adding to cart
+      setQuantity(1);
+      
       setTimeout(() => setIsAddingToCart(false), 1000);
     } catch (error) {
       console.error('Failed to add to cart:', error);
@@ -75,14 +89,16 @@ export default function ProductInfo({ product }) {
     if (!product) return;
     
     try {
-      // Add to cart first
-      await addToCart({
-        id: product.id.toString(),
-        name: product.name,
-        price: product.compare_price || product.price,
-        image: product.image_url || product.image || '/placeholder-product.svg',
-        category: product.categories?.name || 'Uncategorized'
-      });
+      // Add the specified quantity to cart first
+      for (let i = 0; i < quantity; i++) {
+        await addToCart({
+          id: product.id.toString(),
+          name: product.name,
+          price: product.compare_price || product.price,
+          image: product.image_url || product.image || '/placeholder-product.svg',
+          category: product.categories?.name || 'Uncategorized'
+        });
+      }
       
       // Redirect to checkout
       router.push('/checkout');
@@ -101,7 +117,9 @@ export default function ProductInfo({ product }) {
       const existingWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
       
       // Check if product is already in wishlist
-      if (!existingWishlist.find((item) => item.id === product.id)) {
+      const existingIndex = existingWishlist.findIndex((item) => item.id === product.id);
+      
+      if (existingIndex === -1) {
         // Add to wishlist
         const wishlistItem = {
           id: product.id,
@@ -115,13 +133,20 @@ export default function ProductInfo({ product }) {
         existingWishlist.push(wishlistItem);
         localStorage.setItem('wishlist', JSON.stringify(existingWishlist));
         
-        // Optional: Show success message
-        setTimeout(() => setIsAddingToWishlist(false), 1000);
+        // Show success feedback
+        console.log('Product added to wishlist');
+        setIsInWishlist(true);
       } else {
-        setIsAddingToWishlist(false);
+        // Product already in wishlist - remove it (toggle functionality)
+        existingWishlist.splice(existingIndex, 1);
+        localStorage.setItem('wishlist', JSON.stringify(existingWishlist));
+        console.log('Product removed from wishlist');
+        setIsInWishlist(false);
       }
+      
+      setTimeout(() => setIsAddingToWishlist(false), 500);
     } catch (error) {
-      console.error('Failed to add to wishlist:', error);
+      console.error('Failed to update wishlist:', error);
       setIsAddingToWishlist(false);
     }
   };
@@ -332,8 +357,8 @@ export default function ProductInfo({ product }) {
             className="w-full border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-400 active:bg-gray-100 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-3"
             disabled={isAddingToWishlist}
           >
-            <Heart className={`h-5 w-5 ${isAddingToWishlist ? 'fill-red-500 text-red-500' : ''}`} />
-            <span>{isAddingToWishlist ? 'Adding to Wishlist...' : 'Add to Wishlist'}</span>
+            <Heart className={`h-5 w-5 ${isInWishlist ? 'fill-red-500 text-red-500' : ''}`} />
+            <span>{isAddingToWishlist ? 'Updating...' : (isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist')}</span>
           </button>
         </div>
       </div>

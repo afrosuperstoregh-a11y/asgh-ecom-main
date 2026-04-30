@@ -40,6 +40,8 @@ export default function CartPage() {
   };
 
   const handleUpdateQuantity = async (id: string, quantity: number) => {
+    if (quantity < 1) return;
+    
     try {
       setUpdatingItemId(id);
       updateQuantity(id, quantity);
@@ -149,7 +151,7 @@ export default function CartPage() {
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => handleUpdateQuantity(item.id.toString(), item.quantity - 1)}
-                          disabled={updatingItemId === item.id.toString()}
+                          disabled={updatingItemId === item.id.toString() || item.quantity <= 1}
                           className="icon-button p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors touch-target disabled:opacity-50 disabled:hover:bg-transparent"
                           aria-label="Decrease quantity"
                         >

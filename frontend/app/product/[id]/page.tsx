@@ -33,13 +33,19 @@ export default function ProductPage() {
     try {
       setAddingToCart(true);
       
-      await addToCart({
-        id: product.id,
-        name: product.name,
-        price: product.compare_price || product.price,
-        image: product.image_url || product.image || '/placeholder-product.svg',
-        category: product.categories?.name || 'Uncategorized'
-      });
+      // Add the specified quantity to cart
+      for (let i = 0; i < quantity; i++) {
+        await addToCart({
+          id: product.id.toString(),
+          name: product.name,
+          price: product.compare_price || product.price,
+          image: product.image_url || product.image || '/placeholder-product.svg',
+          category: product.categories?.name || 'Uncategorized'
+        });
+      }
+      
+      // Reset quantity to 1 after adding to cart
+      setQuantity(1);
       
       setTimeout(() => setAddingToCart(false), 1000);
     } catch (error) {
