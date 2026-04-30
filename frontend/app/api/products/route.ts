@@ -24,9 +24,10 @@ function generateProductNameFromImage(imageUrl: string | string[] | null): strin
   
   if (Array.isArray(imageUrl)) {
     if (imageUrl.length === 0) return '';
-    filename = imageUrl[0].split('/').pop() || '';
+    const firstUrl = imageUrl[0];
+    filename = (typeof firstUrl === 'string' ? firstUrl : String(firstUrl)).split('/').pop() || '';
   } else {
-    filename = imageUrl.split('/').pop() || '';
+    filename = (typeof imageUrl === 'string' ? imageUrl : String(imageUrl)).split('/').pop() || '';
   }
   
   return filename
