@@ -179,15 +179,27 @@ export default function FoodBeveragesPage() {
 
   const preloadImageUrls = async (files: StorageFile[]) => {
     const urls: Record<string, string> = {};
-    const supabaseUrl = 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public';
+    const supabaseClient = supabase();
     
     console.log(`Preloading URLs for ${files.length} files...`);
+    
+    if (!supabaseClient) {
+      console.error('Supabase client not initialized');
+      setImageUrls(urls);
+      return;
+    }
     
     for (const file of files) {
       try {
         const key = file.id || file.name;
         const fullPath = `${folderPath}/${file.name}`;
-        const url = `${supabaseUrl}/${fullPath}`;
+        
+        // Use proper Supabase getPublicUrl method
+        const { data } = supabaseClient.storage
+          .from(bucketName)
+          .getPublicUrl(fullPath);
+        
+        const url = data.publicUrl;
         urls[key] = url;
         
         // Log first few URLs for debugging
@@ -196,6 +208,11 @@ export default function FoodBeveragesPage() {
         }
       } catch (error) {
         console.error(`Error getting URL for ${file.name}:`, error);
+        // Use fallback URL
+        const key = file.id || file.name;
+        const fullPath = `${folderPath}/${file.name}`;
+        const fallbackUrl = `https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/${fullPath}`;
+        urls[key] = fallbackUrl;
       }
     }
     
