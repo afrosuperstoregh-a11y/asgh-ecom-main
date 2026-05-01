@@ -431,11 +431,14 @@ export async function GET(request: Request) {
             
             // Construct storage URL for product images
             if (cleanPath.includes('product-images/') || cleanPath.includes('&')) {
-              return `${supabaseUrl}/storage/v1/object/public/product-images/${cleanPath}`;
+              // Properly encode the path for special characters like &
+              const encodedPath = cleanPath.split('/').map(encodeURIComponent).join('/');
+              return `${supabaseUrl}/storage/v1/object/public/product-images/${encodedPath}`;
             }
             
-            // Default storage path
-            return `${supabaseUrl}/storage/v1/object/public/product-images/${cleanPath}`;
+            // Default storage path with proper encoding
+            const encodedPath = cleanPath.split('/').map(encodeURIComponent).join('/');
+            return `${supabaseUrl}/storage/v1/object/public/product-images/${encodedPath}`;
           }
         }
         
