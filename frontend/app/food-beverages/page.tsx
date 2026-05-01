@@ -64,68 +64,49 @@ export default function FoodBeveragesPage() {
       setLoading(true);
       setError(null);
 
-      // Predefined list of all 59 food & beverage product images
-      // Missing images will use fallback placeholders until uploaded
+      // Real working food & beverage images from database
+      // These images actually exist in Supabase Storage
       const predefinedImages = [
+        'cabbage-stew.png',
+        'chicken-wings-ghanaian-style-2.jpg',
+        'chicken.png',
+        'different-stew-party-orders-1.jpg',
+        'different-stew-party-orders-2.jpg',
+        'different-stew-party-orders-3.jpg',
+        'different-stew-party-orders-4.jpg',
+        'fried-fish-2.jpg',
+        'fried-fish.jpg',
+        'fried-rice-and-chicken.jpg',
+        'fried-rice-with-chicken-combo-2.jpg',
+        'fried-rice-with-chicken-combo-3.jpg',
+        'fried-rice-with-chicken-combo-4.jpg',
+        'fried-rice-with-chicken-combo.jpg',
+        'ghana-nkulenu-plam-sauce.jpeg',
+        'jollof-combo.jpg',
+        'jollof-rice.jpg',
+        'jolof-rice,-plaintain-vegetables-&-chicken.png',
+        'kenkey.jpg',
+        'khebab-1.jpg',
+        'khebab-2.jpg',
+        'kontomire-stew.jpg',
+        'meat-pie.png',
+        'neat-fufu.png',
+        'nigerian-egusi-stew.jpg',
+        'palm-oil.jpg',
+        'pasta.png',
+        'rice-with-green-pea.png',
+        'sierra-leone-food.jpg',
+        'spaghetti.jpg',
+        'tuozafi-2.jpg',
+        'tuozafi.jpg',
+        'vegetables-&-bake-beans.png',
+        'waakye-with-fish-combo-1.jpg',
+        'waakye-with-fish-combo-2.jpg',
+        'waakye.png',
+        // Add the 3 original working images
         'all-ghanaian-foods-party-orders-1.jpg',
         'all-ghanaian-foods-party-orders-2.jpg',
-        'all-ghanaian-foods-party-orders-3.jpg',
-        'all-ghanaian-foods-party-orders-4.jpg',
-        'all-ghanaian-foods-party-orders-5.jpg',
-        'all-ghanaian-foods-party-orders-6.jpg',
-        'all-ghanaian-foods-party-orders-7.jpg',
-        'all-ghanaian-foods-party-orders-8.jpg',
-        'all-ghanaian-foods-party-orders-9.jpg',
-        'all-ghanaian-foods-party-orders-10.jpg',
-        'jollof-rice-special-1.jpg',
-        'jollof-rice-special-2.jpg',
-        'jollof-rice-special-3.jpg',
-        'banku-and-okro-soup-1.jpg',
-        'banku-and-okro-soup-2.jpg',
-        'fufu-and-palm-nut-soup-1.jpg',
-        'fufu-and-palm-nut-soup-2.jpg',
-        'kenkey-and-fish-1.jpg',
-        'kenkey-and-fish-2.jpg',
-        'waakye-1.jpg',
-        'waakye-2.jpg',
-        'shito-1.jpg',
-        'shito-2.jpg',
-        'gari-1.jpg',
-        'gari-2.jpg',
-        'kelewele-1.jpg',
-        'kelewele-2.jpg',
-        'fried-plantain-1.jpg',
-        'fried-plantain-2.jpg',
-        'fried-rice-1.jpg',
-        'fried-rice-2.jpg',
-        'jollof-rice-1.jpg',
-        'jollof-rice-2.jpg',
-        'waakye-with-stew-1.jpg',
-        'waakye-with-stew-2.jpg',
-        'red-red-1.jpg',
-        'red-red-2.jpg',
-        'palava-sauce-1.jpg',
-        'palava-sauce-2.jpg',
-        'groundnut-soup-1.jpg',
-        'groundnut-soup-2.jpg',
-        'light-soup-1.jpg',
-        'light-soup-2.jpg',
-        'banga-soup-1.jpg',
-        'banga-soup-2.jpg',
-        'egusi-soup-1.jpg',
-        'egusi-soup-2.jpg',
-        'okro-soup-1.jpg',
-        'okro-soup-2.jpg',
-        'kontomire-soup-1.jpg',
-        'kontomire-soup-2.jpg',
-        'african-salad-1.jpg',
-        'african-salad-2.jpg',
-        'fruit-juice-mix-1.jpg',
-        'fruit-juice-mix-2.jpg',
-        'sobolo-1.jpg',
-        'sobolo-2.jpg',
-        'zobo-1.jpg',
-        'zobo-2.jpg'
+        'all-ghanaian-foods-party-orders-3.jpg'
       ];
 
       // Generate mock storage file objects
@@ -141,7 +122,7 @@ export default function FoodBeveragesPage() {
         };
       });
 
-      console.log(`Generated ${mockFiles.length} food & beverage products (3 with images, 52 with placeholders)`);
+      console.log(`Generated ${mockFiles.length} food & beverage products (39 with real images, 0 with placeholders)`);
       
       if (mockFiles.length > 0) {
         setStorageFiles(mockFiles);
@@ -642,8 +623,9 @@ export default function FoodBeveragesPage() {
               <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-left max-w-md mx-auto">
                 <p className="text-sm text-yellow-800 font-medium mb-2">Note:</p>
                 <ul className="text-xs text-yellow-700 space-y-1">
-                  <li>• Showing all 55 food & beverage products</li>
-                  <li>• 3 products have real images, 52 use placeholders</li>
+                  <li>• Real working food & beverage images from database (39 total)</li>
+                  <li>• These images actually exist in Supabase Storage</li>
+                  <li>• Missing images will use fallback placeholders until uploaded real images, 52 use placeholders</li>
                   <li>• Images load from Supabase Storage with fallback system</li>
                   <li>• Try clicking the Refresh button above</li>
                 </ul>
