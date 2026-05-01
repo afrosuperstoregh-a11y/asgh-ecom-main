@@ -293,7 +293,14 @@ export async function GET(request: Request) {
 
     // Add category filter
     if (category && category !== 'all') {
-      query = query.eq('categories.slug', category);
+      // Special handling for food-beverages category
+      if (category === 'food-beverages') {
+        // For food-beverages, don't filter by category - let all food-related products show
+        // We'll filter them in the application layer
+        console.log('Food & beverages category requested - including all food-related products');
+      } else {
+        query = query.eq('categories.slug', category);
+      }
     }
 
     // Add search filter
@@ -388,7 +395,7 @@ export async function GET(request: Request) {
     }
 
     // Process products to ensure images are arrays and handle URLs properly
-    const processedProducts = (products || []).map((product: any) => {
+    let processedProducts = (products || []).map((product: any) => {
       // Handle images field - convert string to array if needed
       let images = [];
       if (product.images) {
@@ -480,19 +487,47 @@ export async function GET(request: Request) {
       })
     }
 
+    // Special filtering for food-beverages category
+    if (category === 'food-beverages') {
+      console.log('Filtering for food & beverages category...');
+      processedProducts = processedProducts.filter((product: any) => {
+        const name = (product.name || '').toLowerCase();
+        const categoryName = (product.categories?.name || '').toLowerCase();
+        
+        return categoryName.includes('food') || 
+               categoryName.includes('beverage') ||
+               name.includes('food') || 
+               name.includes('rice') ||
+               name.includes('stew') ||
+               name.includes('jollof') ||
+               name.includes('kenkey') ||
+               name.includes('waakye') ||
+               name.includes('banku') ||
+               name.includes('shito') ||
+               name.includes('gari') ||
+               name.includes('kelewele') ||
+               name.includes('plantain') ||
+               name.includes('soup') ||
+               name.includes('egusi') ||
+               name.includes('fufu');
+      });
+      console.log(`Filtered to ${processedProducts.length} food & beverage products`);
+    }
+
     console.log('=== PRODUCT FETCH DEBUG ===');
     console.log('Environment variables valid:', hasValidEnv);
     console.log('Database available:', databaseAvailable);
     console.log('Total products found:', products?.length || 0);
+    console.log('Processed products after filtering:', processedProducts.length);
     console.log('Total items count:', count);
     console.log('Limit applied:', shouldLimit ? limit : 'No limit');
     console.log('Filters applied:', { category, search, featured, minPrice, maxPrice });
-    console.log('Sample product data:', products?.[0] ? {
-      id: products[0].id,
-      name: products[0].name,
-      status: products[0].status,
-      images: products[0].images,
-      categories: products[0].categories
+    console.log('Sample product data:', processedProducts?.[0] ? {
+      id: processedProducts[0].id,
+      name: processedProducts[0].name,
+      status: processedProducts[0].status,
+      images: processedProducts[0].images,
+      categories: processedProducts[0].categories
     } : 'No products');
     console.log('==========================');
 
