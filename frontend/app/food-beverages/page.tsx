@@ -64,7 +64,7 @@ export default function FoodBeveragesPage() {
       setLoading(true);
       setError(null);
 
-      // Predefined list of all 55 food & beverage product images
+      // Predefined list of all 59 food & beverage product images
       // Missing images will use fallback placeholders until uploaded
       const predefinedImages = [
         'all-ghanaian-foods-party-orders-1.jpg',
@@ -129,14 +129,17 @@ export default function FoodBeveragesPage() {
       ];
 
       // Generate mock storage file objects
-      const mockFiles: StorageFile[] = predefinedImages.map((imageName, index) => ({
-        name: imageName,
-        id: `food-bev-${index}`,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        size: 1024000, // Mock size
-        metadata: null
-      }));
+      const mockFiles: StorageFile[] = predefinedImages.map((imageName) => {
+        const nameWithoutExt = imageName.replace(/\.[^/.]+$/, '');
+        return {
+          name: imageName,
+          id: nameWithoutExt, // Use filename without extension as ID for better debugging
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          size: 1024000, // Mock size
+          metadata: null
+        };
+      });
 
       console.log(`Generated ${mockFiles.length} food & beverage products (3 with images, 52 with placeholders)`);
       
