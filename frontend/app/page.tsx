@@ -48,6 +48,25 @@ export default function HomePage() {
       {/* Shop by Category Section */}
       <ShopByCategory />
 
+      {/* Food & Beverages Section */}
+      <section className="py-12 md:py-16 bg-gradient-to-br from-green-50 to-yellow-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8 md:mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Food & Beverages</h2>
+            <p className="text-base md:text-lg text-gray-600 px-4">Discover our authentic African food and beverage collection</p>
+          </div>
+          <div className="text-center mb-8">
+            <Link
+              href="/food-beverages"
+              className="inline-flex items-center px-6 md:px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors duration-200"
+            >
+              Browse All Food & Beverages
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* All Products */}
       {!loading && (
         <section className="py-12 md:py-16 bg-white">
