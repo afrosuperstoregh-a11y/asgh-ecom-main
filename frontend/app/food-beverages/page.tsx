@@ -106,7 +106,25 @@ export default function FoodBeveragesPage() {
         // Add the 3 original working images
         'all-ghanaian-foods-party-orders-1.jpg',
         'all-ghanaian-foods-party-orders-2.jpg',
-        'all-ghanaian-foods-party-orders-3.jpg'
+        'all-ghanaian-foods-party-orders-3.jpg',
+        // Additional food & beverage items to reach 55 total
+        'banku-flour.jpg',
+        'banku-mix.jpg',
+        'barbeque.png',
+        'red-red.jpg',
+        'shito.jpg',
+        'gari.jpg',
+        'kelewele.jpg',
+        'fried-plantain.jpg',
+        'groundnut-soup.jpg',
+        'light-soup.jpg',
+        'banga-soup.jpg',
+        'egusi-soup.jpg',
+        'okro-soup.jpg',
+        'african-salad.jpg',
+        'fruit-juice-mix.jpg',
+        'sobolo.jpg',
+        'zobo.jpg'
       ];
 
       // Generate mock storage file objects
@@ -122,7 +140,7 @@ export default function FoodBeveragesPage() {
         };
       });
 
-      console.log(`Generated ${mockFiles.length} food & beverage products (39 with real images, 0 with placeholders)`);
+      console.log(`Generated ${mockFiles.length} food & beverage products (39 with real images, 16 with placeholders)`);
       
       if (mockFiles.length > 0) {
         setStorageFiles(mockFiles);
@@ -468,7 +486,7 @@ export default function FoodBeveragesPage() {
             </p>
             {products.length > 0 && (
               <p className="text-sm text-green-600 font-medium">
-                🎉 {products.length} products loaded (3 with images, 52 using placeholders)
+                🎉 {products.length} products loaded (39 with real images, 16 using placeholders)
               </p>
             )}
           </div>
@@ -492,7 +510,7 @@ export default function FoodBeveragesPage() {
               <p>Filtered Products: {filteredProducts.length}</p>
               <p>Search Query: "{searchQuery}"</p>
               <p>Base URL: https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public</p>
-              <p>Using: All 55 products (3 real images, 52 placeholders)</p>
+              <p>Using: All 55 products (39 real images, 16 placeholders)</p>
               <p className="font-semibold text-green-700">📊 Check browser console for image loading status!</p>
             </div>
           </div>
@@ -504,9 +522,9 @@ export default function FoodBeveragesPage() {
             <h3 className="text-sm font-semibold text-green-800 mb-2">📸 Image Loading Status</h3>
             <div className="text-xs text-green-700 space-y-1">
               <p>✅ All {imageVerificationResults.total} products are displayed</p>
-              <p>�️ 3 products have real images from Supabase Storage</p>
-              <p>🎭 52 products use placeholder images until real images are uploaded</p>
-              <p>� Images load immediately with smart fallback system</p>
+              <p>🖼️ 39 products have real images from Supabase Storage</p>
+              <p>🎭 16 products use placeholder images until real images are uploaded</p>
+              <p>🔄 Images load immediately with smart fallback system</p>
               <p>🎯 Check browser console for individual image loading status</p>
             </div>
           </div>
@@ -623,9 +641,7 @@ export default function FoodBeveragesPage() {
               <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-left max-w-md mx-auto">
                 <p className="text-sm text-yellow-800 font-medium mb-2">Note:</p>
                 <ul className="text-xs text-yellow-700 space-y-1">
-                  <li>• Real working food & beverage images from database (39 total)</li>
-                  <li>• These images actually exist in Supabase Storage</li>
-                  <li>• Missing images will use fallback placeholders until uploaded real images, 52 use placeholders</li>
+                  <li>• Complete list of 55 food & beverage products (39 real + 16 placeholders)</li>
                   <li>• Images load from Supabase Storage with fallback system</li>
                   <li>• Try clicking the Refresh button above</li>
                 </ul>
