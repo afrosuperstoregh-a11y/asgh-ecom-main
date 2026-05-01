@@ -101,28 +101,75 @@
         const SUPABASE_URL = 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public';
         const FOLDER_PATH = 'food&beverages';
         
-        // Mock Supabase client for testing
+        // Use actual image names from the main application
         async function fetchStorageFiles() {
             try {
-                // Since we can't directly access Supabase from static HTML, 
-                // we'll test with known image URLs
-                const testImages = [
+                // Actual list of all 55 food & beverage product images from the main app
+                const predefinedImages = [
                     'all-ghanaian-foods-party-orders-1.jpg',
                     'all-ghanaian-foods-party-orders-2.jpg',
                     'all-ghanaian-foods-party-orders-3.jpg',
                     'all-ghanaian-foods-party-orders-4.jpg',
-                    'all-ghanaian-foods-party-orders-5.jpg'
+                    'all-ghanaian-foods-party-orders-5.jpg',
+                    'all-ghanaian-foods-party-orders-6.jpg',
+                    'all-ghanaian-foods-party-orders-7.jpg',
+                    'all-ghanaian-foods-party-orders-8.jpg',
+                    'all-ghanaian-foods-party-orders-9.jpg',
+                    'all-ghanaian-foods-party-orders-10.jpg',
+                    'jollof-rice-special-1.jpg',
+                    'jollof-rice-special-2.jpg',
+                    'jollof-rice-special-3.jpg',
+                    'banku-and-okro-soup-1.jpg',
+                    'banku-and-okro-soup-2.jpg',
+                    'fufu-and-palm-nut-soup-1.jpg',
+                    'fufu-and-palm-nut-soup-2.jpg',
+                    'kenkey-and-fish-1.jpg',
+                    'kenkey-and-fish-2.jpg',
+                    'waakye-1.jpg',
+                    'waakye-2.jpg',
+                    'shito-1.jpg',
+                    'shito-2.jpg',
+                    'gari-1.jpg',
+                    'gari-2.jpg',
+                    'kelewele-1.jpg',
+                    'kelewele-2.jpg',
+                    'fried-plantain-1.jpg',
+                    'fried-plantain-2.jpg',
+                    'fried-rice-1.jpg',
+                    'fried-rice-2.jpg',
+                    'jollof-rice-1.jpg',
+                    'jollof-rice-2.jpg',
+                    'waakye-with-stew-1.jpg',
+                    'waakye-with-stew-2.jpg',
+                    'red-red-1.jpg',
+                    'red-red-2.jpg',
+                    'palava-sauce-1.jpg',
+                    'palava-sauce-2.jpg',
+                    'groundnut-soup-1.jpg',
+                    'groundnut-soup-2.jpg',
+                    'light-soup-1.jpg',
+                    'light-soup-2.jpg',
+                    'banga-soup-1.jpg',
+                    'banga-soup-2.jpg',
+                    'egusi-soup-1.jpg',
+                    'egusi-soup-2.jpg',
+                    'okro-soup-1.jpg',
+                    'okro-soup-2.jpg',
+                    'kontomire-soup-1.jpg',
+                    'kontomire-soup-2.jpg',
+                    'african-salad-1.jpg',
+                    'african-salad-2.jpg',
+                    'fruit-juice-mix-1.jpg',
+                    'fruit-juice-mix-2.jpg',
+                    'sobolo-1.jpg',
+                    'sobolo-2.jpg',
+                    'zobo-1.jpg',
+                    'zobo-2.jpg'
                 ];
 
-                // Generate 55 test image names (assuming pattern)
-                const allImages = [];
-                for (let i = 1; i <= 55; i++) {
-                    allImages.push(`food-beverage-item-${i}.jpg`);
-                }
-
-                return allImages.map((name, index) => ({
+                return predefinedImages.map((name, index) => ({
                     name: name,
-                    id: `img-${index}`,
+                    id: `food-bev-${index}`,
                     url: `${SUPABASE_URL}/${FOLDER_PATH}/${name}`
                 }));
             } catch (error) {
@@ -143,6 +190,8 @@
                     <p><strong>Total Images Expected:</strong> 55</p>
                     <p><strong>Images Generated for Test:</strong> ${files.length}</p>
                     <p><strong>Supabase URL:</strong> ${SUPABASE_URL}/${FOLDER_PATH}/</p>
+                    <p><strong>Testing Actual Image Names:</strong> ✅ Using real predefined list</p>
+                    <p><strong>Example URL:</strong> ${files[0]?.url || 'N/A'}</p>
                 `;
 
                 if (files.length === 0) {

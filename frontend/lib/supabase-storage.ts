@@ -169,7 +169,9 @@ export function fixImageUrl(imageUrl?: string): string {
   if (imageUrl.includes('/') && !imageUrl.startsWith('http') && !imageUrl.startsWith('product-images/')) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     if (supabaseUrl) {
-      return `${supabaseUrl}/storage/v1/object/public/product-images/${imageUrl}`
+      // Encode special characters in the path
+      const encodedImageUrl = imageUrl.replace(/&/g, '%26')
+      return `${supabaseUrl}/storage/v1/object/public/product-images/${encodedImageUrl}`
     }
   }
 

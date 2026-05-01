@@ -59,7 +59,7 @@ export default function FoodBeveragesPage() {
       setError(null);
 
       // Predefined list of all 55 food & beverage product images
-      // This bypasses RLS policy issues by using direct URL generation
+      // Missing images will use fallback placeholders until uploaded
       const predefinedImages = [
         'all-ghanaian-foods-party-orders-1.jpg',
         'all-ghanaian-foods-party-orders-2.jpg',
@@ -132,7 +132,7 @@ export default function FoodBeveragesPage() {
         metadata: null
       }));
 
-      console.log(`Generated ${mockFiles.length} predefined food & beverage images`);
+      console.log(`Generated ${mockFiles.length} food & beverage products (3 with images, 52 with placeholders)`);
       
       if (mockFiles.length > 0) {
         setStorageFiles(mockFiles);
@@ -207,7 +207,8 @@ export default function FoodBeveragesPage() {
           .from(bucketName)
           .getPublicUrl(fullPath);
         
-        const url = data.publicUrl;
+        // Ensure URL is properly encoded
+        const url = data.publicUrl.replace(/food&beverages/g, 'food%26beverages');
         urls[key] = url;
         
         // Log first few URLs for debugging
@@ -216,10 +217,10 @@ export default function FoodBeveragesPage() {
         }
       } catch (error) {
         console.error(`Error getting URL for ${file.name}:`, error);
-        // Use fallback URL
+        // Use fallback URL with proper encoding
         const key = file.id || file.name;
         const fullPath = `${folderPath}/${file.name}`;
-        const fallbackUrl = `https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/${fullPath}`;
+        const fallbackUrl = `https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/${fullPath.replace(/food&beverages/g, 'food%26beverages')}`;
         urls[key] = fallbackUrl;
       }
     }
@@ -363,7 +364,7 @@ export default function FoodBeveragesPage() {
             </p>
             {products.length > 0 && (
               <p className="text-sm text-green-600 font-medium">
-                🎉 All {products.length} products loaded from Supabase Storage
+                🎉 {products.length} products loaded (3 with images, 52 using placeholders)
               </p>
             )}
           </div>
@@ -387,7 +388,7 @@ export default function FoodBeveragesPage() {
               <p>Filtered Products: {filteredProducts.length}</p>
               <p>Search Query: "{searchQuery}"</p>
               <p>Base URL: https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public</p>
-              <p>Using: Direct URL approach (bypasses RLS)</p>
+              <p>Using: All 55 products (3 real images, 52 placeholders)</p>
               <p className="font-semibold text-green-700">📊 Check browser console for image loading status!</p>
             </div>
           </div>
@@ -398,10 +399,10 @@ export default function FoodBeveragesPage() {
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
             <h3 className="text-sm font-semibold text-green-800 mb-2">📸 Image Loading Status</h3>
             <div className="text-xs text-green-700 space-y-1">
-              <p>✅ All {imageVerificationResults.total} product images are configured to display</p>
-              <p>🔄 Images load immediately with eager loading</p>
-              <p>🛡️ Fallback images will show if any image fails to load</p>
-              <p>📱 Optimized for all device sizes and network conditions</p>
+              <p>✅ All {imageVerificationResults.total} products are displayed</p>
+              <p>�️ 3 products have real images from Supabase Storage</p>
+              <p>🎭 52 products use placeholder images until real images are uploaded</p>
+              <p>� Images load immediately with smart fallback system</p>
               <p>🎯 Check browser console for individual image loading status</p>
             </div>
           </div>
@@ -426,8 +427,23 @@ export default function FoodBeveragesPage() {
                           // Try multiple fallback options
                           const target = e.target as HTMLImageElement;
                           
-                          // Try data URI fallback first
-                          const fallbackDataUri = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMjUgMTA4SDE3NVYxOTJIMTI1VjEwOFoiIGZpbGw9IiNEMUQ1REIiLz4KPGNpcmNsZSBjeD0iMTUwIiBjeT0iMTM1IiByPSIxNSIgZmlsbD0iI0QxRDVEQiIvPgo8cGF0aCBkPSJNMTM1IDE1MEgxNjVWMTY1SDEzNVYxNTBaIiBmaWxsPSIjRDFENURCIi8+Cjwvc3ZnPgo=';
+                          // Create a more informative placeholder with upload needed indicator
+                          const createPlaceholderSvg = () => {
+                            const svgContent = `
+                              <svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="300" height="300" fill="#F3F4F6"/>
+                                <rect width="300" height="300" fill="#E5E7EB"/>
+                                <path d="M125 80H175V140H125V80Z" fill="#9CA3AF"/>
+                                <circle cx="150" cy="105" r="15" fill="#6B7280"/>
+                                <path d="M135 120H165V130H135V120Z" fill="#6B7280"/>
+                                <path d="M100 160L125 180L175 160L200 180V220H100V160Z" fill="#D1D5DB"/>
+                                <text x="150" y="250" text-anchor="middle" fill="#6B7280" font-family="Arial, sans-serif" font-size="12">Image Needed</text>
+                                <text x="150" y="265" text-anchor="middle" fill="#9CA3AF" font-family="Arial, sans-serif" font-size="10">Upload Coming Soon</text>
+                              </svg>
+                            `;
+                            return 'data:image/svg+xml;base64,' + btoa(svgContent);
+                          };
+                          const fallbackDataUri = createPlaceholderSvg();
                           
                           // Try Supabase placeholder
                           if (!target.src.includes('placeholder')) {
@@ -482,8 +498,23 @@ export default function FoodBeveragesPage() {
                           // Try multiple fallback options
                           const target = e.target as HTMLImageElement;
                           
-                          // Try data URI fallback first
-                          const fallbackDataUri = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMjUgMTA4SDE3NVYxOTJIMTI1VjEwOFoiIGZpbGw9IiNEMUQ1REIiLz4KPGNpcmNsZSBjeD0iMTUwIiBjeT0iMTM1IiByPSIxNSIgZmlsbD0iI0QxRDVEQiIvPgo8cGF0aCBkPSJNMTM1IDE1MEgxNjVWMTY1SDEzNVYxNTBaIiBmaWxsPSIjRDFENURCIi8+Cjwvc3ZnPgo=';
+                          // Create a more informative placeholder with upload needed indicator
+                          const createPlaceholderSvg = () => {
+                            const svgContent = `
+                              <svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="300" height="300" fill="#F3F4F6"/>
+                                <rect width="300" height="300" fill="#E5E7EB"/>
+                                <path d="M125 80H175V140H125V80Z" fill="#9CA3AF"/>
+                                <circle cx="150" cy="105" r="15" fill="#6B7280"/>
+                                <path d="M135 120H165V130H135V120Z" fill="#6B7280"/>
+                                <path d="M100 160L125 180L175 160L200 180V220H100V160Z" fill="#D1D5DB"/>
+                                <text x="150" y="250" text-anchor="middle" fill="#6B7280" font-family="Arial, sans-serif" font-size="12">Image Needed</text>
+                                <text x="150" y="265" text-anchor="middle" fill="#9CA3AF" font-family="Arial, sans-serif" font-size="10">Upload Coming Soon</text>
+                              </svg>
+                            `;
+                            return 'data:image/svg+xml;base64,' + btoa(svgContent);
+                          };
+                          const fallbackDataUri = createPlaceholderSvg();
                           
                           // Try Supabase placeholder
                           if (!target.src.includes('placeholder')) {
@@ -542,10 +573,10 @@ export default function FoodBeveragesPage() {
               <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-left max-w-md mx-auto">
                 <p className="text-sm text-yellow-800 font-medium mb-2">Note:</p>
                 <ul className="text-xs text-yellow-700 space-y-1">
-                  <li>• Using predefined list of 55 food & beverage items</li>
-                  <li>• Images load directly from Supabase Storage URLs</li>
+                  <li>• Showing all 55 food & beverage products</li>
+                  <li>• 3 products have real images, 52 use placeholders</li>
+                  <li>• Images load from Supabase Storage with fallback system</li>
                   <li>• Try clicking the Refresh button above</li>
-                  <li>• Check browser console for loading status</li>
                 </ul>
               </div>
             )}

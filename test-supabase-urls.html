@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase URL Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .pending { background: #fff3cd; border-color: #ffeaa7; }
+        img {
+            max-width: 100px;
+            height: 100px;
+            object-fit: cover;
+            margin: 5px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Supabase URL Accessibility Test</h1>
+        <p>Testing if Supabase Storage URLs are accessible...</p>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public';
+        const FOLDER_PATH = 'food&beverages';
+        
+        // Test a few specific URLs that we know should exist
+        const testUrls = [
+            'all-ghanaian-foods-party-orders-1.jpg',
+            'jollof-rice-special-1.jpg',
+            'banku-and-okro-soup-1.jpg',
+            'waakye-1.jpg',
+            'sobolo-1.jpg'
+        ];
+
+        function testUrl(imageName) {
+            return new Promise((resolve) => {
+                const fullUrl = `${SUPABASE_URL}/${FOLDER_PATH}/${imageName}`;
+                const img = new Image();
+                
+                img.onload = () => {
+                    resolve({
+                        name: imageName,
+                        url: fullUrl,
+                        status: 'success',
+                        message: '✅ Image loaded successfully'
+                    });
+                };
+                
+                img.onerror = () => {
+                    resolve({
+                        name: imageName,
+                        url: fullUrl,
+                        status: 'error',
+                        message: '❌ Image failed to load'
+                    });
+                };
+                
+                img.src = fullUrl;
+                
+                // Timeout after 5 seconds
+                setTimeout(() => {
+                    resolve({
+                        name: imageName,
+                        url: fullUrl,
+                        status: 'error',
+                        message: '⏰ Timeout - Image took too long to load'
+                    });
+                }, 5000);
+            });
+        }
+
+        async function runTests() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Testing URLs...</p>';
+            
+            const results = [];
+            
+            for (const imageName of testUrls) {
+                const result = await testUrl(imageName);
+                results.push(result);
+                
+                // Update UI immediately for each result
+                updateResults(results);
+            }
+            
+            // Final summary
+            const successCount = results.filter(r => r.status === 'success').length;
+            const errorCount = results.filter(r => r.status === 'error').length;
+            
+            resultsDiv.innerHTML += `
+                <div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 5px;">
+                    <h3>📊 Test Summary</h3>
+                    <p><strong>Success:</strong> ${successCount}/${results.length}</p>
+                    <p><strong>Failed:</strong> ${errorCount}/${results.length}</p>
+                    <p><strong>Success Rate:</strong> ${((successCount / results.length) * 100).toFixed(1)}%</p>
+                </div>
+            `;
+        }
+
+        function updateResults(results) {
+            const resultsDiv = document.getElementById('results');
+            
+            const html = results.map(result => `
+                <div class="test-item ${result.status}">
+                    <strong>${result.name}</strong><br>
+                    <small>${result.url}</small><br>
+                    <span>${result.message}</span>
+                    ${result.status === 'success' ? `<img src="${result.url}" alt="${result.name}">` : ''}
+                </div>
+            `).join('');
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // Start tests when page loads
+        window.addEventListener('load', runTests);
+        
+        // Log to console for debugging
+        console.log('🔍 Testing Supabase URLs...');
+        console.log('Base URL:', SUPABASE_URL);
+        console.log('Folder:', FOLDER_PATH);
+    </script>
+</body>
+</html>
