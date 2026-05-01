@@ -44,6 +44,7 @@ export default function FoodBeveragesPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [imageVerificationResults, setImageVerificationResults] = useState<ImageVerificationResults | null>(null);
+  const [imageLoadStates, setImageLoadStates] = useState<Record<string, { loaded: boolean; failed: boolean }>>({});
   const { addToCart } = useCart();
 
   const bucketName = 'product-images';
@@ -51,6 +52,11 @@ export default function FoodBeveragesPage() {
 
   useEffect(() => {
     fetchStorageFiles();
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+      setImageLoadStates({});
+    };
   }, []);
 
   const fetchStorageFiles = async () => {
@@ -187,6 +193,7 @@ export default function FoodBeveragesPage() {
 
   const preloadImageUrls = async (files: StorageFile[]) => {
     const urls: Record<string, string> = {};
+    const loadStates: Record<string, { loaded: boolean; failed: boolean }> = {};
     const supabaseClient = supabase();
     
     console.log(`Preloading URLs for ${files.length} files...`);
@@ -194,9 +201,11 @@ export default function FoodBeveragesPage() {
     if (!supabaseClient) {
       console.error('Supabase client not initialized');
       setImageUrls(urls);
+      setImageLoadStates(loadStates);
       return;
     }
     
+    // Generate URLs first
     for (const file of files) {
       try {
         const key = file.id || file.name;
@@ -207,9 +216,12 @@ export default function FoodBeveragesPage() {
           .from(bucketName)
           .getPublicUrl(fullPath);
         
-        // Ensure URL is properly encoded
-        const url = data.publicUrl.replace(/food&beverages/g, 'food%26beverages');
+        // Ensure URL is properly encoded using encodeURIComponent for reliability
+        const encodedPath = encodeURIComponent(folderPath) + '/' + encodeURIComponent(file.name);
+        const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${encodedPath}`;
+        
         urls[key] = url;
+        loadStates[key] = { loaded: false, failed: false };
         
         // Log first few URLs for debugging
         if (files.indexOf(file) < 5) {
@@ -219,38 +231,136 @@ export default function FoodBeveragesPage() {
         console.error(`Error getting URL for ${file.name}:`, error);
         // Use fallback URL with proper encoding
         const key = file.id || file.name;
-        const fullPath = `${folderPath}/${file.name}`;
-        const fallbackUrl = `https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/${fullPath.replace(/food&beverages/g, 'food%26beverages')}`;
+        const encodedPath = encodeURIComponent(folderPath) + '/' + encodeURIComponent(file.name);
+        const fallbackUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${encodedPath}`;
         urls[key] = fallbackUrl;
+        loadStates[key] = { loaded: false, failed: false };
       }
     }
     
     console.log(`Successfully generated ${Object.keys(urls).length} image URLs`);
     setImageUrls(urls);
+    setImageLoadStates(loadStates);
     
-    // Verify images are accessible
+    // Preload images to verify accessibility
     await verifyImages(urls);
   };
 
   const verifyImages = async (urls: Record<string, string>) => {
-    console.log('🔍 Verifying image accessibility...');
+    console.log('🔍 Preloading images to verify accessibility...');
     let successCount = 0;
     let failCount = 0;
     const failedImages: string[] = [];
     const totalImages = Object.keys(urls).length;
     
-    // Skip verification for now - the fallback system will handle loading
-    // The verification was causing issues with lazy loading
-    console.log(`📊 Skipping verification - ${totalImages} images configured`);
-    console.log(`� Images will load on-demand with fallback system`);
+    const loadStates: Record<string, { loaded: boolean; failed: boolean }> = {};
     
-    // Store initial results for UI display
+    // Preload each image to verify it loads correctly
+    const preloadPromises = Object.entries(urls).map(([key, url]) => {
+      return new Promise<void>((resolve) => {
+        if (typeof window === 'undefined') {
+          // Skip preloading on server side
+          resolve();
+          return;
+        }
+        
+        const img = document.createElement('img');
+        const timeoutId = setTimeout(() => {
+          console.log(`⏰ Image preload timeout: ${key}`);
+          loadStates[key] = { loaded: false, failed: true };
+          failedImages.push(key);
+          failCount++;
+          resolve();
+        }, 10000); // 10 second timeout
+        
+        img.onload = () => {
+          clearTimeout(timeoutId);
+          loadStates[key] = { loaded: true, failed: false };
+          successCount++;
+          console.log(`✅ Image preloaded successfully: ${key}`);
+          resolve();
+        };
+        
+        img.onerror = () => {
+          clearTimeout(timeoutId);
+          loadStates[key] = { loaded: false, failed: true };
+          failedImages.push(key);
+          failCount++;
+          console.log(`❌ Image preload failed: ${key}`);
+          resolve();
+        };
+        
+        img.src = url;
+      });
+    });
+    
+    await Promise.all(preloadPromises);
+    
+    console.log(`📊 Preload complete: ${successCount} loaded, ${failCount} failed`);
+    
+    // Update load states
+    setImageLoadStates(loadStates);
+    
+    // Store results for UI display
     setImageVerificationResults({
       total: totalImages,
-      success: 0, // Will update as images load
-      failed: 0,  // Will update as images fail
-      failedImages: []
+      success: successCount,
+      failed: failCount,
+      failedImages
     });
+  };
+
+  const createPlaceholderSvg = () => {
+    const svgContent = `
+      <svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="300" height="300" fill="#F3F4F6"/>
+        <rect width="300" height="300" fill="#E5E7EB"/>
+        <path d="M125 80H175V140H125V80Z" fill="#9CA3AF"/>
+        <circle cx="150" cy="105" r="15" fill="#6B7280"/>
+        <path d="M135 120H165V130H135V120Z" fill="#6B7280"/>
+        <path d="M100 160L125 180L175 160L200 180V220H100V160Z" fill="#D1D5DB"/>
+        <text x="150" y="250" text-anchor="middle" fill="#6B7280" font-family="Arial, sans-serif" font-size="12">Image Needed</text>
+        <text x="150" y="265" text-anchor="middle" fill="#9CA3AF" font-family="Arial, sans-serif" font-size="10">Upload Coming Soon</text>
+      </svg>
+    `;
+    return 'data:image/svg+xml;base64,' + btoa(svgContent);
+  };
+
+  const handleImageError = (productId: string, productName: string, imageUrl: string, target: HTMLImageElement) => {
+    const currentState = imageLoadStates[productId] || { loaded: false, failed: false };
+    
+    // Only handle error if not already loaded and not already failed
+    if (!currentState.loaded && !currentState.failed) {
+      console.log(`❌ Image failed to load: ${productName} - ${imageUrl}`);
+      
+      // Update state to mark as failed
+      setImageLoadStates(prev => ({
+        ...prev,
+        [productId]: { loaded: false, failed: true }
+      }));
+      
+      const fallbackDataUri = createPlaceholderSvg();
+      
+      // Only set fallback if not already a placeholder
+      if (!target.src.includes('placeholder') && !target.src.includes('data:image/svg+xml')) {
+        target.src = fallbackDataUri;
+      }
+    }
+  };
+
+  const handleImageLoad = (productId: string, productName: string) => {
+    const currentState = imageLoadStates[productId] || { loaded: false, failed: false };
+    
+    // Only log success if not already loaded and not previously failed
+    if (!currentState.loaded && !currentState.failed) {
+      console.log(`✅ Image loaded successfully: ${productName}`);
+      
+      // Update state to mark as loaded
+      setImageLoadStates(prev => ({
+        ...prev,
+        [productId]: { loaded: true, failed: false }
+      }));
+    }
   };
 
   const handleAddToCart = (product: FoodProduct) => {
@@ -423,38 +533,11 @@ export default function FoodBeveragesPage() {
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                         sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, (max-width: 1536px) 20vw, 16vw"
                         onError={(e) => {
-                          console.log(`Image failed to load: ${product.name} - ${imageUrls[product.id]}`);
-                          // Try multiple fallback options
                           const target = e.target as HTMLImageElement;
-                          
-                          // Create a more informative placeholder with upload needed indicator
-                          const createPlaceholderSvg = () => {
-                            const svgContent = `
-                              <svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect width="300" height="300" fill="#F3F4F6"/>
-                                <rect width="300" height="300" fill="#E5E7EB"/>
-                                <path d="M125 80H175V140H125V80Z" fill="#9CA3AF"/>
-                                <circle cx="150" cy="105" r="15" fill="#6B7280"/>
-                                <path d="M135 120H165V130H135V120Z" fill="#6B7280"/>
-                                <path d="M100 160L125 180L175 160L200 180V220H100V160Z" fill="#D1D5DB"/>
-                                <text x="150" y="250" text-anchor="middle" fill="#6B7280" font-family="Arial, sans-serif" font-size="12">Image Needed</text>
-                                <text x="150" y="265" text-anchor="middle" fill="#9CA3AF" font-family="Arial, sans-serif" font-size="10">Upload Coming Soon</text>
-                              </svg>
-                            `;
-                            return 'data:image/svg+xml;base64,' + btoa(svgContent);
-                          };
-                          const fallbackDataUri = createPlaceholderSvg();
-                          
-                          // Try Supabase placeholder
-                          if (!target.src.includes('placeholder')) {
-                            target.src = fallbackDataUri;
-                          } else {
-                            // Final fallback to local placeholder
-                            target.src = '/placeholder-product.jpg';
-                          }
+                          handleImageError(product.id, product.name, imageUrls[product.id] || '', target);
                         }}
                         onLoad={() => {
-                          console.log(`Image loaded successfully: ${product.name}`);
+                          handleImageLoad(product.id, product.name);
                         }}
                         loading="eager"
                         quality={85}
@@ -494,38 +577,11 @@ export default function FoodBeveragesPage() {
                         className="object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
                         sizes="96px"
                         onError={(e) => {
-                          console.log(`List view image failed: ${product.name} - ${imageUrls[product.id]}`);
-                          // Try multiple fallback options
                           const target = e.target as HTMLImageElement;
-                          
-                          // Create a more informative placeholder with upload needed indicator
-                          const createPlaceholderSvg = () => {
-                            const svgContent = `
-                              <svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect width="300" height="300" fill="#F3F4F6"/>
-                                <rect width="300" height="300" fill="#E5E7EB"/>
-                                <path d="M125 80H175V140H125V80Z" fill="#9CA3AF"/>
-                                <circle cx="150" cy="105" r="15" fill="#6B7280"/>
-                                <path d="M135 120H165V130H135V120Z" fill="#6B7280"/>
-                                <path d="M100 160L125 180L175 160L200 180V220H100V160Z" fill="#D1D5DB"/>
-                                <text x="150" y="250" text-anchor="middle" fill="#6B7280" font-family="Arial, sans-serif" font-size="12">Image Needed</text>
-                                <text x="150" y="265" text-anchor="middle" fill="#9CA3AF" font-family="Arial, sans-serif" font-size="10">Upload Coming Soon</text>
-                              </svg>
-                            `;
-                            return 'data:image/svg+xml;base64,' + btoa(svgContent);
-                          };
-                          const fallbackDataUri = createPlaceholderSvg();
-                          
-                          // Try Supabase placeholder
-                          if (!target.src.includes('placeholder')) {
-                            target.src = fallbackDataUri;
-                          } else {
-                            // Final fallback to local placeholder
-                            target.src = '/placeholder-product.jpg';
-                          }
+                          handleImageError(product.id, product.name, imageUrls[product.id] || '', target);
                         }}
                         onLoad={() => {
-                          console.log(`List view image loaded: ${product.name}`);
+                          handleImageLoad(product.id, product.name);
                         }}
                         loading="eager"
                         quality={85}
