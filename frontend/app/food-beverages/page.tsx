@@ -28,6 +28,13 @@ interface FoodProduct {
   inStock: boolean;
 }
 
+interface ImageVerificationResults {
+  total: number;
+  success: number;
+  failed: number;
+  failedImages: string[];
+}
+
 export default function FoodBeveragesPage() {
   const [storageFiles, setStorageFiles] = useState<StorageFile[]>([]);
   const [products, setProducts] = useState<FoodProduct[]>([]);
@@ -36,6 +43,7 @@ export default function FoodBeveragesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [imageVerificationResults, setImageVerificationResults] = useState<ImageVerificationResults | null>(null);
   const { addToCart } = useCart();
 
   const bucketName = 'product-images';
@@ -224,46 +232,71 @@ export default function FoodBeveragesPage() {
   };
 
   const verifyImages = async (urls: Record<string, string>) => {
-    console.log('Verifying image accessibility...');
+    console.log('🔍 Verifying image accessibility...');
     let successCount = 0;
     let failCount = 0;
+    const failedImages: string[] = [];
     
-    for (const [key, url] of Object.entries(urls)) {
-      try {
+    // Track all image loading promises
+    const imagePromises = Object.entries(urls).map(([key, url]) => {
+      return new Promise<void>((resolve) => {
         const img = document.createElement('img');
+        let loaded = false;
+        
         img.onload = () => {
-          successCount++;
-          console.log(`✅ Image loaded: ${key}`);
+          if (!loaded) {
+            loaded = true;
+            successCount++;
+            console.log(`✅ Image loaded: ${key}`);
+            resolve();
+          }
         };
+        
         img.onerror = () => {
-          failCount++;
-          console.log(`❌ Image failed: ${key}`);
+          if (!loaded) {
+            loaded = true;
+            failCount++;
+            failedImages.push(key);
+            console.log(`❌ Image failed: ${key} - ${url}`);
+            resolve();
+          }
         };
+        
         img.src = url;
         
         // Add timeout to prevent hanging
         setTimeout(() => {
-          if (img.complete && img.naturalHeight !== 0) {
-            successCount++;
-          } else {
+          if (!loaded) {
+            loaded = true;
             failCount++;
+            failedImages.push(key);
+            console.log(`⏰ Image timeout: ${key} - ${url}`);
+            resolve();
           }
-        }, 3000);
-      } catch (error) {
-        failCount++;
-        console.error(`Error verifying ${key}:`, error);
-      }
+        }, 5000);
+      });
+    });
+    
+    // Wait for all image verifications to complete
+    await Promise.all(imagePromises);
+    
+    // Log comprehensive verification results
+    console.log(`📊 Image Verification Complete:`);
+    console.log(`✅ Successfully loaded: ${successCount}/${urls.length}`);
+    console.log(`❌ Failed to load: ${failCount}/${urls.length}`);
+    console.log(`📈 Success rate: ${((successCount / Number(urls.length)) * 100).toFixed(1)}%`);
+    
+    if (failedImages.length > 0) {
+      console.log(`� Failed Images:`, failedImages);
     }
     
-    // Log verification results after delay
-    setTimeout(() => {
-      console.log(`📊 Image Verification Results:`);
-      console.log(`✅ Successfully loaded: ${successCount}`);
-      console.log(`❌ Failed to load: ${failCount}`);
-      if (successCount + failCount > 0) {
-        console.log(`📈 Success rate: ${((successCount / (successCount + failCount)) * 100).toFixed(1)}%`);
-      }
-    }, 5000);
+    // Store verification results in state for UI display
+    setImageVerificationResults({
+      total: Number(urls.length),
+      success: successCount,
+      failed: failCount,
+      failedImages: failedImages
+    });
   };
 
   const handleAddToCart = (product: FoodProduct) => {
@@ -407,15 +440,47 @@ export default function FoodBeveragesPage() {
           </div>
         )}
 
-        {/* Image Loading Status - Always visible */}
-        {products.length > 0 && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <h3 className="text-sm font-semibold text-green-800 mb-2">📸 Image Loading Status</h3>
-            <div className="text-xs text-green-700">
-              <p>✅ All {products.length} product images are configured to display</p>
+        {/* Image Verification Results - Always visible */}
+        {imageVerificationResults && (
+          <div className={`mb-6 p-4 border rounded-lg ${
+            imageVerificationResults.failed === 0 
+              ? 'bg-green-50 border-green-200' 
+              : 'bg-yellow-50 border-yellow-200'
+          }`}>
+            <h3 className={`text-sm font-semibold mb-2 ${
+              imageVerificationResults.failed === 0 
+                ? 'text-green-800' 
+                : 'text-yellow-800'
+            }`}>
+              📸 Image Verification Results
+            </h3>
+            <div className={`text-xs space-y-1 ${
+              imageVerificationResults.failed === 0 
+                ? 'text-green-700' 
+                : 'text-yellow-700'
+            }`}>
+              <p>✅ Successfully loaded: {imageVerificationResults.success}/{imageVerificationResults.total}</p>
+              {imageVerificationResults.failed > 0 && (
+                <p>❌ Failed to load: {imageVerificationResults.failed}/{imageVerificationResults.total}</p>
+              )}
+              <p>📈 Success rate: {((imageVerificationResults.success / imageVerificationResults.total) * 100).toFixed(1)}%</p>
               <p>🔄 Images load as you scroll (lazy loading enabled)</p>
               <p>🛡️ Fallback images will show if any image fails to load</p>
               <p>📱 Optimized for all device sizes and network conditions</p>
+              
+              {imageVerificationResults.failed > 0 && (
+                <div className="mt-2 p-2 bg-yellow-100 rounded border border-yellow-300">
+                  <p className="font-semibold">⚠️ Images with issues:</p>
+                  <ul className="mt-1 space-y-1">
+                    {imageVerificationResults.failedImages.slice(0, 5).map(imageId => (
+                      <li key={imageId} className="text-xs">• {imageId}</li>
+                    ))}
+                    {imageVerificationResults.failedImages.length > 5 && (
+                      <li className="text-xs">• ... and {imageVerificationResults.failedImages.length - 5} more</li>
+                    )}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -436,9 +501,19 @@ export default function FoodBeveragesPage() {
                         sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, (max-width: 1536px) 20vw, 16vw"
                         onError={(e) => {
                           console.log(`Image failed to load: ${product.name} - ${imageUrls[product.id]}`);
-                          // Try fallback to placeholder
+                          // Try multiple fallback options
                           const target = e.target as HTMLImageElement;
-                          target.src = '/placeholder-product.jpg';
+                          
+                          // Try data URI fallback first
+                          const fallbackDataUri = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMjUgMTA4SDE3NVYxOTJIMTI1VjEwOFoiIGZpbGw9IiNEMUQ1REIiLz4KPGNpcmNsZSBjeD0iMTUwIiBjeT0iMTM1IiByPSIxNSIgZmlsbD0iI0QxRDVEQiIvPgo8cGF0aCBkPSJNMTM1IDE1MEgxNjVWMTY1SDEzNVYxNTBaIiBmaWxsPSIjRDFENURCIi8+Cjwvc3ZnPgo=';
+                          
+                          // Try Supabase placeholder
+                          if (!target.src.includes('placeholder')) {
+                            target.src = fallbackDataUri;
+                          } else {
+                            // Final fallback to local placeholder
+                            target.src = '/placeholder-product.jpg';
+                          }
                         }}
                         onLoad={() => {
                           console.log(`Image loaded successfully: ${product.name}`);
@@ -482,8 +557,19 @@ export default function FoodBeveragesPage() {
                         sizes="96px"
                         onError={(e) => {
                           console.log(`List view image failed: ${product.name} - ${imageUrls[product.id]}`);
+                          // Try multiple fallback options
                           const target = e.target as HTMLImageElement;
-                          target.src = '/placeholder-product.jpg';
+                          
+                          // Try data URI fallback first
+                          const fallbackDataUri = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMjUgMTA4SDE3NVYxOTJIMTI1VjEwOFoiIGZpbGw9IiNEMUQ1REIiLz4KPGNpcmNsZSBjeD0iMTUwIiBjeT0iMTM1IiByPSIxNSIgZmlsbD0iI0QxRDVEQiIvPgo8cGF0aCBkPSJNMTM1IDE1MEgxNjVWMTY1SDEzNVYxNTBaIiBmaWxsPSIjRDFENURCIi8+Cjwvc3ZnPgo=';
+                          
+                          // Try Supabase placeholder
+                          if (!target.src.includes('placeholder')) {
+                            target.src = fallbackDataUri;
+                          } else {
+                            // Final fallback to local placeholder
+                            target.src = '/placeholder-product.jpg';
+                          }
                         }}
                         onLoad={() => {
                           console.log(`List view image loaded: ${product.name}`);
