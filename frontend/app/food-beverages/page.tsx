@@ -55,26 +55,51 @@ export default function FoodBeveragesPage() {
         throw new Error('Supabase client not initialized');
       }
 
-      // List all files in the food&beverages folder
-      const { data, error } = await supabaseClient.storage
-        .from(bucketName)
-        .list(folderPath, {
-          limit: 100,
-          offset: 0,
-          sortBy: { column: 'created_at', order: 'desc' }
-        });
+      // Fetch all files with pagination to ensure we get all 55 images
+      let allFiles: StorageFile[] = [];
+      let hasMore = true;
+      let offset = 0;
+      const limit = 100; // Increased limit to get more files per request
 
-      if (error) {
-        throw error;
+      while (hasMore) {
+        const { data, error } = await supabaseClient.storage
+          .from(bucketName)
+          .list(folderPath, {
+            limit: limit,
+            offset: offset,
+            sortBy: { column: 'created_at', order: 'desc' }
+          });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data && data.length > 0) {
+          allFiles = [...allFiles, ...data];
+          console.log(`Fetched ${data.length} files, total: ${allFiles.length}`);
+          
+          // If we got less than the limit, we've got all files
+          if (data.length < limit) {
+            hasMore = false;
+          } else {
+            offset += limit;
+          }
+        } else {
+          hasMore = false;
+        }
       }
 
-      if (data) {
-        setStorageFiles(data);
+      console.log(`Total files fetched: ${allFiles.length}`);
+      
+      if (allFiles.length > 0) {
+        setStorageFiles(allFiles);
         // Convert storage files to product format
-        const convertedProducts = await convertToProducts(data);
+        const convertedProducts = await convertToProducts(allFiles);
         setProducts(convertedProducts);
         // Preload image URLs
-        await preloadImageUrls(data);
+        await preloadImageUrls(allFiles);
+      } else {
+        console.log('No files found in the food&beverages folder');
       }
     } catch (error) {
       console.error('Error fetching storage files:', error);
@@ -119,18 +144,27 @@ export default function FoodBeveragesPage() {
 
   const preloadImageUrls = async (files: StorageFile[]) => {
     const urls: Record<string, string> = {};
+    const supabaseUrl = 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public';
+    
+    console.log(`Preloading URLs for ${files.length} files...`);
     
     for (const file of files) {
       try {
         const key = file.id || file.name;
         const fullPath = `${folderPath}/${file.name}`;
-        const url = `https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/${fullPath}`;
+        const url = `${supabaseUrl}/${fullPath}`;
         urls[key] = url;
+        
+        // Log first few URLs for debugging
+        if (files.indexOf(file) < 5) {
+          console.log(`Image URL for ${file.name}: ${url}`);
+        }
       } catch (error) {
         console.error(`Error getting URL for ${file.name}:`, error);
       }
     }
     
+    console.log(`Successfully generated ${Object.keys(urls).length} image URLs`);
     setImageUrls(urls);
   };
 
@@ -236,11 +270,40 @@ export default function FoodBeveragesPage() {
         </div>
 
         {/* Results count */}
-        <div className="mb-6">
-          <p className="text-gray-600">
-            Showing {filteredProducts.length} of {products.length} food & beverage items
-          </p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-gray-600">
+              Showing {filteredProducts.length} of {products.length} food & beverage items
+            </p>
+            {products.length > 0 && (
+              <p className="text-sm text-green-600 font-medium">
+                🎉 All {products.length} products loaded from Supabase Storage
+              </p>
+            )}
+          </div>
+          <button
+            onClick={fetchStorageFiles}
+            className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+          >
+            <Loader2 className="h-4 w-4 mr-2" />
+            Refresh
+          </button>
         </div>
+
+        {/* Debug Information - Only in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="text-sm font-semibold text-blue-800 mb-2">Debug Information</h3>
+            <div className="text-xs text-blue-700 space-y-1">
+              <p>Storage Files: {storageFiles.length}</p>
+              <p>Products Generated: {products.length}</p>
+              <p>Image URLs Generated: {Object.keys(imageUrls).length}</p>
+              <p>Filtered Products: {filteredProducts.length}</p>
+              <p>Search Query: "{searchQuery}"</p>
+              <p>Folder Path: {folderPath}</p>
+            </div>
+          </div>
+        )}
 
         {/* Products Grid/List */}
         {filteredProducts.length > 0 ? (
@@ -329,19 +392,42 @@ export default function FoodBeveragesPage() {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No items found</h3>
             <p className="text-gray-500 mb-4">
-              {searchQuery ? `No food & beverages match "${searchQuery}"` : 'No items available'}
+              {searchQuery ? `No food & beverages match "${searchQuery}"` : 
+               products.length === 0 ? 'No food & beverage items found in Supabase Storage' :
+               'No items match your current filters'}
             </p>
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="text-green-600 hover:text-green-700 font-medium"
-              >
-                Clear search
-              </button>
+            
+            {products.length === 0 && !searchQuery && (
+              <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-left max-w-md mx-auto">
+                <p className="text-sm text-yellow-800 font-medium mb-2">Troubleshooting:</p>
+                <ul className="text-xs text-yellow-700 space-y-1">
+                  <li>• Check if images exist in the food&beverages folder</li>
+                  <li>• Verify Supabase Storage permissions</li>
+                  <li>• Try clicking the Refresh button above</li>
+                  <li>• Check browser console for errors</li>
+                </ul>
+              </div>
             )}
-            <Link href="/" className="block mt-4 text-green-600 hover:text-green-700">
-              Continue shopping
-            </Link>
+            
+            <div className="space-y-2">
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="text-green-600 hover:text-green-700 font-medium"
+                >
+                  Clear search
+                </button>
+              )}
+              <button
+                onClick={fetchStorageFiles}
+                className="block mx-auto text-green-600 hover:text-green-700 font-medium"
+              >
+                Refresh Products
+              </button>
+              <Link href="/" className="block mt-4 text-green-600 hover:text-green-700">
+                Continue shopping
+              </Link>
+            </div>
           </div>
         )}
       </main>
