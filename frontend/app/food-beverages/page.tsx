@@ -334,7 +334,7 @@ export default function FoodBeveragesPage() {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl xl:max-w-screen-2xl 2xl:max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8">
         {/* Search and Controls */}
         <div className="mb-8 flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
@@ -350,18 +350,20 @@ export default function FoodBeveragesPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <div className="flex border border-gray-300 rounded-lg">
+            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`px-3 py-2 ${viewMode === 'grid' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-50'} transition-colors`}
+                className={`px-3 py-2 ${viewMode === 'grid' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-50'} transition-colors flex items-center gap-2`}
               >
-                <Grid className="h-5 w-5" />
+                <Grid className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="hidden sm:inline lg:inline xl:inline">Grid</span>
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`px-3 py-2 ${viewMode === 'list' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-50'} transition-colors`}
+                className={`px-3 py-2 ${viewMode === 'list' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-50'} transition-colors flex items-center gap-2 border-l border-gray-300`}
               >
-                <List className="h-5 w-5" />
+                <List className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="hidden sm:inline lg:inline xl:inline">List</span>
               </button>
             </div>
           </div>
@@ -420,7 +422,7 @@ export default function FoodBeveragesPage() {
 
         {/* Products Grid/List */}
         {filteredProducts.length > 0 ? (
-          <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6' : 'space-y-6'}>
+          <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6' : 'space-y-6'}>
             {filteredProducts.map((product) => (
               <div key={product.id}>
                 {viewMode === 'grid' ? (
@@ -431,7 +433,7 @@ export default function FoodBeveragesPage() {
                         alt={product.name}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
+                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, (max-width: 1536px) 20vw, 16vw"
                         onError={(e) => {
                           console.log(`Image failed to load: ${product.name} - ${imageUrls[product.id]}`);
                           // Try fallback to placeholder
@@ -449,11 +451,11 @@ export default function FoodBeveragesPage() {
                         In Stock
                       </div>
                     </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2 text-sm line-clamp-2">{product.name}</h3>
-                      <p className="text-xs text-gray-600 mb-3 line-clamp-2">{product.description}</p>
+                    <div className="p-4 sm:p-3 lg:p-4">
+                      <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-xs lg:text-sm line-clamp-2 group-hover:text-green-700 transition-colors">{product.name}</h3>
+                      <p className="text-xs text-gray-600 mb-3 line-clamp-2 hidden sm:block lg:block">{product.description}</p>
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-lg font-bold text-gray-900">${product.price}</span>
+                        <span className="text-lg font-bold text-gray-900 sm:text-base lg:text-lg">${product.price}</span>
                         <div className="flex items-center">
                           <Star className="h-4 w-4 text-yellow-400 fill-current" />
                           <span className="text-xs text-gray-600 ml-1">4.5</span>
@@ -461,21 +463,22 @@ export default function FoodBeveragesPage() {
                       </div>
                       <button
                         onClick={() => handleAddToCart(product)}
-                        className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                        className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium transform hover:scale-105 transition-transform duration-200"
                       >
                         <ShoppingCart className="h-4 w-4 inline mr-2" />
-                        Add to Cart
+                        <span className="hidden sm:inline lg:inline">Add to Cart</span>
+                        <span className="sm:hidden lg:hidden">Add</span>
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center p-4 gap-4 h-full bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
-                    <div className="relative w-24 h-24 flex-shrink-0">
+                    <div className="relative w-24 h-24 sm:w-20 sm:h-20 lg:w-32 lg:h-32 flex-shrink-0">
                       <Image
                         src={imageUrls[product.id] || '/placeholder-product.jpg'}
                         alt={product.name}
                         fill
-                        className="object-cover rounded-lg"
+                        className="object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
                         sizes="96px"
                         onError={(e) => {
                           console.log(`List view image failed: ${product.name} - ${imageUrls[product.id]}`);
