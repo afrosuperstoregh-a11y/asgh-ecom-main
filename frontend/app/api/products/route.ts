@@ -282,7 +282,7 @@ export async function GET(request: Request) {
       .from('products')
       .select(`
         *,
-        categories!inner(name, slug)
+        categories(name, slug)
       `, { count: 'exact' })
       .eq('status', 'active');
 
@@ -299,6 +299,7 @@ export async function GET(request: Request) {
         // We'll filter them in the application layer
         console.log('Food & beverages category requested - including all food-related products');
       } else {
+        // For other categories, only filter if category exists
         query = query.eq('categories.slug', category);
       }
     }
@@ -490,6 +491,7 @@ export async function GET(request: Request) {
     // Special filtering for food-beverages category
     if (category === 'food-beverages') {
       console.log('Filtering for food & beverages category...');
+      const beforeCount = processedProducts.length;
       processedProducts = processedProducts.filter((product: any) => {
         const name = (product.name || '').toLowerCase();
         const categoryName = (product.categories?.name || '').toLowerCase();
@@ -511,7 +513,15 @@ export async function GET(request: Request) {
                name.includes('egusi') ||
                name.includes('fufu');
       });
-      console.log(`Filtered to ${processedProducts.length} food & beverage products`);
+      console.log(`Filtered ${beforeCount} products to ${processedProducts.length} food & beverage products`);
+      
+      // Log some examples of filtered products
+      if (processedProducts.length > 0) {
+        console.log('Sample filtered products:');
+        processedProducts.slice(0, 5).forEach((product: any, index: number) => {
+          console.log(`  ${index + 1}. ${product.name} - Category: ${product.categories?.name || 'None'} - $${product.price}`);
+        });
+      }
     }
 
     console.log('=== PRODUCT FETCH DEBUG ===');
