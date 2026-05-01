@@ -241,6 +241,13 @@ export default function FoodBeveragesPage() {
     }
     
     console.log(`Successfully generated ${Object.keys(urls).length} image URLs`);
+    
+    // Debug: Log all generated URLs
+    console.log('🔍 Generated Image URLs:');
+    Object.entries(urls).forEach(([key, url]) => {
+      console.log(`  ${key}: ${url}`);
+    });
+    
     setImageUrls(urls);
     setImageLoadStates(loadStates);
     
@@ -538,6 +545,12 @@ export default function FoodBeveragesPage() {
                 {viewMode === 'grid' ? (
                   <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
                     <div className="relative aspect-square">
+                      {/* Debug indicator */}
+                      {process.env.NODE_ENV === 'development' && (
+                        <div className="absolute top-0 left-0 z-10 bg-blue-500 text-white text-xs px-1 rounded-br">
+                          {imageUrls[product.id] ? 'URL' : 'No URL'}
+                        </div>
+                      )}
                       <Image
                         src={imageUrls[product.id] || '/placeholder-product.jpg'}
                         alt={product.name}
@@ -546,14 +559,17 @@ export default function FoodBeveragesPage() {
                         sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, (max-width: 1536px) 20vw, 16vw"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
+                          console.log(`🔍 Grid image error for ${product.name}: ${imageUrls[product.id] || 'No URL'}`);
                           handleImageError(product.id, product.name, imageUrls[product.id] || '', target);
                         }}
                         onLoad={() => {
+                          console.log(`🔍 Grid image loaded for ${product.name}`);
                           handleImageLoad(product.id, product.name);
                         }}
                         loading="eager"
                         quality={85}
                         unoptimized={false}
+                        priority={false}
                       />
                       <div className="absolute top-2 right-2 bg-green-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
                         In Stock
