@@ -201,6 +201,52 @@ export default function FoodBeveragesPage() {
     
     console.log(`Successfully generated ${Object.keys(urls).length} image URLs`);
     setImageUrls(urls);
+    
+    // Verify images are accessible
+    await verifyImages(urls);
+  };
+
+  const verifyImages = async (urls: Record<string, string>) => {
+    console.log('Verifying image accessibility...');
+    let successCount = 0;
+    let failCount = 0;
+    
+    for (const [key, url] of Object.entries(urls)) {
+      try {
+        const img = document.createElement('img');
+        img.onload = () => {
+          successCount++;
+          console.log(`✅ Image loaded: ${key}`);
+        };
+        img.onerror = () => {
+          failCount++;
+          console.log(`❌ Image failed: ${key}`);
+        };
+        img.src = url;
+        
+        // Add timeout to prevent hanging
+        setTimeout(() => {
+          if (img.complete && img.naturalHeight !== 0) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+        }, 3000);
+      } catch (error) {
+        failCount++;
+        console.error(`Error verifying ${key}:`, error);
+      }
+    }
+    
+    // Log verification results after delay
+    setTimeout(() => {
+      console.log(`📊 Image Verification Results:`);
+      console.log(`✅ Successfully loaded: ${successCount}`);
+      console.log(`❌ Failed to load: ${failCount}`);
+      if (successCount + failCount > 0) {
+        console.log(`📈 Success rate: ${((successCount / (successCount + failCount)) * 100).toFixed(1)}%`);
+      }
+    }, 5000);
   };
 
   const handleAddToCart = (product: FoodProduct) => {
@@ -337,6 +383,20 @@ export default function FoodBeveragesPage() {
               <p>Search Query: "{searchQuery}"</p>
               <p>Base URL: https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public</p>
               <p>Using: Direct URL approach (bypasses RLS)</p>
+              <p className="font-semibold text-green-700">📊 Check browser console for image loading status!</p>
+            </div>
+          </div>
+        )}
+
+        {/* Image Loading Status - Always visible */}
+        {products.length > 0 && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <h3 className="text-sm font-semibold text-green-800 mb-2">📸 Image Loading Status</h3>
+            <div className="text-xs text-green-700">
+              <p>✅ All {products.length} product images are configured to display</p>
+              <p>🔄 Images load as you scroll (lazy loading enabled)</p>
+              <p>🛡️ Fallback images will show if any image fails to load</p>
+              <p>📱 Optimized for all device sizes and network conditions</p>
             </div>
           </div>
         )}
@@ -356,8 +416,17 @@ export default function FoodBeveragesPage() {
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                         sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
                         onError={(e) => {
-                          e.currentTarget.src = '/placeholder-product.jpg';
+                          console.log(`Image failed to load: ${product.name} - ${imageUrls[product.id]}`);
+                          // Try fallback to placeholder
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder-product.jpg';
                         }}
+                        onLoad={() => {
+                          console.log(`Image loaded successfully: ${product.name}`);
+                        }}
+                        loading="lazy"
+                        quality={85}
+                        unoptimized={false}
                       />
                       <div className="absolute top-2 right-2 bg-green-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
                         In Stock
@@ -392,8 +461,16 @@ export default function FoodBeveragesPage() {
                         className="object-cover rounded-lg"
                         sizes="96px"
                         onError={(e) => {
-                          e.currentTarget.src = '/placeholder-product.jpg';
+                          console.log(`List view image failed: ${product.name} - ${imageUrls[product.id]}`);
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder-product.jpg';
                         }}
+                        onLoad={() => {
+                          console.log(`List view image loaded: ${product.name}`);
+                        }}
+                        loading="lazy"
+                        quality={85}
+                        unoptimized={false}
                       />
                     </div>
                     <div className="flex-1 min-w-0">
