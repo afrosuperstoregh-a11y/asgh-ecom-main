@@ -245,8 +245,18 @@ export default function FoodBeveragesPage() {
     setImageUrls(urls);
     setImageLoadStates(loadStates);
     
-    // Preload images to verify accessibility
-    await verifyImages(urls);
+    // Skip preloading verification to avoid timeout issues
+    // Images will load on-demand with fallback system
+    console.log(`📊 Skipping preloading - ${Object.keys(urls).length} images configured`);
+    console.log(`🔄 Images will load on-demand with smart fallback system`);
+    
+    // Store initial results for UI display
+    setImageVerificationResults({
+      total: Object.keys(urls).length,
+      success: 0, // Will update as images load
+      failed: 0,  // Will update as images fail
+      failedImages: []
+    });
   };
 
   const verifyImages = async (urls: Record<string, string>) => {
