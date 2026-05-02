@@ -9,7 +9,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import FilterPanel from '@/components/FilterPanel';
 import FeaturedProductCard from '@/components/FeaturedProductCard';
-import { fixImageUrl } from '@/lib/supabase-storage';
+import { fixImageUrlWithFallback } from '@/lib/supabase-storage';
 
 import { Product } from '@/types/product';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -230,7 +230,7 @@ export default function ProductsPage() {
                     <Link href={`/product/${product.id}`} className="flex-shrink-0">
                       <div className="relative w-20 h-20 sm:w-24 sm:h-24">
                         <Image
-                          src={fixImageUrl(product.images?.[0] || product.image)}
+                          src={fixImageUrlWithFallback(product.images?.[0] || product.image)}
                           alt={product.name}
                           fill
                           className="object-cover rounded-lg"
