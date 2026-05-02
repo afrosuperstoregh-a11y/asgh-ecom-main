@@ -1,3 +1,8 @@
+/**
+ * @deprecated This component is deprecated and should not be used.
+ * Use ProductCard component from '@/components/ProductCard' instead.
+ * This file will be removed in a future version.
+ */
 'use client';
 
 import { useEffect, useState, memo } from 'react';

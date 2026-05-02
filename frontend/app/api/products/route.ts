@@ -209,7 +209,9 @@ export async function GET(request: Request) {
 
     // If environment variables are missing, use mock data immediately
     if (!hasValidEnv) {
+    if (process.env.NODE_ENV !== 'production') {
       console.log('Environment variables missing, using mock products');
+    }
       const mockProducts = getMockProducts();
       const limitedMockProducts = limit ? mockProducts.slice(0, limit) : mockProducts;
       
@@ -247,19 +249,25 @@ export async function GET(request: Request) {
         .limit(1)
       
       if (connectionError) {
-        console.error('Database connection error:', connectionError)
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Database connection error:', connectionError)
+        }
         databaseAvailable = false;
       } else {
         databaseAvailable = true;
       }
     } catch (connectionTestError) {
-      console.error('Database test failed:', connectionTestError)
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Database test failed:', connectionTestError)
+      }
       databaseAvailable = false;
     }
 
     // If database is not available, fallback to mock products
     if (!databaseAvailable) {
-      console.log('Database unavailable, using mock products');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Database unavailable, using mock products');
+      }
       const mockProducts = getMockProducts();
       return new Response(JSON.stringify({
         success: true,
@@ -302,7 +310,9 @@ export async function GET(request: Request) {
       if (category === 'food-beverages') {
         // For food-beverages, don't filter by category - let all food-related products show
         // We'll filter them in the application layer
-        console.log('Food & beverages category requested - including all food-related products');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Food & beverages category requested - including all food-related products');
+    }
       } else {
         // For other categories, only filter if category exists
         query = query.eq('categories.slug', category);
@@ -383,7 +393,9 @@ export async function GET(request: Request) {
 
     // If no products found, fallback to mock products
     if (!products || products.length === 0) {
+    if (process.env.NODE_ENV !== 'production') {
       console.log('No products in database, using mock products');
+    }
       const mockProducts = getMockProducts();
       return new Response(JSON.stringify({
         success: true,
@@ -435,7 +447,9 @@ export async function GET(request: Request) {
           // If it's a Supabase URL with .png extension, convert to .jpg
           if (img.includes('storage/v1/object/public/product-images/') && img.endsWith('.png')) {
             const convertedUrl = img.replace(/\.png$/, '.jpg');
-            console.log(`API: Converting full URL .png to .jpg: ${img} -> ${convertedUrl}`);
+            if (process.env.NODE_ENV !== 'production') {
+              console.log(`API: Converting full URL .png to .jpg: ${img} -> ${convertedUrl}`);
+            }
             return convertedUrl;
           }
           return img;
@@ -451,7 +465,9 @@ export async function GET(request: Request) {
             // Handle image extension mismatches - normalize .png to .jpg for product images
             if (cleanPath.endsWith('.png')) {
               cleanPath = cleanPath.replace(/\.png$/, '.jpg');
-              console.log(`Normalized image path: ${img} -> ${cleanPath}`);
+              if (process.env.NODE_ENV !== 'production') {
+                console.log(`Normalized image path: ${img} -> ${cleanPath}`);
+              }
             }
             
             // Check if it's already a full storage path
@@ -512,7 +528,9 @@ export async function GET(request: Request) {
 
     // Special filtering for food-beverages category
     if (category === 'food-beverages') {
-      console.log('Filtering for food & beverages category...');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Filtering for food & beverages category...');
+      }
       const beforeCount = processedProducts.length;
       processedProducts = processedProducts.filter((product: any) => {
         const name = (product.name || '').toLowerCase();
@@ -535,10 +553,12 @@ export async function GET(request: Request) {
                name.includes('egusi') ||
                name.includes('fufu');
       });
-      console.log(`Filtered ${beforeCount} products to ${processedProducts.length} food & beverage products`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Filtered ${beforeCount} products to ${processedProducts.length} food & beverage products`);
+      }
       
       // Log some examples of filtered products
-      if (processedProducts.length > 0) {
+      if (processedProducts.length > 0 && process.env.NODE_ENV !== 'production') {
         console.log('Sample filtered products:');
         processedProducts.slice(0, 5).forEach((product: any, index: number) => {
           console.log(`  ${index + 1}. ${product.name} - Category: ${product.categories?.name || 'None'} - $${product.price}`);
@@ -546,22 +566,24 @@ export async function GET(request: Request) {
       }
     }
 
-    console.log('=== PRODUCT FETCH DEBUG ===');
-    console.log('Environment variables valid:', hasValidEnv);
-    console.log('Database available:', databaseAvailable);
-    console.log('Total products found:', products?.length || 0);
-    console.log('Processed products after filtering:', processedProducts.length);
-    console.log('Total items count:', count);
-    console.log('Limit applied:', shouldLimit ? limit : 'No limit');
-    console.log('Filters applied:', { category, search, featured, minPrice, maxPrice });
-    console.log('Sample product data:', processedProducts?.[0] ? {
-      id: processedProducts[0].id,
-      name: processedProducts[0].name,
-      status: processedProducts[0].status,
-      images: processedProducts[0].images,
-      categories: processedProducts[0].categories
-    } : 'No products');
-    console.log('==========================');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('=== PRODUCT FETCH DEBUG ===');
+      console.log('Environment variables valid:', hasValidEnv);
+      console.log('Database available:', databaseAvailable);
+      console.log('Total products found:', products?.length || 0);
+      console.log('Processed products after filtering:', processedProducts.length);
+      console.log('Total items count:', count);
+      console.log('Limit applied:', shouldLimit ? limit : 'No limit');
+      console.log('Filters applied:', { category, search, featured, minPrice, maxPrice });
+      console.log('Sample product data:', processedProducts?.[0] ? {
+        id: processedProducts[0].id,
+        name: processedProducts[0].name,
+        status: processedProducts[0].status,
+        images: processedProducts[0].images,
+        categories: processedProducts[0].categories
+      } : 'No products');
+      console.log('==========================');
+    }
 
     const totalItems = count || 0;
     const totalPages = shouldLimit && limit ? Math.ceil(totalItems / limit) : 1;

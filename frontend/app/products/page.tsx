@@ -8,7 +8,7 @@ import { Loader2, Search, Filter, Grid, List, Star, ShoppingCart, X } from 'luci
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import FilterPanel from '@/components/FilterPanel';
-import FeaturedProductCard from '@/components/FeaturedProductCard';
+import ProductCard from '@/components/ProductCard';
 import { fixImageUrlWithFallback } from '@/lib/supabase-storage';
 
 import { Product } from '@/types/product';
@@ -224,7 +224,7 @@ export default function ProductsPage() {
             {products.map((product) => (
               <div key={product.id}>
                 {viewMode === 'grid' ? (
-                  <FeaturedProductCard product={product} />
+                  <ProductCard product={product} />
                 ) : (
                   <div className="flex items-center p-4 gap-4 h-full bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
                     <Link href={`/product/${product.id}`} className="flex-shrink-0">
