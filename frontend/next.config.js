@@ -68,6 +68,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://afrosuperstore.ca',
+    NEXT_PUBLIC_BUILD_VERSION: process.env.BUILD_VERSION || Date.now().toString(),
   },
   
   // Configure webpack for serverless compatibility
@@ -88,6 +89,12 @@ const nextConfig = {
         dns: false,
         child_process: false,
       };
+    }
+
+    // Force cache busting for development
+    if (dev) {
+      config.output.filename = config.output.filename.replace('.js', '.[contenthash].js');
+      config.output.chunkFilename = config.output.chunkFilename.replace('.js', '.[contenthash].js');
     }
     
     return config;
