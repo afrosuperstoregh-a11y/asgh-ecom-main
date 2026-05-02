@@ -81,7 +81,7 @@ export async function GET(
       .from('products')
       .select(`
         *,
-        categories!inner(name, slug)
+        categories(name, slug)
       `)
       .eq('id', id)
       .eq('status', 'active')
@@ -144,11 +144,21 @@ export async function GET(
         return img;
       }
       
-      // If it's a Supabase storage path, construct full URL
-      if (img.startsWith('/') || !img.includes('://')) {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        if (supabaseUrl && img.startsWith('product-images/')) {
-          return `${supabaseUrl}/storage/v1/object/public/products/${img}`;
+      // Handle all Supabase storage path formats
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (supabaseUrl) {
+        // Handle paths starting with 'product-images/' or 'food&beverages/' etc.
+        if (img.startsWith('product-images/') || img.includes('food&beverages/') || img.includes('%26')) {
+          // Remove leading slash if present and construct full URL
+          const cleanPath = img.startsWith('/') ? img.substring(1) : img;
+          return `${supabaseUrl}/storage/v1/object/public/products/${cleanPath}`;
+        }
+        // Handle paths starting with '/'
+        if (img.startsWith('/')) {
+          const cleanPath = img.substring(1);
+          if (cleanPath.includes('product-images/') || cleanPath.includes('food&beverages/')) {
+            return `${supabaseUrl}/storage/v1/object/public/products/${cleanPath}`;
+          }
         }
       }
       
