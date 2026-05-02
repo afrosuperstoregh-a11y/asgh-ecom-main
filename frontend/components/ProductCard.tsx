@@ -4,6 +4,8 @@
 
 import Image from 'next/image';
 
+import { useState } from 'react';
+
 import { Product } from '@/types/product';
 
 import { Heart, ShoppingCart, Star } from 'lucide-react';
@@ -12,7 +14,7 @@ import { useCart } from '../context/CartContext';
 
 import { useWishlist } from '../context/WishlistContext';
 
-import { fixImageUrl } from '../lib/supabase-storage';
+import { fixImageUrlWithFallback } from '../lib/supabase-storage';
 
 import { Button } from './ui/Button';
 
@@ -31,6 +33,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
 
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+
+  const [imageError, setImageError] = useState(false);
 
   
 
@@ -52,7 +56,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       price: product.price,
 
-      image: fixImageUrl(product.image_url || product.images?.[0])
+      image: fixImageUrlWithFallback(product.image_url || product.images?.[0])
 
     });
 
@@ -94,7 +98,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         price: product.price,
 
-        image: fixImageUrl(product.image_url || product.images?.[0])
+        image: fixImageUrlWithFallback(product.image_url || product.images?.[0])
 
       });
 
@@ -118,7 +122,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         <Image
 
-          src={fixImageUrl(product.image_url || product.images?.[0])}
+          src={imageError ? '/placeholder-product.jpg' : fixImageUrlWithFallback(product.image_url || product.images?.[0])}
 
           alt={product.name}
 
@@ -130,13 +134,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           loading="eager"
 
-          onError={(e) => {
-
-            const target = e.target as HTMLImageElement;
-
-            target.src = '/placeholder-product.jpg';
-
-          }}
+          onError={() => setImageError(true)}
 
         />
 

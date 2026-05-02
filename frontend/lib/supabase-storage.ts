@@ -188,6 +188,55 @@ export function fixImageUrl(imageUrl?: string): string {
 }
 
 /**
+ * Enhanced image URL fixer that handles missing extensions and provides fallbacks
+ * @param imageUrl - The image URL from the database
+ * @returns The fixed image URL with fallback handling
+ */
+export function fixImageUrlWithFallback(imageUrl?: string): string {
+  if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
+    return '/placeholder-product.jpg'
+  }
+
+  // If it's already a full HTTP/HTTPS URL, check for .png extension
+  if (imageUrl.startsWith('http')) {
+    // If it's a Supabase URL with .png extension, convert to .jpg
+    if (imageUrl.includes('storage/v1/object/public/product-images/') && imageUrl.endsWith('.png')) {
+      const convertedUrl = imageUrl.replace(/\.png$/, '.jpg');
+      console.log(`Converting full URL .png to .jpg: ${imageUrl} -> ${convertedUrl}`);
+      return convertedUrl;
+    }
+    return imageUrl
+  }
+
+  // For filenames without extensions or with potentially wrong extensions
+  // This handles cases like "banku-mix.png" when only "banku-mix.jpg" exists
+  const filename = imageUrl.split('/').pop() || imageUrl
+  const filenameWithoutExt = filename.replace(/\.[^/.]+$/, '')
+  
+  // If the URL has no extension, try common ones
+  if (!filename.includes('.')) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (supabaseUrl) {
+      // Try jpg first (most common for products)
+      return `${supabaseUrl}/storage/v1/object/public/product-images/${filenameWithoutExt}.jpg`
+    }
+  }
+
+  // If the URL has .png extension, convert to .jpg
+  if (filename.endsWith('.png')) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (supabaseUrl) {
+      // Return the .jpg version instead
+      console.log(`Converting .png to .jpg: ${filename} -> ${filenameWithoutExt}.jpg`)
+      return `${supabaseUrl}/storage/v1/object/public/product-images/${filenameWithoutExt}.jpg`
+    }
+  }
+
+  // Use the standard fixImageUrl for other cases
+  return fixImageUrl(imageUrl)
+}
+
+/**
  * Gets the public URL for a product image
  * @param imagePath - The image path within the 'product-images' bucket
  * @returns The public URL for the product image

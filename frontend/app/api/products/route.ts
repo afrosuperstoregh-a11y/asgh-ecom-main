@@ -229,7 +229,12 @@ export async function GET(request: Request) {
         }
       }), {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       })
     }
 
@@ -356,7 +361,12 @@ export async function GET(request: Request) {
           }
         }), {
           status: 200,
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
         })
       }
       
@@ -420,8 +430,14 @@ export async function GET(request: Request) {
       images = images.map((img: any) => {
         if (!img || typeof img !== 'string') return '/placeholder-product.jpg';
         
-        // If it's already a full URL, return as is
+        // If it's already a full URL, check for .png extension
         if (img.startsWith('http')) {
+          // If it's a Supabase URL with .png extension, convert to .jpg
+          if (img.includes('storage/v1/object/public/product-images/') && img.endsWith('.png')) {
+            const convertedUrl = img.replace(/\.png$/, '.jpg');
+            console.log(`API: Converting full URL .png to .jpg: ${img} -> ${convertedUrl}`);
+            return convertedUrl;
+          }
           return img;
         }
         
@@ -430,7 +446,13 @@ export async function GET(request: Request) {
           const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
           if (supabaseUrl) {
             // Remove leading slash if present
-            const cleanPath = img.startsWith('/') ? img.slice(1) : img;
+            let cleanPath = img.startsWith('/') ? img.slice(1) : img;
+            
+            // Handle image extension mismatches - normalize .png to .jpg for product images
+            if (cleanPath.endsWith('.png')) {
+              cleanPath = cleanPath.replace(/\.png$/, '.jpg');
+              console.log(`Normalized image path: ${img} -> ${cleanPath}`);
+            }
             
             // Check if it's already a full storage path
             if (cleanPath.includes('storage/v1/object/public/')) {
@@ -568,7 +590,12 @@ export async function GET(request: Request) {
       }
     }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     })
 
   } catch (error) {
