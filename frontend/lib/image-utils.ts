@@ -27,6 +27,13 @@ export function getProductImageUrl(image: string | undefined | null, fallback: s
   // If it's a Supabase storage path, construct full URL
   if (image.startsWith('/') || !image.includes('://')) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    
+    // Debug logging
+    if (typeof window !== 'undefined') {
+      console.log('getProductImageUrl - supabaseUrl:', supabaseUrl);
+      console.log('getProductImageUrl - input image:', image);
+    }
+    
     if (supabaseUrl) {
       // Remove leading slash if present
       let cleanPath = image.startsWith('/') ? image.slice(1) : image;
@@ -50,6 +57,10 @@ export function getProductImageUrl(image: string | undefined | null, fallback: s
       // Default storage path with proper encoding
       const encodedPath = cleanPath.split('/').map(encodeURIComponent).join('/');
       return `${supabaseUrl}/storage/v1/object/public/product-images/${encodedPath}`;
+    } else {
+      // Fallback when environment variable is not available
+      console.warn('NEXT_PUBLIC_SUPABASE_URL is not available, returning fallback image');
+      return fallback;
     }
   }
 

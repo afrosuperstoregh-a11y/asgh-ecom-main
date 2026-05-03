@@ -76,7 +76,14 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
               className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105 rounded-t-xl"
               {...PRODUCT_IMAGE_PROPS}
               priority={false}
-              onError={() => setImageError(true)}
+              onError={(e) => {
+                console.log('FeaturedProductCard - Image error for product:', product.name);
+                console.log('FeaturedProductCard - Image URL:', e.currentTarget.src);
+                setImageError(true);
+              }}
+              onLoad={() => {
+                console.log('FeaturedProductCard - Image loaded successfully for product:', product.name);
+              }}
             />
           </div>
         </Link>
