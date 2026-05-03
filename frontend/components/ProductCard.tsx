@@ -74,6 +74,7 @@ export default function ProductCard({ product, showQuantitySelector = false }: P
           fill
           className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105 rounded-t-xl"
           {...PRODUCT_IMAGE_PROPS}
+          priority={false}
           onError={() => setImageError(true)}
         />
         

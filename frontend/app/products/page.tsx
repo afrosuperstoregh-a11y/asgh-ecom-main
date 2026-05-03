@@ -9,7 +9,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import FilterPanel from '@/components/FilterPanel';
 import ProductCard from '@/components/ProductCard';
-import { fixImageUrlWithFallback } from '@/lib/supabase-storage';
+import { getProductImageUrl } from '@/lib/image-utils';
 
 import { Product } from '@/types/product';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -78,7 +78,7 @@ export default function ProductsPage() {
       id: product.id,
       name: product.name,
       price: product.compare_price || product.price,
-      image: product.images?.[0] || product.image || '/placeholder-product.jpg',
+      image: getProductImageUrl(product.images?.[0] || product.image),
       category: product.categories?.name || 'Uncategorized'
     });
   };
@@ -230,7 +230,7 @@ export default function ProductsPage() {
                     <Link href={`/product/${product.id}`} className="flex-shrink-0">
                       <div className="relative w-20 h-20 sm:w-24 sm:h-24">
                         <Image
-                          src={fixImageUrlWithFallback(product.images?.[0] || product.image)}
+                          src={getProductImageUrl(product.images?.[0] || product.image)}
                           alt={product.name}
                           fill
                           className="object-cover rounded-lg"

@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star, ShoppingCart, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { fixImageUrlWithFallback } from '../lib/supabase-storage';
+import { getProductImageUrl, handleImageError, PRODUCT_IMAGE_PROPS } from '../lib/image-utils';
 
 interface Product {
   id: string;
@@ -28,6 +29,7 @@ interface FeaturedProductCardProps {
 
 export default function FeaturedProductCard({ product }: FeaturedProductCardProps) {
   const [quantity, setQuantity] = useState(1);
+  const [imageError, setImageError] = useState(false);
   const { addToCart } = useCart();
   
   const inStock = ((product.inventory_quantity || 0) > 0) || product.allow_backorder;
@@ -52,7 +54,7 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
         id: product.id,
         name: product.name,
         price: product.price,
-        image: fixImageUrlWithFallback(product.image || product.images?.[0]),
+        image: getProductImageUrl(product.image || product.images?.[0]),
         category: product.categories?.name
       });
     }
@@ -67,12 +69,14 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
         {/* Product Image */}
         <Link href={`/product/${product.id}`} className="block flex-shrink-0 w-full aspect-[4/3] sm:aspect-[16/9] overflow-hidden">
           <div className="relative w-full h-full overflow-hidden bg-gray-100 rounded-t-xl">
-            <img
-              src={fixImageUrlWithFallback(product.image || product.images?.[0])}
+            <Image
+              src={imageError ? getProductImageUrl(null) : getProductImageUrl(product.image || product.images?.[0])}
               alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 rounded-t-xl"
-              sizes="275px"
-              loading="eager"
+              fill
+              className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105 rounded-t-xl"
+              {...PRODUCT_IMAGE_PROPS}
+              priority={false}
+              onError={() => setImageError(true)}
             />
           </div>
         </Link>
