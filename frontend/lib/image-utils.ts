@@ -17,10 +17,6 @@ export function getProductImageUrl(image: string | undefined | null, fallback: s
 
   // If it's already a full URL, return as-is
   if (image.startsWith('http')) {
-    // If it's a Supabase URL with .png extension, convert to .jpg
-    if (image.includes('storage/v1/object/public/product-images/') && image.endsWith('.png')) {
-      return image.replace(/\.png$/, '.jpg');
-    }
     return image;
   }
 
@@ -37,11 +33,6 @@ export function getProductImageUrl(image: string | undefined | null, fallback: s
     if (supabaseUrl) {
       // Remove leading slash if present
       let cleanPath = image.startsWith('/') ? image.slice(1) : image;
-      
-      // Handle image extension mismatches - normalize .png to .jpg for product images
-      if (cleanPath.endsWith('.png')) {
-        cleanPath = cleanPath.replace(/\.png$/, '.jpg');
-      }
       
       // Check if it's already a full storage path
       if (cleanPath.includes('storage/v1/object/public/')) {
