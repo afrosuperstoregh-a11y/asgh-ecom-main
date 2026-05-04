@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Cache & Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 10px; }
+        .button:hover { background: #0056b3; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        img { width: 100px; height: 100px; object-fit: cover; border: 1px solid #ccc; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Cache Clear & Image Test</h1>
+    
+    <button class="button" onclick="testWithCacheBusting()">Test with Cache Busting</button>
+    <button class="button" onclick="testDirectAPI()">Test Direct API Call</button>
+    <button class="button" onclick="clearBrowserCache()">Clear Browser Cache</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+        }
+        
+        async function testWithCacheBusting() {
+            addResult('Testing with cache-busting timestamp...', 'info');
+            
+            try {
+                const timestamp = new Date().getTime();
+                const response = await fetch(`http://localhost:3000/api/products?search=banku&_t=${timestamp}`);
+                const data = await response.json();
+                
+                addResult(`API Response Status: ${response.status}`, 'info');
+                
+                if (data.success && data.data.products) {
+                    const bankuProduct = data.data.products.find(p => p.name.toLowerCase().includes('banku mix'));
+                    if (bankuProduct) {
+                        const imageUrl = bankuProduct.images[0];
+                        addResult(`Found Banku Mix product: ${bankuProduct.name}`, 'success');
+                        addResult(`Image URL: ${imageUrl}`, 'info');
+                        
+                        // Test image loading
+                        const img = new Image();
+                        img.onload = () => addResult('✓ Image loaded successfully!', 'success');
+                        img.onerror = () => addResult('✗ Image failed to load', 'error');
+                        img.src = imageUrl + `?_t=${timestamp}`;
+                        
+                        addResult(`<img src="${imageUrl}?_t=${timestamp}" alt="Banku Mix">`, 'info');
+                    } else {
+                        addResult('Banku Mix product not found', 'error');
+                    }
+                } else {
+                    addResult('Failed to fetch products', 'error');
+                }
+            } catch (error) {
+                addResult(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDirectAPI() {
+            addResult('Testing direct API call without cache...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/products?search=banku', {
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                const data = await response.json();
+                
+                addResult(`Direct API Status: ${response.status}`, 'info');
+                addResult(`Cache-Control headers sent: no-cache, Pragma: no-cache`, 'info');
+                
+                if (data.success && data.data.products) {
+                    const bankuProduct = data.data.products.find(p => p.name.toLowerCase().includes('banku mix'));
+                    if (bankuProduct) {
+                        addResult(`✓ Banku Mix found with image: ${bankuProduct.images[0]}`, 'success');
+                    }
+                }
+            } catch (error) {
+                addResult(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearBrowserCache() {
+            addResult('Attempting to clear browser cache...', 'info');
+            
+            // Clear localStorage
+            localStorage.clear();
+            addResult('✓ LocalStorage cleared', 'success');
+            
+            // Clear sessionStorage
+            sessionStorage.clear();
+            addResult('✓ SessionStorage cleared', 'success');
+            
+            // Force reload
+            addResult('Reloading page in 2 seconds...', 'info');
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 2000);
+        }
+        
+        // Auto-run test on page load
+        window.onload = () => {
+            addResult('Page loaded. Ready for testing.', 'info');
+            addResult('Click buttons above to test image loading with cache clearing.', 'info');
+        };
+    </script>
+</body>
+</html>

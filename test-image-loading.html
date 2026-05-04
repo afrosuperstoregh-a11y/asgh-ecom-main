@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Loading Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .loading { background: #fff3cd; color: #856404; }
+        img { width: 100px; height: 100px; object-fit: cover; border: 1px solid #ccc; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Image Loading Fix Verification</h1>
+    
+    <div id="results"></div>
+    
+    <script>
+        async function testImageLoading() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="test-result loading">Testing image loading...</div>';
+            
+            try {
+                // Fetch products from API
+                const response = await fetch('http://localhost:3000/api/products?limit=10');
+                const data = await response.json();
+                
+                if (!data.success || !data.data.products) {
+                    throw new Error('Failed to fetch products');
+                }
+                
+                let successCount = 0;
+                let errorCount = 0;
+                let html = '<h2>Test Results:</h2>';
+                
+                // Test each product's images
+                for (const product of data.data.products) {
+                    if (product.images && product.images.length > 0) {
+                        const imageUrl = product.images[0];
+                        const testName = `${product.name} (${imageUrl.split('/').pop()})`;
+                        
+                        html += `<div class="test-result loading">Testing: ${testName}</div>`;
+                        
+                        // Test image loading
+                        const img = new Image();
+                        const promise = new Promise((resolve) => {
+                            img.onload = () => resolve(true);
+                            img.onerror = () => resolve(false);
+                        });
+                        
+                        img.src = imageUrl;
+                        const loaded = await promise;
+                        
+                        if (loaded) {
+                            successCount++;
+                            html += `<div class="test-result success">✓ ${testName} - Loaded successfully</div>`;
+                        } else {
+                            errorCount++;
+                            html += `<div class="test-result error">✗ ${testName} - Failed to load</div>`;
+                        }
+                        
+                        html += `<img src="${imageUrl}" alt="${product.name}" onerror="this.style.background='#f8d7da';">`;
+                    }
+                }
+                
+                // Summary
+                html += `<h2>Summary:</h2>`;
+                html += `<div class="test-result ${errorCount === 0 ? 'success' : 'error'}">`;
+                html += `Total tested: ${successCount + errorCount}<br>`;
+                html += `Successful: ${successCount}<br>`;
+                html += `Failed: ${errorCount}<br>`;
+                html += `Success rate: ${Math.round((successCount / (successCount + errorCount)) * 100)}%`;
+                html += `</div>`;
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="test-result error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Run test when page loads
+        window.onload = testImageLoading;
+    </script>
+</body>
+</html>

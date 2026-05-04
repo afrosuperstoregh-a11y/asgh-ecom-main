@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force Refresh & Clear Cache</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+        .button { 
+            background: #dc3545; 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            margin: 10px; 
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .button:hover { background: #c82333; }
+        .button.primary { background: #007bff; }
+        .button.primary:hover { background: #0056b3; }
+        .info { 
+            background: #d1ecf1; 
+            color: #0c5460; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 20px 0; 
+            border-left: 4px solid #bee5eb;
+        }
+        .success { 
+            background: #d4edda; 
+            color: #155724; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 20px 0; 
+            border-left: 4px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔄 Force Refresh & Clear Cache</h1>
+    
+    <div class="info">
+        <h3>⚠️ Important: Browser Cache Issue Detected</h3>
+        <p>The browser is still loading cached JavaScript files with the old image handling code.</p>
+        <p>This is causing the 404 error for banku-mix.png even though the API has been fixed.</p>
+    </div>
+
+    <h2>📋 Steps to Fix:</h2>
+    
+    <div style="text-align: left; max-width: 600px; margin: 0 auto;">
+        <h3>Step 1: Clear Browser Cache</h3>
+        <button class="button" onclick="clearCache()">
+            🗑️ Clear Browser Cache & Storage
+        </button>
+        
+        <h3>Step 2: Hard Refresh</h3>
+        <button class="button primary" onclick="hardRefresh()">
+            🔄 Hard Refresh Main Site
+        </button>
+        
+        <h3>Step 3: Test the Fix</h3>
+        <button class="button primary" onclick="testFix()">
+            🧪 Test Image Loading
+        </button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+        }
+
+        function clearCache() {
+            addResult('🗑️ Clearing browser cache and storage...', 'info');
+            
+            try {
+                // Clear localStorage
+                localStorage.clear();
+                addResult('✅ LocalStorage cleared', 'success');
+                
+                // Clear sessionStorage
+                sessionStorage.clear();
+                addResult('✅ SessionStorage cleared', 'success');
+                
+                // Clear service workers
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) {
+                            registration.unregister();
+                        }
+                        addResult('✅ Service workers cleared', 'success');
+                    });
+                }
+                
+                addResult('🎉 Cache cleared successfully!', 'success');
+                addResult('⏳ Now click "Hard Refresh Main Site" to reload with fresh files', 'info');
+                
+            } catch (error) {
+                addResult(`❌ Error clearing cache: ${error.message}`, 'error');
+            }
+        }
+
+        function hardRefresh() {
+            addResult('🔄 Performing hard refresh...', 'info');
+            
+            // Add cache-busting parameter
+            const timestamp = new Date().getTime();
+            const url = `http://localhost:3000?_t=${timestamp}`;
+            
+            addResult(`📍 Opening: ${url}`, 'info');
+            
+            // Open in new tab with cache-busting
+            window.open(url, '_blank');
+            
+            addResult('✅ New tab opened with fresh cache', 'success');
+            addResult('🔍 Check the new tab for 404 errors - they should be gone!', 'success');
+        }
+
+        async function testFix() {
+            addResult('🧪 Testing image loading fix...', 'info');
+            
+            try {
+                // Test API response
+                const response = await fetch('http://localhost:3000/api/products?search=banku', {
+                    headers: { 'Cache-Control': 'no-cache' }
+                });
+                const data = await response.json();
+                
+                if (data.success && data.data.products) {
+                    const bankuProduct = data.data.products.find(p => p.name.toLowerCase().includes('banku mix'));
+                    if (bankuProduct) {
+                        const imageUrl = bankuProduct.images[0];
+                        addResult(`✅ API returns correct URL: ${imageUrl}`, 'success');
+                        
+                        // Test if URL ends with .jpg
+                        if (imageUrl.endsWith('.jpg')) {
+                            addResult('✅ Image URL correctly ends with .jpg', 'success');
+                        } else {
+                            addResult(`❌ Image URL still ends with wrong extension: ${imageUrl}`, 'error');
+                        }
+                        
+                        // Test image loading
+                        const img = new Image();
+                        img.onload = () => addResult('✅ Image loads successfully!', 'success');
+                        img.onerror = () => addResult('❌ Image still fails to load', 'error');
+                        img.src = imageUrl;
+                        
+                    } else {
+                        addResult('❌ Banku Mix product not found in API response', 'error');
+                    }
+                } else {
+                    addResult('❌ API request failed', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Test failed: ${error.message}`, 'error');
+            }
+        }
+
+        window.onload = function() {
+            addResult('📋 Ready to fix the image loading 404 error!', 'info');
+            addResult('👆 Follow the steps above in order', 'info');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cache Busting Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-button { 
+            background: #007bff; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin: 10px; 
+        }
+        .test-button:hover { background: #0056b3; }
+        .result { 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 4px; 
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🔄 Cache Busting Test</h1>
+    
+    <button class="test-button" onclick="testImageFix()">Test Image Loading Fix</button>
+    <button class="test-button" onclick="testAPIResponse()">Test API Response</button>
+    <button class="test-button" onclick="openMainSite()">Open Main Site (Fresh)</button>
+    
+    <div id="results"></div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+        }
+
+        async function testImageFix() {
+            addResult('🧪 Testing image loading fix...', 'info');
+            
+            try {
+                // Test if fixImageUrlWithFallback is available in the global scope
+                // This would be loaded from the main site
+                addResult('📍 Opening main site to test...', 'info');
+                
+                const testWindow = window.open('http://localhost:3000', '_blank');
+                
+                setTimeout(() => {
+                    addResult('✅ Main site opened in new tab', 'success');
+                    addResult('🔍 Check the new tab for 404 errors', 'info');
+                    addResult('📋 If 404 errors persist, perform hard refresh (Ctrl+Shift+R)', 'info');
+                }, 2000);
+                
+            } catch (error) {
+                addResult(`❌ Test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAPIResponse() {
+            addResult('🔍 Testing API response...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/products?search=banku', {
+                    headers: { 'Cache-Control': 'no-cache' }
+                });
+                const data = await response.json();
+                
+                if (data.success && data.data.products) {
+                    const bankuProduct = data.data.products.find(p => p.name.toLowerCase().includes('banku mix'));
+                    if (bankuProduct) {
+                        const imageUrl = bankuProduct.images[0];
+                        addResult(`✅ Banku Mix found`, 'success');
+                        addResult(`📍 Image URL: ${imageUrl}`, 'info');
+                        
+                        if (imageUrl.endsWith('.jpg')) {
+                            addResult('✅ API correctly returns .jpg URL', 'success');
+                        } else {
+                            addResult(`❌ API returns wrong extension: ${imageUrl}`, 'error');
+                        }
+                        
+                        // Test image loading
+                        const img = new Image();
+                        img.onload = () => addResult('✅ Image loads successfully!', 'success');
+                        img.onerror = () => addResult('❌ Image fails to load', 'error');
+                        img.src = imageUrl;
+                        
+                    } else {
+                        addResult('❌ Banku Mix not found', 'error');
+                    }
+                } else {
+                    addResult('❌ API request failed', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ API test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function openMainSite() {
+            addResult('🔄 Opening main site with cache busting...', 'info');
+            
+            // Add timestamp to force cache refresh
+            const timestamp = new Date().getTime();
+            const url = `http://localhost:3000?_v=${timestamp}`;
+            
+            addResult(`📍 Opening: ${url}`, 'info');
+            window.open(url, '_blank');
+            
+            addResult('✅ Main site opened with cache-busting parameter', 'success');
+            addResult('🔍 Check for 404 errors in the new tab', 'info');
+        }
+
+        window.onload = function() {
+            addResult('🧪 Cache Busting Test Ready', 'info');
+            addResult('📋 Use the buttons above to test the image loading fix', 'info');
+        };
+    </script>
+</body>
+</html>

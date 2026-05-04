@@ -39,14 +39,14 @@ export function getProductImageUrl(image: string | undefined | null, fallback: s
         return image.startsWith('/') ? `${supabaseUrl}${image}` : `${supabaseUrl}/${image}`;
       }
       
-      // Construct storage URL for product images with proper encoding
-      if (cleanPath.includes('product-images/') || cleanPath.includes('&')) {
-        const encodedPath = cleanPath.split('/').map(encodeURIComponent).join('/');
-        return `${supabaseUrl}/storage/v1/object/public/product-images/${encodedPath}`;
+      // Remove 'product-images/' prefix if it exists to avoid duplication
+      if (cleanPath.startsWith('product-images/')) {
+        cleanPath = cleanPath.replace('product-images/', '');
       }
       
-      // Default storage path with proper encoding
+      // Encode special characters in path (especially & in folder names)
       const encodedPath = cleanPath.split('/').map(encodeURIComponent).join('/');
+      
       return `${supabaseUrl}/storage/v1/object/public/product-images/${encodedPath}`;
     } else {
       // Fallback when environment variable is not available

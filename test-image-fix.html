@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-image { border: 1px solid #ccc; margin: 10px; width: 200px; height: 200px; object-fit: cover; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .loading { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>Image Loading Fix Test</h1>
+    
+    <h2>Test 1: Original .png (should 404)</h2>
+    <div id="test1-status" class="status loading">Loading...</div>
+    <img id="test1" class="test-image" src="http://localhost:3000/api/products?limit=1" alt="Test 1">
+    
+    <h2>Test 2: .jpg version (should work)</h2>
+    <div id="test2-status" class="status loading">Loading...</div>
+    <img id="test2" class="test-image" src="https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku-mix.jpg" alt="Test 2">
+    
+    <h2>Test 3: Products API (should return normalized .jpg)</h2>
+    <div id="test3-status" class="status loading">Loading...</div>
+    <div id="test3-results"></div>
+
+    <script>
+        // Test 1: Load products API and check for banku-mix image
+        async function testProductsAPI() {
+            try {
+                const response = await fetch('http://localhost:3000/api/products?search=banku');
+                const data = await response.json();
+                
+                const bankuProduct = data.data?.products?.find(p => 
+                    p.name.toLowerCase().includes('banku')
+                );
+                
+                if (bankuProduct && bankuProduct.images && bankuProduct.images.length > 0) {
+                    const imageUrl = bankuProduct.images[0];
+                    document.getElementById('test3-results').innerHTML = `
+                        <p><strong>Product:</strong> ${bankuProduct.name}</p>
+                        <p><strong>Image URL:</strong> ${imageUrl}</p>
+                        <img src="${imageUrl}" style="width: 200px; height: 200px; object-fit: cover; border: 1px solid #ccc;" onerror="this.style.background='#f8d7da'; this.alt='Image failed to load';" onload="this.style.background='#d4edda';">
+                    `;
+                    document.getElementById('test3-status').className = 'status success';
+                    document.getElementById('test3-status').textContent = 'Success: Product API returned normalized image URL';
+                } else {
+                    document.getElementById('test3-status').className = 'status error';
+                    document.getElementById('test3-status').textContent = 'Error: No banku product found';
+                }
+            } catch (error) {
+                document.getElementById('test3-status').className = 'status error';
+                document.getElementById('test3-status').textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        // Test image loading
+        function testImage(imgId, statusId) {
+            const img = document.getElementById(imgId);
+            const status = document.getElementById(statusId);
+            
+            img.onload = function() {
+                status.className = 'status success';
+                status.textContent = 'Success: Image loaded successfully';
+            };
+            
+            img.onerror = function() {
+                status.className = 'status error';
+                status.textContent = 'Error: Image failed to load (404)';
+            };
+        }
+        
+        // Run tests
+        window.onload = function() {
+            testProductsAPI();
+            
+            // Test direct image loading
+            const test1Img = new Image();
+            test1Img.onload = function() {
+                document.getElementById('test1-status').className = 'status success';
+                document.getElementById('test1-status').textContent = 'Success: Image loaded';
+            };
+            test1Img.onerror = function() {
+                document.getElementById('test1-status').className = 'status error';
+                document.getElementById('test1-status').textContent = 'Error: .png image failed to load (expected)';
+            };
+            test1Img.src = 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku-mix.png';
+            
+            const test2Img = new Image();
+            test2Img.onload = function() {
+                document.getElementById('test2-status').className = 'status success';
+                document.getElementById('test2-status').textContent = 'Success: .jpg image loaded';
+            };
+            test2Img.onerror = function() {
+                document.getElementById('test2-status').className = 'status error';
+                document.getElementById('test2-status').textContent = 'Error: .jpg image failed to load';
+            };
+            test2Img.src = 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku-mix.jpg';
+        };
+    </script>
+</body>
+</html>
