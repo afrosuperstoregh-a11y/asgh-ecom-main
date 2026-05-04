@@ -65,7 +65,7 @@ export default function CategoryPage() {
           <div className="h-64 bg-gray-200"></div>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="h-8 bg-gray-200 rounded mb-4 w-1/3"></div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {[...Array(8)].map((_, i) => (
                 <div key={i} className="bg-gray-200 rounded-lg h-80"></div>
               ))}
@@ -146,9 +146,9 @@ export default function CategoryPage() {
 
         {/* Products Grid */}
         {products.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {products.filter(product => product && product.id).map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow w-[275px] h-[375px] flex flex-col">
+              <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow w-full h-[375px] flex flex-col">
                 {/* Product Image */}
                 <div className="relative flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-lg" style={{ height: '200px' }}>
                   <img

@@ -61,7 +61,7 @@ function ProductGridComponent({ products: propProducts, loading: propLoading }: 
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12">Best Sellers</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[...Array(6)].map((_, index) => (
               <div key={index} className="bg-gray-200 rounded-lg h-96 animate-pulse"></div>
             ))}
@@ -75,7 +75,7 @@ function ProductGridComponent({ products: propProducts, loading: propLoading }: 
     <section className="py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl font-bold text-center mb-12">Best Sellers</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {products.filter(product => product && product.id).map((product) => (
             <div key={product.id} className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow">
               <div className="relative aspect-square">

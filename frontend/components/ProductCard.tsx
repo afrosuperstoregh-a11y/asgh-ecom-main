@@ -65,7 +65,7 @@ export default function ProductCard({ product, showQuantitySelector = false }: P
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden w-full max-w-[275px] sm:w-[275px] aspect-[4/5] flex flex-col">
+    <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden w-full aspect-[4/5] flex flex-col">
       {/* Product Image */}
       <div className="relative flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-xl w-full aspect-[4/3] sm:aspect-[16/9]">
         <Image

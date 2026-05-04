@@ -522,23 +522,10 @@ export default function FoodBeveragesPage() {
           </div>
         )}
 
-        {/* Image Loading Status - Always visible */}
-        {imageVerificationResults && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <h3 className="text-sm font-semibold text-green-800 mb-2">📸 Image Loading Status</h3>
-            <div className="text-xs text-green-700 space-y-1">
-              <p>✅ All {imageVerificationResults.total} products are displayed</p>
-              <p>🖼️ 55 products have real working images from Supabase Storage</p>
-              <p>🎭 0 products use placeholder images - all replaced with real images!</p>
-              <p>🔄 Images load immediately with smart fallback system</p>
-              <p>🎯 Check browser console for individual image loading status</p>
-            </div>
-          </div>
-        )}
-
+        
         {/* Products Grid/List */}
         {filteredProducts.length > 0 ? (
-          <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6' : 'space-y-6'}>
+          <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6' : 'space-y-6'}>
             {filteredProducts.map((product) => (
               <div key={product.id}>
                 {viewMode === 'grid' ? (
