@@ -132,5 +132,8 @@ export const PRODUCT_IMAGE_PROPS = {
  */
 export function handleImageError(event: React.SyntheticEvent<HTMLImageElement>) {
   // Set fallback image on error
-  event.currentTarget.src = FALLBACK_IMAGE;
+  const target = event.currentTarget;
+  if (!target.src.includes(FALLBACK_IMAGE)) {
+    target.src = FALLBACK_IMAGE;
+  }
 }

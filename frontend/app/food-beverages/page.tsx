@@ -7,6 +7,8 @@ import { useCart } from '../../context/CartContext';
 import { Loader2, Search, Grid, List, ShoppingCart, ArrowLeft, Star } from 'lucide-react';
 import { fixImageUrl } from '@/lib/supabase-storage';
 import { supabase } from '@/lib/supabase-client';
+import ProductCard from '@/components/ProductCard';
+import { Product } from '@/types/product';
 
 interface StorageFile {
   name: string;
@@ -18,15 +20,6 @@ interface StorageFile {
   size?: number | null;
 }
 
-interface FoodProduct {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  description?: string;
-  category: string;
-  inStock: boolean;
-}
 
 interface ImageVerificationResults {
   total: number;
@@ -37,7 +30,7 @@ interface ImageVerificationResults {
 
 export default function FoodBeveragesPage() {
   const [storageFiles, setStorageFiles] = useState<StorageFile[]>([]);
-  const [products, setProducts] = useState<FoodProduct[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -159,7 +152,7 @@ export default function FoodBeveragesPage() {
     }
   };
 
-  const convertToProducts = async (files: StorageFile[]): Promise<FoodProduct[]> => {
+  const convertToProducts = async (files: StorageFile[]): Promise<Product[]> => {
     return files.map((file, index) => {
       // Generate product name from filename
       const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
@@ -183,12 +176,23 @@ export default function FoodBeveragesPage() {
       return {
         id: file.id || file.name,
         name: productName,
-        price: price,
-        image: `${folderPath}/${file.name}`,
         description: `Delicious ${productName} from our authentic African food collection. Perfect for any occasion.`,
-        category: 'Food & Beverages',
-        inStock: true
-      };
+        price: price,
+        compare_price: undefined,
+        sku: `FB-${index + 1}`,
+        status: 'active',
+        featured: false,
+        stock_quantity: 100,
+        inventory_quantity: 100,
+        track_inventory: true,
+        allow_backorder: true,
+        images: [`${folderPath}/${file.name}`],
+        image_url: `${folderPath}/${file.name}`,
+        category_name: 'Food & Beverages',
+        created_at: new Date().toISOString(),
+        rating: 4.5,
+        reviews: 12
+      } as Product;
     });
   };
 
@@ -381,13 +385,13 @@ export default function FoodBeveragesPage() {
     }
   };
 
-  const handleAddToCart = (product: FoodProduct) => {
+  const handleAddToCart = (product: Product) => {
     addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.image,
-      category: product.category
+      image: product.image_url || product.images?.[0] || '/placeholder-product.jpg',
+      category: product.category_name || 'Food & Beverages'
     });
   };
 
@@ -527,104 +531,11 @@ export default function FoodBeveragesPage() {
         {filteredProducts.length > 0 ? (
           <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6' : 'space-y-6'}>
             {filteredProducts.map((product) => (
-              <div key={product.id}>
-                {viewMode === 'grid' ? (
-                  <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
-                    <div className="relative aspect-square">
-                      {/* Debug indicator */}
-                      {process.env.NODE_ENV === 'development' && (
-                        <div className="absolute top-0 left-0 z-10 bg-blue-500 text-white text-xs px-1 rounded-br">
-                          {imageUrls[product.id] ? 'URL' : 'No URL'}
-                        </div>
-                      )}
-                      <Image
-                        src={imageUrls[product.id] || '/placeholder-product.jpg'}
-                        alt={product.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, (max-width: 1536px) 20vw, 16vw"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          console.log(`🔍 Grid image error for ${product.name}: ${imageUrls[product.id] || 'No URL'}`);
-                          handleImageError(product.id, product.name, imageUrls[product.id] || '', target);
-                        }}
-                        onLoad={() => {
-                          console.log(`🔍 Grid image loaded for ${product.name}`);
-                          handleImageLoad(product.id, product.name);
-                        }}
-                        loading="eager"
-                        quality={85}
-                        unoptimized={false}
-                        priority={false}
-                      />
-                      <div className="absolute top-2 right-2 bg-green-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                        In Stock
-                      </div>
-                    </div>
-                    <div className="p-4 sm:p-3 lg:p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-xs lg:text-sm line-clamp-2 group-hover:text-green-700 transition-colors">{product.name}</h3>
-                      <p className="text-xs text-gray-600 mb-3 line-clamp-2 hidden sm:block lg:block">{product.description}</p>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-lg font-bold text-gray-900 sm:text-base lg:text-lg">${product.price}</span>
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                          <span className="text-xs text-gray-600 ml-1">4.5</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleAddToCart(product)}
-                        className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium transform hover:scale-105 transition-transform duration-200"
-                      >
-                        <ShoppingCart className="h-4 w-4 inline mr-2" />
-                        <span className="hidden sm:inline lg:inline">Add to Cart</span>
-                        <span className="sm:hidden lg:hidden">Add</span>
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center p-4 gap-4 h-full bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
-                    <div className="relative w-24 h-24 sm:w-20 sm:h-20 lg:w-32 lg:h-32 flex-shrink-0">
-                      <Image
-                        src={imageUrls[product.id] || '/placeholder-product.jpg'}
-                        alt={product.name}
-                        fill
-                        className="object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
-                        sizes="96px"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          handleImageError(product.id, product.name, imageUrls[product.id] || '', target);
-                        }}
-                        onLoad={() => {
-                          handleImageLoad(product.id, product.name);
-                        }}
-                        loading="eager"
-                        quality={85}
-                        unoptimized={false}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 mb-1 text-sm">{product.name}</h3>
-                      <p className="text-xs text-gray-600 mb-2 line-clamp-2">{product.description}</p>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-lg font-bold text-gray-900">${product.price}</span>
-                          <div className="flex items-center mt-1">
-                            <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                            <span className="text-xs text-gray-600 ml-1">4.5</span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleAddToCart(product)}
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
-                        >
-                          <ShoppingCart className="h-4 w-4 inline mr-1" />
-                          Add
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <ProductCard 
+                key={product.id} 
+                product={product}
+                showQuantitySelector={false}
+              />
             ))}
           </div>
         ) : (
