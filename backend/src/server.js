@@ -225,6 +225,7 @@ app.use('/api/admin', require(path.join(__dirname, 'routes', 'admin')));
 app.use('/api/products', require(path.join(__dirname, 'routes', 'products'))); // Updated with bulk activate endpoint
 app.use('/api/orders', require(path.join(__dirname, 'routes', 'orders')));
 // app.use('/api/payments', require(path.join(__dirname, 'routes', 'payments')));
+app.use('/api/paystack', require(path.join(__dirname, 'routes', 'paystack')));
 app.use('/api/users', require(path.join(__dirname, 'routes', 'users')));
 app.use('/api/categories', require(path.join(__dirname, 'routes', 'categories')));
 app.use('/api/settings', require(path.join(__dirname, 'routes', 'settings')));

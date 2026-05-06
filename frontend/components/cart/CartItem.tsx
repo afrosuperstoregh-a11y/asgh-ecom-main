@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { Minus, Plus, X } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { formatPrice } from '../../lib/utils';
 
 interface CartItemProps {
   id: number;
@@ -55,7 +56,7 @@ export default function CartItem({
                 {variant}
               </p>
               <p className="text-lg font-bold text-gray-900 mt-2 sm:hidden">
-                ${lineTotal.toFixed(2)}
+                {formatPrice(lineTotal * 100)}
               </p>
             </div>
 
@@ -63,7 +64,7 @@ export default function CartItem({
             <div className="flex flex-col sm:items-end gap-4">
               {/* Desktop Price */}
               <p className="hidden sm:block text-lg font-bold text-gray-900">
-                ${lineTotal.toFixed(2)}
+                {formatPrice(lineTotal * 100)}
               </p>
 
               {/* Quantity Controls */}
@@ -107,14 +108,14 @@ export default function CartItem({
 
               {/* Unit Price (Mobile) */}
               <div className="sm:hidden text-sm text-gray-500">
-                ${price.toFixed(2)} each
+                {formatPrice(price * 100)} each
               </div>
             </div>
           </div>
 
           {/* Unit Price (Desktop) */}
           <div className="hidden sm:block mt-2 text-sm text-gray-500">
-            ${price.toFixed(2)} each
+            {formatPrice(price * 100)} each
           </div>
         </div>
       </div>

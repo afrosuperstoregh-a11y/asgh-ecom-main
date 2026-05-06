@@ -1,5 +1,6 @@
 import React from 'react';
 import { Star, ShoppingCart, Heart, Clock, TrendingDown, ExternalLink } from 'lucide-react';
+import { formatPrice } from '../lib/utils';
 
 interface DealProductCardProps {
   product: {
@@ -90,11 +91,11 @@ const DealProductCard: React.FC<DealProductCardProps> = ({ product, viewMode = '
 
             <div className="flex items-center gap-3 mb-3">
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-red-600">${product.discountedPrice}</span>
-                <span className="text-lg text-gray-400 line-through">${product.originalPrice}</span>
+                <span className="text-2xl font-bold text-red-600">{formatPrice(product.discountedPrice * 100)}</span>
+                <span className="text-lg text-gray-400 line-through">{formatPrice(product.originalPrice * 100)}</span>
               </div>
               <div className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-                Save ${savings.toFixed(2)}
+                Save {formatPrice(savings * 100)}
               </div>
             </div>
 
@@ -203,10 +204,10 @@ const DealProductCard: React.FC<DealProductCardProps> = ({ product, viewMode = '
           </div>
 
           <div className="flex items-baseline gap-2">
-            <span className="text-base font-bold text-red-600">${product.discountedPrice}</span>
-            <span className="text-xs text-gray-400 line-through">${product.originalPrice}</span>
+            <span className="text-base font-bold text-red-600">{formatPrice(product.discountedPrice * 100)}</span>
+            <span className="text-xs text-gray-400 line-through">{formatPrice(product.originalPrice * 100)}</span>
             <div className="bg-green-100 text-green-800 px-1 py-0.5 rounded-full text-xs font-medium">
-              Save ${savings.toFixed(2)}
+              Save {formatPrice(savings * 100)}
             </div>
           </div>
 

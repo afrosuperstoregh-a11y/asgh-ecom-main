@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { CreditCard, Wallet } from 'lucide-react';
+import { CreditCard, Wallet, Smartphone } from 'lucide-react';
 import PayPalPayment from './PayPalPayment';
 import StripePayment from './StripePayment';
+import PaystackPayment from './PaystackPayment';
 
 interface PaymentMethod {
   id: string;
@@ -18,6 +19,8 @@ interface PaymentMethodSelectorProps {
   onPaymentSuccess: (details: any) => void;
   onPaymentError: (error: any) => void;
   disabled?: boolean;
+  email?: string;
+  orderId?: string;
 }
 
 const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
@@ -25,7 +28,9 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   onPaymentMethodChange,
   onPaymentSuccess,
   onPaymentError,
-  disabled = false
+  disabled = false,
+  email = '',
+  orderId = ''
 }) => {
   const [selectedMethod, setSelectedMethod] = useState<string>('card');
 
@@ -41,6 +46,12 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
       name: 'PayPal',
       icon: <Wallet className="h-6 w-6" />,
       description: 'Pay safely with your PayPal account'
+    },
+    {
+      id: 'paystack',
+      name: 'Paystack (Mobile Money)',
+      icon: <Smartphone className="h-6 w-6" />,
+      description: 'Pay with MTN, Vodafone, AirtelTigo Mobile Money'
     }
   ];
 
@@ -148,6 +159,18 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
             onSuccess={handlePayPalSuccess}
             onError={handlePayPalError}
             onCancel={() => console.log('PayPal payment cancelled')}
+            disabled={disabled}
+          />
+        )}
+
+        {selectedMethod === 'paystack' && (
+          <PaystackPayment
+            amount={amount}
+            email={email}
+            orderId={orderId}
+            onSuccess={onPaymentSuccess}
+            onError={onPaymentError}
+            onCancel={() => console.log('Paystack payment cancelled')}
             disabled={disabled}
           />
         )}

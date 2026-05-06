@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Star, ShoppingCart, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { getProductImageUrl, handleImageError, PRODUCT_IMAGE_PROPS } from '../lib/image-utils';
+import { formatPrice } from '../lib/utils';
 
 interface Product {
   id: string;
@@ -122,11 +123,11 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1">
                 <span className="text-base font-bold text-gray-900">
-                  ${product.price.toFixed(2)}
+                  {formatPrice(product.price)}
                 </span>
                 {hasDiscount && (
                   <span className="text-xs text-gray-500 line-through">
-                    ${product.compare_price?.toFixed(2)}
+                    {formatPrice(product.compare_price || 0)}
                   </span>
                 )}
               </div>

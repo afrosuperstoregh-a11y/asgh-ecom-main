@@ -5,8 +5,8 @@ class PaymentService {
   async createPaymentIntent(orderId, amount) {
     try {
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(amount * 100), // Convert to cents
-        currency: 'cad',
+        amount: Math.round(amount * 100), // Convert to pesewas (cents)
+        currency: 'ghs',
         metadata: {
           order_id: orderId
         }
@@ -60,7 +60,7 @@ class PaymentService {
 
       const refund = await stripe.refunds.create({
         payment_intent: order.payment_intent_id,
-        amount: Math.round(amount * 100) // Convert to cents
+        amount: Math.round(amount * 100) // Convert to pesewas
       });
 
       // Update order status

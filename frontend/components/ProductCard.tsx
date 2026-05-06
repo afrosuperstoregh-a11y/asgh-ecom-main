@@ -8,6 +8,7 @@ import { Heart, ShoppingCart, Star, Plus, Minus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { getProductImageUrl, handleImageError, PRODUCT_IMAGE_PROPS } from '../lib/image-utils';
+import { formatPrice } from '../lib/utils';
 import { Button } from './ui/Button';
 
 interface ProductCardProps {
@@ -150,11 +151,11 @@ export default function ProductCard({ product, showQuantitySelector = false }: P
           {/* Price */}
           <div className="flex items-center gap-2">
             <span className="text-base font-bold text-gray-900">
-              ${product.price.toFixed(2)}
+              {formatPrice(product.price)}
             </span>
             {hasDiscount && (
               <span className="text-xs text-gray-500 line-through">
-                ${product.compare_price?.toFixed(2)}
+                {formatPrice(product.compare_price || 0)}
               </span>
             )}
           </div>

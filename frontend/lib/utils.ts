@@ -1,14 +1,14 @@
 /**
  * Formats a number as a price string with 2 decimal places and a currency symbol
- * @param price - The price to format (in cents or dollars, depending on your application)
- * @returns Formatted price string (e.g., "$19.99")
+ * @param price - The price to format (in pesewas or GHS, depending on your application)
+ * @returns Formatted price string (e.g., "₵19.99")
  */
 export function formatPrice(price: number): string {
-  // Convert to dollars if your prices are stored in cents
+  // Convert to GHS if your prices are stored in pesewas (cents)
   const amount = price / 100;
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-GH', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'GHS',
   }).format(amount);
 }
 
