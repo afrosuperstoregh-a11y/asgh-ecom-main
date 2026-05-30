@@ -15,7 +15,7 @@
     "start:frontend": "cd frontend && npm start",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "clean": "rm -rf node_modules backend/node_modules frontend/node_modules",
-    "postinstall": "cd backend && npm install && cd ../frontend && npm install",
+    "postinstall": "npm install --prefix backend && npm install --prefix frontend",
     "generate-categories": "cd backend && npx ts-node ../scripts/generate-categories-from-bucket.ts",
     "test-category-generation": "npx ts-node scripts/test-category-generation.ts"
   },
@@ -28,7 +28,7 @@
     "uuid": "^13.0.0"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": "20.x"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.1",

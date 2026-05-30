@@ -18,13 +18,18 @@ export async function middleware(request: NextRequest) {
         .eq('id', productId)
         .single()
 
-      if (error || !product?.slug) {
+      if (error || !product) {
         // If no slug found, redirect to products page
         return NextResponse.redirect(new URL('/products', request.url), 301)
       }
 
+      const slug = (product as any).slug
+      if (!slug) {
+        return NextResponse.redirect(new URL('/products', request.url), 301)
+      }
+
       // Redirect to slug-based URL with 301 permanent redirect
-      const newUrl = new URL(`/product/${product.slug}`, request.url)
+      const newUrl = new URL(`/product/${slug}`, request.url)
       return NextResponse.redirect(newUrl, 301)
     } catch (error) {
       // If there's any error, redirect to products page
@@ -46,13 +51,18 @@ export async function middleware(request: NextRequest) {
         .eq('id', productId)
         .single()
 
-      if (error || !product?.slug) {
+      if (error || !product) {
         // If no slug found, redirect to admin products page
         return NextResponse.redirect(new URL('/admin/products', request.url), 301)
       }
 
+      const slug = (product as any).slug
+      if (!slug) {
+        return NextResponse.redirect(new URL('/admin/products', request.url), 301)
+      }
+
       // Redirect to slug-based URL with 301 permanent redirect
-      const newUrl = new URL(`/admin/products/${product.slug}`, request.url)
+      const newUrl = new URL(`/admin/products/${slug}`, request.url)
       return NextResponse.redirect(newUrl, 301)
     } catch (error) {
       // If there's any error, redirect to admin products page
@@ -74,13 +84,18 @@ export async function middleware(request: NextRequest) {
         .eq('id', categoryId)
         .single()
 
-      if (error || !category?.slug) {
+      if (error || !category) {
         // If no slug found, redirect to categories page
         return NextResponse.redirect(new URL('/categories', request.url), 301)
       }
 
+      const slug = (category as any).slug
+      if (!slug) {
+        return NextResponse.redirect(new URL('/categories', request.url), 301)
+      }
+
       // Redirect to slug-based URL with 301 permanent redirect
-      const newUrl = new URL(`/category/${category.slug}`, request.url)
+      const newUrl = new URL(`/category/${slug}`, request.url)
       return NextResponse.redirect(newUrl, 301)
     } catch (error) {
       // If there's any error, redirect to categories page

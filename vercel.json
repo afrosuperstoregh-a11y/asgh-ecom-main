@@ -3,7 +3,6 @@
   "name": "asca-ecommerce-platform",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "npm install",
   "framework": "nextjs",
   "root": "frontend",
   "build": {
@@ -19,7 +18,11 @@
   ],
   "functions": {
     "app/api/**/*.js": {
-      "runtime": "@vercel/node@3.0.0"
+      "runtime": "nodejs20.x"
+    },
+    "app/api/**/*.ts": {
+      "runtime": "nodejs20.x"
     }
-  }
+  },
+  "installCommand": "cd .. && npm install && cd frontend && npm install"
 }
