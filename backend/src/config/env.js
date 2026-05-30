@@ -22,11 +22,11 @@ const config = {
     serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
   },
   
-  // JWT Configuration
+  // JWT Configuration - NO DEFAULTS FOR SECURITY
   jwt: {
-    secret: process.env.JWT_SECRET || 'your-secret-key',
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
+    secret: process.env.JWT_SECRET,
+    expiresIn: process.env.JWT_EXPIRES_IN || '15m',
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
   
   // Stripe Configuration
@@ -54,9 +54,9 @@ const config = {
     keyPrefix: process.env.REDIS_KEY_PREFIX || 'asca_ecom:',
   },
   
-  // Session Configuration
+  // Session Configuration - NO DEFAULTS FOR SECURITY
   session: {
-    secret: process.env.SESSION_SECRET || 'asca-ecommerce-super-secret-key-change-in-production',
+    secret: process.env.SESSION_SECRET,
     maxAge: parseInt(process.env.SESSION_MAX_AGE) || 24 * 60 * 60 * 1000, // 24 hours
     ttl: parseInt(process.env.SESSION_TTL) || 86400, // 24 hours in seconds
     domain: process.env.SESSION_DOMAIN,
@@ -71,14 +71,19 @@ const config = {
     categoriesTTL: parseInt(process.env.CACHE_CATEGORIES_TTL) || 1800,
   },
   
-  // CORS Configuration
+  // CORS Configuration - Environment-based
   cors: {
-    origins: [
-      process.env.FRONTEND_URL || 'https://www.afrosuperstore.ca',
-      'https://afrosuperstore.ca',
-      'http://localhost:3000',
-      'http://localhost:3001',
-    ],
+    origins: process.env.NODE_ENV === 'production'
+      ? [
+          process.env.FRONTEND_URL || 'https://www.afrosuperstore.ca',
+          'https://afrosuperstore.ca',
+        ]
+      : [
+          process.env.FRONTEND_URL || 'https://www.afrosuperstore.ca',
+          'https://afrosuperstore.ca',
+          'http://localhost:3000',
+          'http://localhost:3001',
+        ],
     credentials: true,
   },
   
@@ -95,20 +100,44 @@ const config = {
   },
 };
 
-// Validation
+// Strict validation with minimum length requirements
 const requiredEnvVars = [
-  'SUPABASE_URL',
-  'SUPABASE_ANON_KEY',
-  'JWT_SECRET',
+  { name: 'JWT_SECRET', minLength: 32 },
+  { name: 'SESSION_SECRET', minLength: 32 },
+  { name: 'SUPABASE_URL', minLength: 10 },
+  { name: 'SUPABASE_ANON_KEY', minLength: 20 },
+  { name: 'SUPABASE_SERVICE_ROLE_KEY', minLength: 20 },
+  { name: 'NODE_ENV', minLength: 3 },
 ];
 
-const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+const missingEnvVars = [];
+const invalidEnvVars = [];
 
-if (missingEnvVars.length > 0) {
-  console.error('Missing required environment variables:', missingEnvVars);
-  if (config.nodeEnv === 'production') {
-    process.exit(1);
+requiredEnvVars.forEach(({ name, minLength }) => {
+  const value = process.env[name];
+  if (!value) {
+    missingEnvVars.push(name);
+  } else if (minLength && value.length < minLength) {
+    invalidEnvVars.push(`${name} (must be at least ${minLength} characters)`);
   }
+});
+
+if (missingEnvVars.length > 0 || invalidEnvVars.length > 0) {
+  console.error('❌ Environment Configuration Error:');
+  
+  if (missingEnvVars.length > 0) {
+    console.error('Missing required environment variables:', missingEnvVars.join(', '));
+  }
+  
+  if (invalidEnvVars.length > 0) {
+    console.error('Invalid environment variables:', invalidEnvVars.join(', '));
+  }
+  
+  console.error('\nPlease set these environment variables before starting the server.');
+  console.error('See backend/.env.example for required variables.');
+  
+  // Always fail on missing/invalid env vars - no fallbacks for security
+  process.exit(1);
 }
 
 module.exports = config;

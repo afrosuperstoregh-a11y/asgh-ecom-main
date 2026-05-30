@@ -5,6 +5,10 @@ export interface SupabaseConfig {
   anonKey: string;
 }
 
+// Simple in-memory cache for deduplication
+const requestCache = new Map<string, Promise<any>>();
+const CACHE_TTL = 5000; // 5 seconds
+
 export function getSupabaseConfig(): SupabaseConfig {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -38,7 +42,7 @@ export async function fetchFromSupabase<T>(
   const { url, anonKey } = getSupabaseConfig();
   const headers = createSupabaseHeaders(anonKey);
 
-  // Build query parameters
+  // Build query parameters with proper URL encoding
   const params = new URLSearchParams();
   
   if (options.select) {
@@ -62,75 +66,158 @@ export async function fetchFromSupabase<T>(
   }
 
   const queryString = params.toString();
+  const cacheKey = `${tableName}:${queryString}`;
+
+  // Check cache for existing request
+  if (requestCache.has(cacheKey)) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Using cached request for: ${cacheKey}`);
+    }
+    return requestCache.get(cacheKey);
+  }
+
   const apiUrl = `${url}/rest/v1/${tableName}${queryString ? `?${queryString}` : ''}`;
 
-  console.log(`Fetching from Supabase: ${apiUrl}`);
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Fetching from Supabase: ${apiUrl}`);
+  }
 
-  const response = await fetch(apiUrl, {
+  const requestPromise = fetch(apiUrl, {
     method: 'GET',
     headers,
     cache: 'no-cache' // Ensure fresh data
+  })
+  .then(async (response) => {
+    if (!response.ok) {
+      let errorData: Record<string, any> = {};
+      let errorMessage = 'No additional error information available.';
+      
+      try {
+        const text = await response.text();
+        errorData = text ? JSON.parse(text) : {};
+        errorMessage = errorData.message || errorData.details || errorData.error || text || 'No additional error information available.';
+      } catch (e) {
+        errorMessage = 'Failed to parse error response';
+      }
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Supabase API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          message: errorMessage,
+          errorData,
+          url: apiUrl
+        });
+      }
+      
+      throw new Error(
+        `Supabase API Error: ${response.status} ${response.statusText}. ${errorMessage}`
+      );
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Invalid response format:', data);
+      }
+      throw new Error('Invalid response format: expected array');
+    }
+
+    return data;
+  })
+  .finally(() => {
+    // Remove from cache after TTL
+    setTimeout(() => {
+      requestCache.delete(cacheKey);
+    }, CACHE_TTL);
   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      `Supabase API Error: ${response.status} ${response.statusText}. ${
-        errorData.message || 'No additional error information available.'
-      }`
-    );
-  }
+  // Store in cache
+  requestCache.set(cacheKey, requestPromise);
 
-  const data = await response.json();
-
-  if (!Array.isArray(data)) {
-    throw new Error('Invalid response format: expected array');
-  }
-
-  return data;
+  return requestPromise;
 }
 
-// Specific function for fetching products
+// Specific function for fetching products with fallback
 export async function fetchAllProducts() {
-  return fetchFromSupabase<any>('products', {
-    select: `*,
-      categories!inner(id, name, slug),
-      category!left(id, name, slug)`, // Include both category relations
-    orderBy: 'created_at.desc' // Order by newest first
-  });
+  try {
+    return await fetchFromSupabase<any>('products', {
+      select: `*, categories(id, name, slug)`,
+      orderBy: 'created_at.desc' // Order by newest first
+    });
+  } catch (error) {
+    // Fallback to basic product fetch without category join if join fails
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Category join failed, falling back to basic product fetch:', error);
+    }
+    return await fetchFromSupabase<any>('products', {
+      select: '*',
+      orderBy: 'created_at.desc'
+    });
+  }
 }
 
-// Function to fetch products with pagination
+// Function to fetch products with pagination with fallback
 export async function fetchProductsWithPagination(
   page: number = 1,
   limit: number = 20
 ) {
   const offset = (page - 1) * limit;
   
-  const [products, countResult] = await Promise.all([
-    fetchFromSupabase<any>('products', {
-      select: `*,
-        categories!inner(id, name, slug),
-        category!left(id, name, slug)`, // Include both category relations
-      limit,
-      offset,
-      orderBy: 'created_at.desc'
-    }),
-    // Get total count
-    fetchFromSupabase<any>('products', {
-      select: 'id'
-    })
-  ]);
+  try {
+    const [products, countResult] = await Promise.all([
+      fetchFromSupabase<any>('products', {
+        select: `*, categories(id, name, slug)`,
+        limit,
+        offset,
+        orderBy: 'created_at.desc'
+      }),
+      // Get total count
+      fetchFromSupabase<any>('products', {
+        select: 'id'
+      })
+    ]);
 
-  return {
-    products,
-    pagination: {
-      currentPage: page,
-      limit,
-      total: countResult.length,
-      totalPages: Math.ceil(countResult.length / limit),
-      hasNext: page * limit < countResult.length,
-      hasPrev: page > 1
+    return {
+      products,
+      pagination: {
+        currentPage: page,
+        limit,
+        total: countResult.length,
+        totalPages: Math.ceil(countResult.length / limit),
+        hasNext: page * limit < countResult.length,
+        hasPrev: page > 1
+      }
+    };
+  } catch (error) {
+    // Fallback to basic product fetch without category join if join fails
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Category join failed, falling back to basic product fetch:', error);
     }
-  };
+    
+    const [products, countResult] = await Promise.all([
+      fetchFromSupabase<any>('products', {
+        select: '*',
+        limit,
+        offset,
+        orderBy: 'created_at.desc'
+      }),
+      fetchFromSupabase<any>('products', {
+        select: 'id'
+      })
+    ]);
+
+    return {
+      products,
+      pagination: {
+        currentPage: page,
+        limit,
+        total: countResult.length,
+        totalPages: Math.ceil(countResult.length / limit),
+        hasNext: page * limit < countResult.length,
+        hasPrev: page > 1
+      }
+    };
+  }
 }

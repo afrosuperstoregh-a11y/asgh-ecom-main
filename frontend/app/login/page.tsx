@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import { Button } from '../../components/ui/Button';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, signInWithGoogle, signInWithFacebook } = useAuth();
+  const { signIn, signInWithProvider } = useSupabaseAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -32,7 +32,7 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      await signInWithGoogle();
+      await signInWithProvider('google');
     } catch (err: any) {
       setError(err.message || 'Google sign-in failed');
       setLoading(false);
@@ -43,7 +43,7 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      await signInWithFacebook();
+      await signInWithProvider('facebook');
     } catch (err: any) {
       setError(err.message || 'Facebook sign-in failed');
       setLoading(false);
@@ -57,16 +57,16 @@ export default function LoginPage() {
     setSuccess('');
 
     try {
-      const success = await login(formData.email, formData.password);
+      const result = await signIn(formData.email, formData.password);
       
-      if (success) {
+      if (result.success) {
         setSuccess('Login successful! Redirecting...');
         
         setTimeout(() => {
           router.replace('/account');
         }, 1500);
       } else {
-        setError('Invalid email or password');
+        setError(result.error || 'Invalid email or password');
       }
     } catch (err: any) {
       setError(err.message || 'Login failed');
