@@ -5,6 +5,7 @@
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "framework": "nextjs",
+  "root": "frontend",
   "build": {
     "env": {
       "NEXT_TELEMETRY_DISABLED": "1"
