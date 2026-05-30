@@ -6,14 +6,16 @@ import Image from 'next/image';
 import { ArrowLeft, ShoppingCart, Star, Truck, Shield, Plus, Minus, X, ZoomIn, ZoomOut, Play } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '../../../context/CartContext';
-import { useProduct, useProducts } from '@/hooks/useProducts';
+import { useProductBySlug } from '@/hooks/useProductBySlug';
+import { useSupabaseProducts } from '@/hooks/useSupabaseProducts';
 import ProductVideo from '../../../components/ProductVideo';
 import ProductInfo from '../../../components/ProductInfo';
 
 import { Product } from '@/types/product';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
-export default function ProductPage() {
+
+export default function ProductSlugPage() {
   const params = useParams();
   const router = useRouter();
   const { addToCart } = useCart();
@@ -23,9 +25,9 @@ export default function ProductPage() {
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomedImageIndex, setZoomedImageIndex] = useState<number | null>(null);
 
-  const productId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { product, loading, error } = useProduct(productId as string);
-  const { products: relatedProducts } = useProducts({ limit: 4 });
+  const productSlug = params.slug?.toString() || '';
+  const { product, loading, error } = useProductBySlug(productSlug as string);
+  const { products: relatedProducts } = useSupabaseProducts({ limit: 4 });
 
   const handleAddToCart = async () => {
     if (!product || addingToCart) return;
@@ -39,8 +41,11 @@ export default function ProductPage() {
           id: product.id.toString(),
           name: product.name,
           price: product.compare_price || product.price,
-          image: product.image_url || product.image || '/placeholder-product.svg',
-          category: product.categories?.name || 'Uncategorized'
+          image: product.images[0] ?? '/placeholder-product.svg',
+          category: 
+          (typeof product.categories === 'object' && product.categories !== null && 'name' in product.categories) 
+            ? product.categories.name 
+            : product.category?.name || 'Uncategorized'
         });
       }
       
@@ -101,8 +106,8 @@ export default function ProductPage() {
   
   // Handle images from Supabase Storage
   let images: string[] = [];
-  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
-    images = product.images;
+  if (product.images && typeof product.images === 'object' && 'length' in product.images && product.images.length > 0) {
+    images = product.images as string[];
   } else if (product.image_url) {
     images = [product.image_url];
   } else if (product.image) {
@@ -137,7 +142,10 @@ export default function ProductPage() {
       "reviewCount": product.reviews || 0
     } : undefined,
     "sku": product.sku,
-    "category": product.categories?.name
+    "category": 
+          (typeof product.categories === 'object' && product.categories !== null && 'name' in product.categories) 
+            ? product.categories.name 
+            : product.category?.name || 'Uncategorized'
   };
 
   return (
@@ -179,21 +187,26 @@ export default function ProductPage() {
             <div className="space-y-4">
               {/* Main Media Display */}
               <div className="aspect-square bg-white rounded-lg overflow-hidden relative">
-                {Array.isArray(product.videos) && product.videos.length > 0 && currentMediaIndex >= images.length ? (
+                {product.videos && typeof product.videos === 'object' && 'length' in product.videos && product.videos.length > 0 && currentMediaIndex >= images.length ? (
                   <ProductVideo
-                    src={product.videos[currentMediaIndex - images.length]}
-                    poster={images[0] || '/placeholder-product.svg'}
+                    src={(product.videos as string[])[currentMediaIndex - images.length] || ''}
+                    poster={images?.[0] ?? '/placeholder-product.svg'}
                     title={product.name}
                     className="w-full h-full"
                   />
                 ) : (
                   <div className="relative group cursor-zoom-in" onClick={() => setIsZoomed(true)}>
                     <Image
-                      src={images[currentMediaIndex] || '/placeholder-product.svg'}
+                      src={currentMediaIndex < images.length ? images[currentMediaIndex] : '/placeholder-product.svg'}
                       alt={product.name}
                       fill
                       className="object-cover transition-transform duration-200 group-hover:scale-105"
                       sizes="(max-width: 1024px) 100vw, 50vw"
+                      onError={() => {
+                        // Fallback to placeholder if image fails to load
+                        // Note: Next.js Image component doesn't allow direct src modification
+                        // The fallback will be handled by updating the images array
+                      }}
                     />
                     {/* Zoom Icon Overlay */}
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center pointer-events-none">
@@ -222,12 +235,16 @@ export default function ProductPage() {
                       fill
                       className="object-cover"
                       sizes="80px"
+                      onError={() => {
+                        // Fallback to placeholder if image fails to load
+                        // Note: Next.js Image component doesn't allow direct src modification
+                      }}
                     />
                   </button>
                 ))}
                 
                 {/* Videos */}
-                {Array.isArray(product.videos) && product.videos.map((video: any, index: number) => (
+                {product.videos && typeof product.videos === 'object' && 'length' in product.videos && (product.videos as string[]).map((video: string, index: number) => (
                   <button
                     key={`video-${index}`}
                     onClick={() => setCurrentMediaIndex(images.length + index)}
@@ -250,6 +267,67 @@ export default function ProductPage() {
               <ProductInfo product={product} />
             </div>
           </div>
+
+          {/* Related Products */}
+          {relatedProducts && relatedProducts.length > 0 && (
+            <div className="mt-16">
+              <h2 className="text-2xl font-bold text-gray-900 mb-8">Related Products</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                {relatedProducts
+                  .filter((p: any) => p.id !== product.id)
+                  .slice(0, 4)
+                  .map((relatedProduct: any) => (
+                    <Link
+                      key={relatedProduct.id}
+                      href={`/product/${relatedProduct.slug}`}
+                      className="group"
+                    >
+                      <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+                        <div className="aspect-square bg-gray-100 relative">
+                          <Image
+                            src={relatedProduct.images?.[0] || relatedProduct.image_url || relatedProduct.image || '/placeholder-product.svg'}
+                            alt={relatedProduct.name}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-200"
+                            sizes="(max-width: 768px) 50vw, 25vw"
+                            onError={() => {
+                              // Fallback to placeholder if image fails to load
+                              // Note: Next.js Image component doesn't allow direct src modification
+                            }}
+                          />
+                        </div>
+                        <div className="p-4">
+                          <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                            {relatedProduct.name}
+                          </h3>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="text-lg font-bold text-gray-900">
+                                ${relatedProduct.compare_price || relatedProduct.price}
+                              </span>
+                              {relatedProduct.compare_price && (
+                                <span className="text-sm text-gray-500 line-through ml-2">
+                                  ${relatedProduct.price}
+                                </span>
+                              )}
+                            </div>
+                            {(relatedProduct.inventory_quantity > 0 || relatedProduct.stock_quantity > 0) ? (
+                              <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                                In Stock
+                              </span>
+                            ) : (
+                              <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">
+                                Out of Stock
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -298,6 +376,10 @@ export default function ProductPage() {
                     width={400}
                     height={400}
                     className="max-w-md max-h-[80vh] object-contain rounded-lg"
+                    onError={() => {
+                      // Fallback to placeholder if image fails to load
+                      // Note: Next.js Image component doesn't allow direct src modification
+                    }}
                   />
                 </div>
               ))}

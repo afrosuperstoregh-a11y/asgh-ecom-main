@@ -1,14 +1,16 @@
 /// <reference path="../types/express.d.ts" />
+/// <reference path="../types/global.d.ts" />
 import { Request, Response } from 'express'
 import productService from '../services/productService'
 import { asyncHandler, createError } from '../middleware/errorHandler'
+
 
 class ProductController {
   // GET /api/products - Get all products
   getProducts = asyncHandler(async (req: Request, res: Response) => {
     const options = {
-      page: parseInt(req.query.page as string) || 1,
-      limit: Math.min(parseInt(req.query.limit as string) || 20, 1000), // Increased max limit to 1000
+      page: Number(req.query.page as string) || 1,
+      limit: Math.min(Number(req.query.limit as string) || 20, 1000), // Increased max limit to 1000
       sort: req.query.sort as string || 'created_at',
       order: (req.query.order as 'ASC' | 'DESC') || 'DESC',
       category: req.query.category as string,
@@ -30,6 +32,28 @@ class ProductController {
   getProductById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params
     const product = await productService.getProductById(Array.isArray(id) ? id[0] : id)
+
+    res.json({
+      success: true,
+      data: product,
+      message: 'Product retrieved successfully'
+    })
+  })
+
+  // GET /api/products/slug/:slug - Get single product by slug
+  getProductBySlug = asyncHandler(async (req: Request, res: Response) => {
+    const { slug } = req.params
+    const product = await productService.getProductBySlug(Array.isArray(slug) ? slug[0] : slug)
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'PRODUCT_NOT_FOUND',
+          message: 'Product not found'
+        }
+      })
+    }
 
     res.json({
       success: true,
@@ -106,7 +130,7 @@ class ProductController {
       throw createError('Quantity is required', 400, 'QUANTITY_REQUIRED')
     }
 
-    const result = await productService.updateStock(Array.isArray(id) ? id[0] : id, parseInt(quantity.toString()), operation)
+    const result = await productService.updateStock(Array.isArray(id) ? id[0] : id, Number(quantity.toString()), operation)
 
     res.json({
       success: true,

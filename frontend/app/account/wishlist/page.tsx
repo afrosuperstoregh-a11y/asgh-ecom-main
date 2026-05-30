@@ -94,7 +94,7 @@ const AccountWishlistPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all-products');
   const [sortBy, setSortBy] = useState('dateAdded');
 
-  const categories = ['all-products', ...new Set(wishlistItems.map(item => item.category).filter(cat => cat !== 'all-products'))];
+  const categories = ['all-products', ...Array.from(new Set(wishlistItems.map(item => item.category).filter(cat => cat !== 'all-products')))];
 
   const filteredAndSortedItems = wishlistItems
     .filter(item => selectedCategory === 'all-products' || item.category === selectedCategory)

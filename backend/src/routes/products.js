@@ -1,8 +1,9 @@
 const express = require('express');
 const productController = require('../controllers/productController');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { verifySupabaseUser, requireAdminUser } = require('../middleware/supabaseAuth');
 const { validateProduct, validateProductUpdate } = require('../middleware/validation');
 const { cacheConfigs, invalidateCache } = require('../middleware/cache');
+const { ApiResponse, asyncHandler } = require('../middleware/apiResponse');
 
 const router = express.Router();
 
@@ -13,29 +14,29 @@ router.get('/:id', productController.getProductById);
 
 // Admin only routes (cache invalidation disabled temporarily)
 router.post('/', 
-  authenticateToken, 
-  requireAdmin, 
+  verifySupabaseUser, 
+  requireAdminUser, 
   validateProduct, 
-  productController.createProduct
+  asyncHandler(productController.createProduct)
 );
 
 router.put('/:id', 
-  authenticateToken, 
-  requireAdmin, 
+  verifySupabaseUser, 
+  requireAdminUser, 
   validateProductUpdate, 
-  productController.updateProduct
+  asyncHandler(productController.updateProduct)
 );
 
 router.delete('/:id', 
-  authenticateToken, 
-  requireAdmin, 
-  productController.deleteProduct
+  verifySupabaseUser, 
+  requireAdminUser, 
+  asyncHandler(productController.deleteProduct)
 );
 
 router.post('/:id/stock', 
-  authenticateToken, 
-  requireAdmin, 
-  productController.updateStock
+  verifySupabaseUser, 
+  requireAdminUser, 
+  asyncHandler(productController.updateStock)
 );
 
 module.exports = router;

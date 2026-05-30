@@ -96,10 +96,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Initialize server-side Supabase client
-    const supabase = getSupabaseServer();
+    const supabase = await getSupabaseServer();
 
     // Update order status
-    const { data: order, error } = await supabase
+    const { data: order, error } = await (supabase as any)
       .from('orders')
       .update({ 
         status: status.toLowerCase(),

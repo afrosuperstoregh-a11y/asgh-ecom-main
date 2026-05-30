@@ -100,6 +100,16 @@ class CRMService {
     try {
       const offset = (page - 1) * limit;
 
+      // Validate sortBy to prevent SQL injection - whitelist allowed columns
+      const allowedSortColumns = [
+        'created_at', 'updated_at', 'lifecycle_stage', 'total_spend', 
+        'order_count', 'last_order_date', 'first_name', 'last_name', 'email'
+      ];
+      const safeSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at';
+      
+      // Validate sortOrder to prevent SQL injection
+      const safeSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+
       if (this.useSupabase) {
         let query = supabase
           .from('customer_profiles')
@@ -141,7 +151,7 @@ class CRMService {
         }
 
         // Apply sorting
-        query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+        query = query.order(safeSortBy, { ascending: safeSortOrder === 'ASC' });
 
         // Apply pagination
         query = query.range(offset, offset + limit - 1);
@@ -187,7 +197,7 @@ class CRMService {
         const countResult = await pool.query(countQuery, params);
         const total = parseInt(countResult.rows[0].count);
 
-        // Get customers
+        // Get customers - use validated column names to prevent SQL injection
         const dataQuery = `
           SELECT 
             cp.*,
@@ -211,7 +221,7 @@ class CRMService {
           LEFT JOIN customer_tags ct ON ctm.tag_id = ct.id
           WHERE ${whereClause}
           GROUP BY cp.id, u.email, u.first_name, u.last_name, u.phone
-          ORDER BY cp.${sortBy} ${sortOrder.toUpperCase()}
+          ORDER BY cp.${safeSortBy} ${safeSortOrder}
           LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
         `;
 

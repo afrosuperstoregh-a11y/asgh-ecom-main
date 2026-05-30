@@ -34,6 +34,10 @@ router.get('/:id',
   categoryController.getCategoryById
 )
 
+router.get('/slug/:slug', 
+  categoryController.getCategoryBySlug
+)
+
 // Admin routes (require authentication + admin role)
 router.use(authenticateToken, requireAdmin)
 

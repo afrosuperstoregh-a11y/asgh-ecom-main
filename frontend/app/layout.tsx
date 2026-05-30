@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "../context/CartContext";
 import { WishlistProvider } from "../context/WishlistContext";
-import { AuthProvider } from "../contexts/AuthContext";
+import { SupabaseAuthProvider } from "../contexts/SupabaseAuthContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Script from "next/script";
@@ -47,13 +47,10 @@ export default function RootLayout({
       <head>
         {/* Preconnect to important third-party domains */}
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
-        
-        {/* Preload critical resources */}
-        <link rel="preload" href="/logo.png" as="image" />
       </head>
       <body className={`${inter.variable} font-sans min-h-screen bg-gray-50 antialiased overflow-x-hidden`}
             suppressHydrationWarning={true}>
-        <AuthProvider>
+        <SupabaseAuthProvider>
           <WishlistProvider>
             <CartProvider>
               <div className="flex flex-col min-h-screen">
@@ -65,38 +62,34 @@ export default function RootLayout({
               </div>
             </CartProvider>
           </WishlistProvider>
-        </AuthProvider>
+        </SupabaseAuthProvider>
         
         {/* Google Analytics - Production Only */}
         {process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
           <>
-            <script
-              suppressHydrationWarning={true}
-              async
+            <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}`}
+              strategy="afterInteractive"
             />
-            <script
-              suppressHydrationWarning={true}
-              dangerouslySetInnerHTML={{
-                __html: `
-                  window.dataLayer = window.dataLayer || [];
-                  function gtag(){dataLayer.push(arguments);}
-                  gtag('js', new Date());
-                  gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}', {
-                    page_path: window.location.pathname,
-                    send_page_view: true,
-                    debug_mode: false
-                  });
-                `,
-              }}
-            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}', {
+                  page_path: window.location.pathname,
+                  send_page_view: true,
+                  debug_mode: false
+                });
+              `}
+            </Script>
           </>
         )}
         
-        {/* Structured Data */}
+        {/* Structured Data - Safe JSON-LD */}
         <script
-          suppressHydrationWarning={true}
           type="application/ld+json"
+          suppressHydrationWarning={true}
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',

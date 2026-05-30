@@ -64,6 +64,7 @@ export default function AllProductsGrid() {
         .map((item: any): Product => ({
           id: item.id,
           name: item.name || 'Unnamed Product',
+          slug: item.slug || `product-${item.id}`,
           description: item.description || '',
           price: item.price || 0,
           compare_price: item.compare_price,

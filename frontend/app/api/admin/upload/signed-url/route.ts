@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Initialize Supabase client
-    const supabaseClient = getSupabaseServer();
+    const supabaseClient = await getSupabaseServer();
     
     console.log('[DEBUG] Generating signed URL:', { bucket, filePath, contentType });
     

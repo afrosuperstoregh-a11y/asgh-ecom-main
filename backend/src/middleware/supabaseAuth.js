@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js')
 const config = require('../config/env')
+const { ApiResponse } = require('./apiResponse')
 
 // Initialize Supabase client for JWT verification
 const supabase = createClient(config.supabase.url, config.supabase.serviceRoleKey, {
@@ -16,10 +17,7 @@ const verifySupabaseUser = async (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1] // Bearer TOKEN
 
     if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: 'Access token required'
-      })
+      return ApiResponse.unauthorized(res, 'Access token required')
     }
 
     // Verify the JWT token using Supabase
@@ -27,25 +25,16 @@ const verifySupabaseUser = async (req, res, next) => {
 
     if (error) {
       console.error('Supabase auth error:', error)
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid token'
-      })
+      return ApiResponse.unauthorized(res, 'Invalid token')
     }
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'User not found'
-      })
+      return ApiResponse.unauthorized(res, 'User not found')
     }
 
     // Check if user's email is verified
     if (!user.email_confirmed_at) {
-      return res.status(401).json({
-        success: false,
-        message: 'Email not verified'
-      })
+      return ApiResponse.unauthorized(res, 'Email not verified')
     }
 
     // Get user profile from our database to include role information
@@ -55,50 +44,59 @@ const verifySupabaseUser = async (req, res, next) => {
       ssl: config.nodeEnv === 'production' ? { rejectUnauthorized: false } : false
     })
 
-    const profileResult = await pool.query(
-      'SELECT * FROM profiles WHERE user_id = $1',
+    // Check if user exists in our users table
+    const userResult = await pool.query(
+      'SELECT * FROM users WHERE id = $1',
       [user.id]
     )
 
-    let profile = null
-    if (profileResult.rows.length > 0) {
-      profile = profileResult.rows[0]
+    let userProfile = null
+    if (userResult.rows.length > 0) {
+      userProfile = userResult.rows[0]
     } else {
-      // Create profile if it doesn't exist
-      const newProfileResult = await pool.query(
-        `INSERT INTO profiles (user_id, first_name, last_name, role, email_verified) 
-         VALUES ($1, $2, $3, $4, $5) 
+      // Create user record if it doesn't exist (sync from Supabase auth)
+      const newUserResult = await pool.query(
+        `INSERT INTO users (id, email, first_name, last_name, role, email_verified) 
+         VALUES ($1, $2, $3, $4, $5, $6) 
          RETURNING *`,
         [
           user.id,
-          user.user_metadata?.first_name || null,
-          user.user_metadata?.last_name || null,
+          user.email,
+          user.user_metadata?.first_name || user.user_metadata?.name?.split(' ')[0] || null,
+          user.user_metadata?.last_name || user.user_metadata?.name?.split(' ')[1] || null,
           user.user_metadata?.role || 'customer',
           user.email_confirmed_at ? true : false
         ]
       )
-      profile = newProfileResult.rows[0]
+      userProfile = newUserResult.rows[0]
     }
+
+    // Check if user is admin
+    const adminResult = await pool.query(
+      'SELECT * FROM admin_users WHERE user_id = $1',
+      [user.id]
+    )
+
+    const isAdmin = adminResult.rows.length > 0
 
     // Add user info to request object
     req.user = {
-      id: user.id,
-      email: user.email,
-      role: profile.role,
-      first_name: profile.first_name,
-      last_name: profile.last_name,
-      email_verified: profile.email_verified,
-      phone: profile.phone,
-      created_at: profile.created_at
+      id: userProfile.id,
+      email: userProfile.email,
+      role: userProfile.role,
+      first_name: userProfile.first_name,
+      last_name: userProfile.last_name,
+      email_verified: userProfile.email_verified,
+      phone: userProfile.phone,
+      is_admin: isAdmin,
+      admin_permissions: isAdmin ? adminResult.rows[0].permissions : null,
+      created_at: userProfile.created_at
     }
 
     next()
   } catch (error) {
     console.error('Authentication middleware error:', error)
-    return res.status(500).json({
-      success: false,
-      message: 'Authentication error'
-    })
+    return ApiResponse.error(res, 'Authentication error', 500, error.message)
   }
 }
 
@@ -106,20 +104,14 @@ const verifySupabaseUser = async (req, res, next) => {
 const requireRole = (roles) => {
   return (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required'
-      })
+      return ApiResponse.unauthorized(res, 'Authentication required')
     }
 
     const userRole = req.user.role
     const allowedRoles = Array.isArray(roles) ? roles : [roles]
 
     if (!allowedRoles.includes(userRole)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Insufficient permissions'
-      })
+      return ApiResponse.forbidden(res, 'Insufficient permissions')
     }
 
     next()
@@ -132,9 +124,23 @@ const requireSuperAdmin = requireRole(['super_admin'])
 // Admin or super admin middleware
 const requireAdmin = requireRole(['admin', 'super_admin'])
 
+// Check if user is admin (from admin_users table)
+const requireAdminUser = (req, res, next) => {
+  if (!req.user) {
+    return ApiResponse.unauthorized(res, 'Authentication required')
+  }
+
+  if (!req.user.is_admin) {
+    return ApiResponse.forbidden(res, 'Admin access required')
+  }
+
+  next()
+}
+
 module.exports = {
   verifySupabaseUser,
   requireRole,
   requireSuperAdmin,
-  requireAdmin
+  requireAdmin,
+  requireAdminUser
 }

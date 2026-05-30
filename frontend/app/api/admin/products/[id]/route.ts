@@ -83,7 +83,7 @@ export async function GET(
     
     // Initialize Supabase client with SERVICE ROLE KEY for admin operations
     console.log(' [DEBUG] Initializing Supabase client...');
-    const supabaseClient = getSupabaseServer();
+    const supabaseClient = await getSupabaseServer();
     
     console.log(' [DEBUG] Supabase client initialized:', {
       url: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -118,28 +118,25 @@ export async function GET(
       }, { status: 404 });
     }
 
-    console.log(' [DEBUG] Product fetched successfully:', product.id);
+    console.log(' [DEBUG] Product fetched successfully:', (product as any)?.id);
 
     // Transform the data to match the expected format with defensive guards
     const transformedProduct = {
-      id: product.id,
-      name: product.name || 'Unnamed Product',
-      sku: product.sku || '',
-      price: product.price || 0,
-      description: product.description || '',
-      status: product.status || 'DRAFT',
-      featured: product.featured || false,
-      stock: product.inventory_quantity || 0,
-      category: product.category || { id: '', name: 'Uncategorized', slug: '' },
-      categories: product.categories || { id: '', name: 'Uncategorized', slug: '' },
-      category_id: product.category_id,
-      images: Array.isArray(product.images) ? product.images : [],
-      slug: product.slug || '',
-      createdAt: product.created_at,
-      updatedAt: product.updated_at,
-      _count: {
-        orderItems: 0 // Default to 0 since we can't access order_items
-      }
+      id: (product as any)?.id,
+      name: (product as any)?.name || 'Unnamed Product',
+      sku: (product as any)?.sku || '',
+      price: (product as any)?.price || 0,
+      description: (product as any)?.description || '',
+      status: (product as any)?.status || 'DRAFT',
+      featured: (product as any)?.featured || false,
+      inventory_quantity: (product as any)?.inventory_quantity || 0,
+      category: (product as any)?.categories?.[0] || null,
+      categories: (product as any)?.categories || [],
+      category_id: (product as any)?.category_id || null,
+      images: (product as any)?.images || [],
+      slug: (product as any)?.slug || '',
+      created_at: (product as any)?.created_at,
+      updated_at: (product as any)?.updated_at
     };
 
     return NextResponse.json({
@@ -193,10 +190,10 @@ export async function PUT(
     const { name, sku, price, description, category_id, inventory_quantity, status, featured, images } = body;
     
     // Initialize Supabase client with SERVICE ROLE KEY for admin operations
-    const supabaseClient = getSupabaseServer();
+    const supabaseClient = await getSupabaseServer();
     
     // Update product
-    const { data, error } = await supabaseClient
+    const { data, error } = await (supabaseClient as any)
       .from('products')
       .update({
         name,
@@ -204,10 +201,10 @@ export async function PUT(
         price: parseFloat(price),
         description: description || '',
         category_id: category_id || null,
-        inventory_quantity: inventory_quantity || 0,
-        status: status || 'draft',
+        inventory_quantity: parseInt(inventory_quantity) || 0,
+        status: status || 'DRAFT',
         featured: featured || false,
-        images: images || null,
+        images: images || [],
         updated_at: new Date().toISOString()
       })
       .eq('id', productId)
@@ -229,7 +226,7 @@ export async function PUT(
       }, { status: 404 });
     }
     
-    console.log(' [DEBUG] Product updated successfully:', data.id);
+    console.log(' [DEBUG] Product updated successfully:', (data as any)?.id);
     
     return NextResponse.json({
       success: true,
@@ -290,7 +287,7 @@ export async function DELETE(
     }
     
     // Initialize Supabase client with SERVICE ROLE KEY for admin operations
-    const supabaseClient = getSupabaseServer();
+    const supabaseClient = await getSupabaseServer();
     
     // First check if product exists
     const { data: existingProduct, error: checkError } = await supabaseClient

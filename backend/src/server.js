@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 
 // Production deployment fix - v2 - Use absolute paths based on the current file location
@@ -11,6 +12,9 @@ const config = require(configPath);
 
 const rateLimiterPath = path.join(__dirname, 'middleware', 'rateLimiter');
 const { generalLimiter } = require(rateLimiterPath);
+
+// Import standardized API response middleware
+const { errorHandler, requestLogger } = require(path.join(__dirname, 'middleware', 'apiResponse'));
 
 // Only import Redis rate limiter if Redis is enabled
 let rateLimiters = {};
@@ -37,37 +41,90 @@ const PORT = config.port;
 // Trust proxy disabled for security - only enable behind trusted reverse proxy
 // app.set('trust proxy', true);
 
-// Security middleware with proper configuration
+// Enhanced security middleware with production-grade configuration
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      fontSrc: ["'self'", "data:"],
-      connectSrc: ["'self'", "https:"],
+      scriptSrc: [
+        "'self'",
+        "https://www.googletagmanager.com",
+        "https://www.google-analytics.com",
+        "https://checkout.stripe.com",
+        "https://js.stripe.com",
+        "https://api.paystack.co"
+      ],
+      styleSrc: [
+        "'self'",
+        "https://fonts.googleapis.com"
+      ],
+      imgSrc: [
+        "'self'",
+        "data:",
+        "https:",
+        "https://res.cloudinary.com",
+        "https://*.stripe.com",
+        "https://www.google-analytics.com"
+      ],
+      fontSrc: [
+        "'self'",
+        "data:",
+        "https://fonts.gstatic.com"
+      ],
+      connectSrc: [
+        "'self'",
+        "https://api.supabase.co",
+        "https://api.stripe.com",
+        "https://api.paystack.co",
+        "https://www.google-analytics.com",
+        "https://stats.g.doubleclick.net"
+      ],
       mediaSrc: ["'self'"],
       objectSrc: ["'none'"],
       childSrc: ["'self'"],
-      frameSrc: ["'self'"],
+      frameSrc: [
+        "'self'",
+        "https://js.stripe.com",
+        "https://checkout.stripe.com",
+        "https://www.google.com"
+      ],
       workerSrc: ["'self'"],
       manifestSrc: ["'self'"],
-      upgradeInsecureRequests: []
+      frameAncestors: ["'none'"],
+      baseUri: ["'self'"],
+      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : []
     }
   },
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false, // Disable for compatibility with third-party scripts
+  crossOriginResourcePolicy: { 
+    policy: "cross-origin" 
+  },
   hsts: {
-    maxAge: 31536000,
+    maxAge: 31536000, // 1 year
     includeSubDomains: true,
     preload: true
   },
-  noSniff: true
+  noSniff: true,
+  referrerPolicy: { 
+    policy: "strict-origin-when-cross-origin" 
+  },
+  permittedCrossDomainPolicies: false,
+  ieNoOpen: true,
+  originAgentCluster: true
 }));
 
 app.use(cors({
-  origin: config.cors.origins,
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in the allowed list
+    if (config.cors.origins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy: Origin not allowed'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Extension-ID'],
@@ -76,6 +133,9 @@ app.use(cors({
 
 // Rate limiting
 app.use(generalLimiter);
+
+// Cookie parser middleware for secure cookie handling
+app.use(cookieParser(process.env.SESSION_SECRET));
 
 // Session middleware
 app.use(sessionMiddleware);
@@ -145,7 +205,7 @@ app.use((req, res, next) => {
   res.send = function(data) {
     // Add anti-interference headers to prevent extensions from modifying HTML
     if (typeof data === 'string' && data.includes('<!DOCTYPE html>')) {
-      res.setHeader('Content-Security-Policy', "script-src 'self' 'unsafe-inline' 'unsafe-eval' *; style-src 'self' 'unsafe-inline' *; img-src 'self' data: *; font-src 'self' *; connect-src 'self' *;");
+      res.setHeader('Content-Security-Policy', "script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://checkout.stripe.com https://js.stripe.com https://api.paystack.co; style-src 'self' https://fonts.googleapis.com; img-src 'self' data: https: https://res.cloudinary.com https://*.stripe.com https://www.google-analytics.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://api.supabase.co https://api.stripe.com https://api.paystack.co https://www.google-analytics.com https://stats.g.doubleclick.net; frame-ancestors 'none'; base-uri 'self';");
       res.setHeader('X-Content-Type-Options', 'nosniff');
       res.setHeader('X-Frame-Options', 'SAMEORIGIN');
       res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -156,6 +216,9 @@ app.use((req, res, next) => {
   
   next();
 });
+
+// Request logging middleware
+app.use(requestLogger);
 
 // General middleware
 app.use(compression());
@@ -234,68 +297,12 @@ app.use('/api/cache', require(path.join(__dirname, 'routes', 'cache')));
 
 // 404 handler
 app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Route not found',
-    message: `Cannot ${req.method} ${req.originalUrl}`
-  });
+  const { ApiResponse } = require(path.join(__dirname, 'middleware', 'apiResponse'));
+  return ApiResponse.notFound(res, `Cannot ${req.method} ${req.originalUrl}`);
 });
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  console.error('Stack:', err.stack);
-  
-  // Handle specific error types
-  if (err.name === 'ValidationError') {
-    return res.status(400).json({
-      success: false,
-      error: 'Validation Error',
-      message: err.message
-    });
-  }
-  
-  if (err.name === 'CastError') {
-    return res.status(400).json({
-      success: false,
-      error: 'Invalid ID',
-      message: 'The provided ID is not valid'
-    });
-  }
-  
-  if (err.code === '23505') { // PostgreSQL unique violation
-    return res.status(409).json({
-      success: false,
-      error: 'Duplicate Entry',
-      message: 'This record already exists'
-    });
-  }
-  
-  if (err.code === '23503') { // PostgreSQL foreign key violation
-    return res.status(400).json({
-      success: false,
-      error: 'Reference Error',
-      message: 'Referenced record does not exist'
-    });
-  }
-  
-  // Handle undefined/null errors that cause browser extension issues
-  if (err.message && err.message.includes('Cannot destructure')) {
-    return res.status(400).json({
-      success: false,
-      error: 'Request Error',
-      message: 'Invalid request format'
-    });
-  }
-  
-  // Default error response
-  const statusCode = err.status || err.statusCode || 500;
-  res.status(statusCode).json({
-    success: false,
-    error: statusCode < 500 ? 'Request Error' : 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-  });
-});
+// Global error handler using standardized middleware
+app.use(errorHandler);
 
 // Start server
 app.listen(PORT, '0.0.0.0', async () => {

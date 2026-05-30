@@ -1,5 +1,11 @@
+/// <reference path="../types/global.d.ts" />
 import { ErrorHandler, withErrorHandling, ErrorContext, AdminError } from './error-handler';
 import { tokenManager } from './token-manager';
+
+// Local type definition for Partial in case TypeScript utility types aren't recognized
+type Partial<T> = {
+  [P in keyof T]?: T[P];
+};
 
 // API response wrapper
 export interface ApiResponse<T = any> {
@@ -112,7 +118,7 @@ class AdminApiClient {
       }
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json().catch(() => ({})) as any;
         if (process.env.NODE_ENV === "development") {
           console.log(' [DEBUG] API Error:', errorData);
         }
@@ -128,7 +134,7 @@ class AdminApiClient {
         return {} as T;
       }
 
-      const responseData = await response.json();
+      const responseData = await response.json() as T;
       if (process.env.NODE_ENV === "development") {
         console.log(' [DEBUG] API Success Data:', responseData);
       }
@@ -156,11 +162,13 @@ class AdminApiClient {
     let url = endpoint;
     if (params) {
       const searchParams = new URLSearchParams();
-      Object.entries(params).forEach(([key, value]) => {
+      const keys = Object.keys(params) as string[];
+      for (const key of keys) {
+        const value = params[key];
         if (value !== undefined && value !== null) {
-          searchParams.append(key, String(value));
+          searchParams.append(key, value.toString());
         }
-      });
+      }
       url += `?${searchParams.toString()}`;
     }
 
@@ -201,7 +209,7 @@ class AdminApiClient {
       
       if (additionalData) {
         Object.entries(additionalData).forEach(([key, value]) => {
-          formData.append(key, String(value));
+          formData.append(key, value.toString());
         });
       }
 
@@ -212,14 +220,14 @@ class AdminApiClient {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json().catch(() => ({})) as any;
         const error = new Error(errorData.message || `Upload failed with status ${response.status}`);
         (error as any).status = response.status;
         (error as any).data = errorData;
         throw error;
       }
 
-      return response.json();
+      return response.json() as T;
     };
 
     const result = await withErrorHandling(apiCall, context);
@@ -248,9 +256,12 @@ export const adminApi = {
   products: {
     list: (params?: Record<string, any>) => adminApiClient.get<ProductsListResponse>('/products', params),
     get: (id: string) => adminApiClient.get(`/products/${id}`),
+    getBySlug: (slug: string) => adminApiClient.get(`/products/slug/${slug}`),
     create: (data: any) => adminApiClient.post('/products', data),
     update: (id: string, data: any) => adminApiClient.put(`/products/${id}`, data),
+    updateBySlug: (slug: string, data: any) => adminApiClient.put(`/products/slug/${slug}`, data),
     delete: (id: string) => adminApiClient.delete(`/products/${id}`),
+    deleteBySlug: (slug: string) => adminApiClient.delete(`/products/slug/${slug}`),
     export: () => adminApiClient.get('/products/export'),
     import: (file: File) => adminApiClient.upload('/products/import', file),
   },

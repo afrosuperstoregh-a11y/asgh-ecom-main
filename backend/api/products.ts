@@ -36,6 +36,10 @@ router.get('/:id',
   productController.getProductById
 )
 
+router.get('/slug/:slug', 
+  productController.getProductBySlug
+)
+
 // Admin routes (require authentication + admin role)
 router.use(authenticateToken, requireAdmin)
 

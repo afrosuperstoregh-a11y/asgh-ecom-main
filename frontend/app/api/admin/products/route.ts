@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     // Initialize Supabase client with SERVICE ROLE KEY for admin operations
     console.log(' [DEBUG] Initializing Supabase client...');
-    const supabaseClient = getSupabaseServer();
+    const supabaseClient = await getSupabaseServer();
     
     console.log(' [DEBUG] Supabase client initialized:', {
       url: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
     console.log(' [DEBUG] Products fetched successfully:', { count: products?.length, total: count });
 
     // Transform the data to match the expected format
-    const transformedProducts = products?.map(product => ({
+    const transformedProducts = (products as any[])?.map(product => ({
       id: product.id,
       name: product.name,
       sku: product.sku,
@@ -197,10 +197,10 @@ export async function POST(request: NextRequest) {
     }
     
     // Initialize Supabase client with SERVICE ROLE KEY for admin operations
-    const supabaseClient = getSupabaseServer();
+    const supabaseClient = await getSupabaseServer();
     
     // Insert product
-    const { data, error } = await supabaseClient
+    const { data, error } = await (supabaseClient as any)
       .from('products')
       .insert({
         name,
@@ -209,11 +209,10 @@ export async function POST(request: NextRequest) {
         price: parseFloat(price),
         description: description || '',
         category_id: category_id || null,
-        inventory_quantity: inventory_quantity || 0,
-        status: status || 'draft',
+        inventory_quantity: parseInt(inventory_quantity) || 0,
+        status: status || 'DRAFT',
         featured: featured || false,
-        images: images || null,
-        created_at: new Date().toISOString()
+        images: images || []
       })
       .select()
       .single();
@@ -273,10 +272,10 @@ export async function PUT(request: NextRequest) {
     const { name, sku, price, description, category_id, inventory_quantity, status, featured, images } = body;
     
     // Initialize Supabase client with SERVICE ROLE KEY for admin operations
-    const supabaseClient = getSupabaseServer();
+    const supabaseClient = await getSupabaseServer();
     
     // Update product
-    const { data, error } = await supabaseClient
+    const { data, error } = await (supabaseClient as any)
       .from('products')
       .update({
         name,
@@ -284,7 +283,7 @@ export async function PUT(request: NextRequest) {
         price: parseFloat(price),
         description: description || '',
         category_id: category_id || null,
-        inventory_quantity: inventory_quantity || 0,
+        inventory_quantity: parseInt(inventory_quantity) || 0,
         status: status || 'draft',
         featured: featured || false,
         images: images || null
@@ -301,7 +300,7 @@ export async function PUT(request: NextRequest) {
       }, { status: 500 });
     }
     
-    console.log(' [DEBUG] Product updated successfully:', data.id);
+    console.log(' [DEBUG] Product updated successfully:', (data as any)?.id);
     
     return NextResponse.json({
       success: true,

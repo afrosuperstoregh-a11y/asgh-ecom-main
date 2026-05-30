@@ -10,6 +10,7 @@ import { formatPrice } from '../lib/utils';
 
 interface Product {
   id: string;
+  slug: string;
   name: string;
   price: number;
   compare_price?: number;
@@ -68,7 +69,7 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
     <div className="group">
       <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[275px] sm:w-[275px] aspect-[4/5] flex flex-col">
         {/* Product Image */}
-        <Link href={`/product/${product.id}`} className="block flex-shrink-0 w-full aspect-[4/3] sm:aspect-[16/9] overflow-hidden">
+        <Link href={`/product/${product.slug}`} className="block flex-shrink-0 w-full aspect-[4/3] sm:aspect-[16/9] overflow-hidden">
           <div className="relative w-full h-full overflow-hidden bg-gray-100 rounded-t-xl">
             <Image
               src={imageError ? getProductImageUrl(null) : getProductImageUrl(product.image || product.images?.[0])}
@@ -96,7 +97,7 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
           </div>
           
           <div className="space-y-1 flex-1">
-            <Link href={`/product/${product.id}`} className="block">
+            <Link href={`/product/${product.slug}`} className="block">
               <h3 className="text-sm sm:text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 overflow-hidden">
                 {product.name}
               </h3>

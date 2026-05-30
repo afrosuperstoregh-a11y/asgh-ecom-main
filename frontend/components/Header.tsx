@@ -6,15 +6,15 @@ import Image from 'next/image';
 import { Search, ShoppingCart, Heart, Menu, X, User } from 'lucide-react';
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
-import { useAuth } from "../contexts/AuthContext";
+import { useSupabaseAuth } from "../contexts/SupabaseAuthContext";
 import { Button } from './ui/Button';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); 
   const { getCartCount } = useCart();
   const { getWishlistCount } = useWishlist();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useSupabaseAuth();
   const cartCount = getCartCount();
   const wishlistCount = getWishlistCount();
 
@@ -35,7 +35,7 @@ export default function Header() {
           <Link href="/" className="flex-shrink-0 flex items-center">
             <Image 
               src="/logo.png" 
-              alt="AfroSuperstore" 
+              alt="AfroSuperstoreGhana" 
               width={120}
               height={40}
               className="h-10 w-auto md:h-12 lg:h-14 transition-all duration-200 hover:opacity-80"
@@ -57,7 +57,7 @@ export default function Header() {
           <nav className="hidden lg:block">
             <ul className="flex items-center space-x-8">
               <li><Link href="/products" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">Shop</Link></li>
-              <li><Link href="/food-beverages" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">Food & Beverages</Link></li>
+              <li><Link href="/food-beverages" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">Auto Parts</Link></li>
               <li><Link href="/categories" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">Categories</Link></li>
               <li><Link href="/deals" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">Deals</Link></li>
               <li><Link href="/about" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">About</Link></li>
@@ -158,7 +158,7 @@ export default function Header() {
               </form>
               
               <Link href="/products" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>Shop</Link>
-              <Link href="/food-beverages" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>Food & Beverages</Link>
+              <Link href="/food-beverages" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>Auto Parts</Link>
               <Link href="/categories" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>Categories</Link>
               <Link href="/deals" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>Deals</Link>
               <Link href="/about" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>About</Link>

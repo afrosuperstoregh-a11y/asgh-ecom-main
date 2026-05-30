@@ -5,8 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from "../../context/CartContext";
 import { Loader2, Search, Filter, Grid, List, Star, ShoppingCart, X } from 'lucide-react';
-import { useProducts } from '@/hooks/useProducts';
-import { useCategories } from '@/hooks/useCategories';
+import { useSupabaseProducts, useSupabaseCategories } from '@/hooks/useSupabaseProducts';
 import FilterPanel from '@/components/FilterPanel';
 import ProductCard from '@/components/ProductCard';
 import { getProductImageUrl } from '@/lib/image-utils';
@@ -26,7 +25,7 @@ export default function ProductsPage() {
   const { addToCart } = useCart();
 
   // Use our custom hook for products with real-time updates
-  const { products, loading, error, pagination, refetch } = useProducts({
+  const { products, loading, error, pagination, refetch } = useSupabaseProducts({
     page: currentPage,
     limit: 50, // Use reasonable limit with pagination
     category: selectedCategory,
@@ -35,7 +34,7 @@ export default function ProductsPage() {
     maxPrice: maxPrice ? parseFloat(maxPrice) : undefined
   });
 
-  const { categories } = useCategories();
+  const { categories } = useSupabaseCategories();
 
   // Debounced search
   useEffect(() => {
@@ -208,7 +207,7 @@ export default function ProductsPage() {
         {/* Results count */}
         <div className="mb-6">
           <p className="text-gray-600 text-sm sm:text-base">
-            Showing {products.length} of {pagination?.total_items || 0} products
+            Showing {products.length} of {pagination?.total || 0} products
           </p>
           {error && (
             <span className="ml-4 text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded">
@@ -298,7 +297,7 @@ export default function ProductsPage() {
         )}
 
         {/* Pagination */}
-        {!loading && pagination && pagination.total_pages > 1 && (
+        {!loading && pagination && pagination.totalPages > 1 && (
           <div className="mt-8 flex justify-center">
             <div className="flex items-center gap-2">
               <button
@@ -309,12 +308,12 @@ export default function ProductsPage() {
                 Previous
               </button>
               
-              {[...Array(pagination.total_pages)].map((_, index) => {
+              {[...Array(pagination.totalPages)].map((_, index) => {
                 const page = index + 1;
                 const isCurrentPage = page === currentPage;
                 const isNearCurrent = Math.abs(page - currentPage) <= 2;
                 const showEllipsis = page === 3 && currentPage > 5;
-                const showEllipsisEnd = page === pagination.total_pages - 2 && currentPage < pagination.total_pages - 4;
+                const showEllipsisEnd = page === pagination.totalPages - 2 && currentPage < pagination.totalPages - 4;
 
                 if (!isNearCurrent && !showEllipsis && !showEllipsisEnd) return null;
 
@@ -339,7 +338,7 @@ export default function ProductsPage() {
               
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage >= pagination.total_pages}
+                disabled={currentPage >= pagination.totalPages}
                 className="px-3 py-2 rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
                 Next

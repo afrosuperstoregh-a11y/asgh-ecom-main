@@ -2,61 +2,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { api } from '@/lib/api/products';
-import type { Product, Category } from '@/lib/api/products';
-import ProductGrid from '@/components/ProductGrid';
-import { formatPrice, getProductImage } from '@/lib/api/products';
+import { useSupabaseProducts, useSupabaseCategories } from '@/hooks/useSupabaseProducts';
+import { formatPrice } from '@/lib/utils';
+import { getProductImageUrl } from '@/lib/image-utils';
 
 export default function CategoryPage() {
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
   
-  const [category, setCategory] = useState<Category | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { categories } = useSupabaseCategories();
+  const { products, loading, error } = useSupabaseProducts({ 
+    category: slug,
+    limit: 50 
+  });
 
-  useEffect(() => {
-    const loadCategoryData = async () => {
-      if (!slug) return;
-      
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch category by slug
-        const categoryResponse = await fetch(`${process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3002'}/api/categories/${slug}`);
-        if (!categoryResponse.ok) {
-          throw new Error('Category not found');
-        }
-        const categoryData = await categoryResponse.json();
-        
-        if (!categoryData.success || !categoryData.data) {
-          throw new Error('Category not found');
-        }
-
-        setCategory(categoryData.data);
-
-        // Fetch products for this category
-        const productsResponse = await api.getProducts({
-          category: categoryData.data.id,
-          limit: 50
-        });
-        
-        // Filter out any undefined products and set products
-        const validProducts = (productsResponse.data || []).filter(product => product && product.id);
-        setProducts(validProducts);
-        
-      } catch (err) {
-        console.error('Error loading category data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load category');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCategoryData();
-  }, [slug]);
+  const category = categories.find(cat => cat.slug === slug);
 
   if (loading) {
     return (
@@ -152,7 +112,7 @@ export default function CategoryPage() {
                 {/* Product Image */}
                 <div className="relative flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-lg" style={{ height: '200px' }}>
                   <img
-                    src={getProductImage(product)}
+                    src={getProductImageUrl(product.images?.[0] || product.image_url || product.image)}
                     alt={product.name || 'Product'}
                     className="w-full h-full object-cover"
                     onError={(e) => {

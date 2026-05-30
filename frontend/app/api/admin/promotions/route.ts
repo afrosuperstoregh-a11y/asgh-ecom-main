@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [DEBUG] Admin authenticated:', validation.user?.email);
     
     // Initialize server-side Supabase client
-    const supabase = getSupabaseServer();
+    const supabase = await getSupabaseServer();
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);

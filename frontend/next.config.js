@@ -46,14 +46,14 @@ const nextConfig = {
         hostname: 'images.unsplash.com',
       },
     ],
-    // Disable image optimization for Supabase URLs to prevent 400 errors
-    unoptimized: true,
+    // Enable image optimization for security and performance
+    unoptimized: false,
     // Enable image formats
     formats: ['image/webp', 'image/avif'],
     // Minimum cache TTL
     minimumCacheTTL: 60,
-    // Disable optimization for specific images
-    dangerouslyAllowSVG: true,
+    // Disable dangerouslyAllowSVG for security - SVG can contain XSS payloads
+    dangerouslyAllowSVG: false,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   

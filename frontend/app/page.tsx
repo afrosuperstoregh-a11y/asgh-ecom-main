@@ -4,14 +4,13 @@
 
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, Star, Truck, Shield } from 'lucide-react';
-import { useProducts } from '@/hooks/useProducts';
-import { useCategories } from '@/hooks/useCategories';
+import { useSupabaseProducts, useSupabaseCategories } from '@/hooks/useSupabaseProducts';
 import ShopByCategory from '@/components/ShopByCategory';
 import FeaturedProductCard from '@/components/FeaturedProductCard';
 
 export default function HomePage() {
-  const { products, loading, error } = useProducts({ limit: 200 });
-  useCategories();
+  const { products, loading, error } = useSupabaseProducts({ limit: 200 });
+  useSupabaseCategories();
 
   return (
     <div className="min-h-screen">

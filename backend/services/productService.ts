@@ -3,12 +3,62 @@ import cacheService, { CACHE_CONFIG, CACHE_PATTERNS } from '../lib/cache/redis'
 import { createError } from '../middleware/errorHandler'
 import type { Database } from '../types/database'
 
+// Type declarations for built-in types
+declare const JSON: {
+  stringify(value: any): string
+}
+
+declare class Error {
+  name: string
+  message: string
+  stack?: string
+  constructor(message?: string)
+}
+
+declare class RegExp {
+  constructor(pattern: string | RegExp, flags?: string)
+  test(string: string): boolean
+  exec(string: string): RegExpExecArray | null
+  source: string
+  flags: string
+  global: boolean
+  ignoreCase: boolean
+  multiline: boolean
+}
+
+interface RegExpExecArray {
+  [index: number]: string
+  index: number
+  input: string
+  length: number
+}
+
+// Global function declarations
+declare function parseFloat(string: string): number
+declare function parseInt(string: string, radix?: number): number
+
+// Global interface declarations for built-in types
+declare interface String {
+  toLowerCase(): string
+  replace(searchValue: string | RegExp, replaceValue: string): string
+  toString(): string
+}
+
+declare interface Array<T> {
+  push(item: T): number
+}
+
+// TypeScript utility type declarations
+declare type Partial<T> = {
+  [P in keyof T]?: T[P];
+}
+
 // Helper function to generate Supabase Storage URL
 function getSupabaseImageUrl(imageUrl: string | null | undefined): string | null {
   if (!imageUrl) return null
   
   // If URL already starts with http, return as-is
-  if (imageUrl.startsWith('http')) {
+  if (typeof imageUrl === 'string' && (imageUrl as any).startsWith && (imageUrl as any).startsWith('http')) {
     return imageUrl
   }
   
@@ -17,12 +67,14 @@ function getSupabaseImageUrl(imageUrl: string | null | undefined): string | null
   
   // Determine bucket based on filename pattern or default to product-images
   let bucket = 'product-images'
-  if (imageUrl.includes('category-') || imageUrl.includes('categories/')) {
+  if (typeof imageUrl === 'string' && 
+      ((imageUrl as any).indexOf('category-') >= 0 || (imageUrl as any).indexOf('categories/') >= 0)) {
     bucket = 'category-images'
   }
   
   // Remove leading slash if present
-  const cleanPath = imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl
+  const cleanPath = typeof imageUrl === 'string' && (imageUrl as any)[0] === '/' ? 
+                    (imageUrl as any).slice(1) : imageUrl
   
   return `${supabaseUrl}/storage/v1/object/public/${bucket}/${cleanPath}`
 }
@@ -111,13 +163,8 @@ class ProductService {
       }
 
       if (category) {
-        // Check if category is numeric (ID) or string (slug)
-        const isNumeric = /^\d+$/.test(category)
-        if (isNumeric) {
-          query = query.eq('category_id', parseInt(category))
-        } else {
-          query = query.eq('categories.slug', category)
-        }
+        // Try treating as slug first, then fallback to numeric ID
+        query = query.eq('categories.slug', category)
         // Since we're using LEFT JOIN, we need to ensure we only get products with matching categories when filtering
         query = query.not('categories.id', 'is', null)
       }
@@ -203,6 +250,41 @@ class ProductService {
     }
   }
 
+  // Get single product by slug
+  async getProductBySlug(slug: string) {
+    try {
+      const { data, error } = await supabase()
+        .from('products')
+        .select(`
+          *,
+          categories!inner(name, slug)
+        `)
+        .eq('slug', slug)
+        .eq('status', 'active')
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null
+        }
+        throw error
+      }
+
+      // Transform image URLs to full Supabase URLs
+      const transformedData = data ? {
+        ...(data as any),
+        images: (data as any).images ? (data as any).images.map((img: string) => getSupabaseImageUrl(img) || img) : [],
+        // Keep backward compatibility with old image_url field
+        image_url: getSupabaseImageUrl((data as any).image_url) || ((data as any).images && (data as any).images.length > 0 ? getSupabaseImageUrl((data as any).images[0]) : null)
+      } : null
+
+      return transformedData
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      throw createError(`Failed to fetch product by slug: ${errorMessage}`, 500, 'PRODUCT_FETCH_ERROR')
+    }
+  }
+
   // Create new product
   async createProduct(productData: ProductData, userId: string) {
     try {
@@ -220,12 +302,15 @@ class ProductService {
         inventory_quantity = 10,
         track_inventory = true,
         weight = 0,
-        tags = [],
+        tags,
         images
       } = productData
 
+      // Ensure tags is an array
+      const productTags: string[] = tags || []
+
       // Generate slug from name
-      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now()
+      const slug = ((name as any) || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now()
 
       // Insert product
       const insertData: any = {
@@ -234,15 +319,15 @@ class ProductService {
         description: description || null,
         short_description: short_description || null,
         sku: sku || '',
-        price: parseFloat(price.toString()),
-        compare_price: compare_price ? parseFloat(compare_price.toString()) : null,
-        cost_price: cost_price ? parseFloat(cost_price.toString()) : null,
+        price: Number(price.toString()),
+        compare_price: compare_price ? Number(compare_price.toString()) : null,
+        cost_price: cost_price ? Number(cost_price.toString()) : null,
         category_id: category_id || null,
         status: status as 'active' | 'draft' | 'archived',
         featured,
-        inventory_quantity: parseInt(inventory_quantity.toString()),
+        inventory_quantity: Math.floor(Number(inventory_quantity.toString())) as number,
         track_inventory,
-        weight: parseFloat(weight.toString()),
+        weight: Number(weight.toString()),
         images: images && images.length > 0 ? images : [],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -257,8 +342,8 @@ class ProductService {
       if (error) throw error
 
       // Handle tags if provided
-      if (tags.length > 0) {
-        await this.attachProductTags(data.id, tags)
+      if (productTags.length > 0) {
+        await this.attachProductTags(data.id, productTags)
       }
 
       // Invalidate cache

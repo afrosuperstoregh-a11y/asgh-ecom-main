@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [DEBUG] Admin authenticated:', validation.user?.email);
     
     // Initialize server-side Supabase client
-    const supabase = getSupabaseServer();
+    const supabase = await getSupabaseServer();
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match frontend interface
-    const transformedOrders = orders?.map(order => ({
+    const transformedOrders = (orders as any[])?.map(order => ({
       id: order.id,
       orderNumber: order.order_number,
       status: order.status.toUpperCase(),
@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
         email: order.profiles[0].email
       } : null,
       guestEmail: order.guest_email,
-      items: order.order_items?.map(item => ({
+      items: (order.order_items as any[])?.map((item: any) => ({
         id: item.id,
         quantity: item.quantity,
         total: item.total,
@@ -183,7 +183,7 @@ export async function GET(request: NextRequest) {
           images: (item.products as any)?.[0]?.images || []
         }
       })) || [],
-      payments: order.payments?.map(payment => ({
+      payments: (order.payments as any[])?.map((payment: any) => ({
         id: payment.id,
         status: payment.status.toUpperCase(),
         amount: payment.amount,
@@ -258,10 +258,10 @@ export async function PUT(request: NextRequest) {
     }
 
     // Initialize server-side Supabase client
-    const supabase = getSupabaseServer();
+    const supabase = await getSupabaseServer();
 
     // Update order status
-    const { data: order, error } = await supabase
+    const { data: order, error } = await (supabase as any)
       .from('orders')
       .update({ 
         status: status.toLowerCase(),

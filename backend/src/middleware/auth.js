@@ -17,19 +17,6 @@ const authenticateToken = async (req, res, next) => {
     // Verify JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // TEMPORARY: Handle hardcoded test user
-    if (decoded.id === '00000000-0000-0000-0000-000000000001') {
-      req.user = {
-        id: decoded.id,
-        email: decoded.email,
-        role: decoded.role,
-        first_name: 'Super',
-        last_name: 'Admin',
-        email_verified: true
-      };
-      return next();
-    }
-    
     // Get user from database to ensure they still exist and have correct role
     const user = await findUserByEmail(decoded.email);
     

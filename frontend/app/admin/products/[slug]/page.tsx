@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useConfirmModal } from '../../../../components/admin/ConfirmModal';
 import { useToast } from '../../../../components/admin/Toast';
 import { adminApi } from '../../../../lib/admin-api-client';
+import { Product } from '../../../../types/product';
 import {
   ArrowLeft,
   Edit,
@@ -16,39 +17,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 
-interface Product {
-  id: string;
-  name: string;
-  sku: string;
-  price: number;
-  comparePrice?: number;
-  cost?: number;
-  description: string;
-  shortDesc: string;
-  status: string;
-  featured: boolean;
-  stock: number;
-  trackInventory: boolean;
-  weight?: number;
-  dimensions?: {
-    length?: number;
-    width?: number;
-    height?: number;
-  };
-  category: {
-    id: string;
-    name: string;
-  };
-  tags: string[];
-  images: string[];
-  createdAt: string;
-  updatedAt: string;
-  _count: {
-    orderItems: number;
-  };
-}
-
-export default function ViewProductPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ViewProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter();
   const { openConfirmModal, ConfirmModalComponent } = useConfirmModal();
   const { showSuccess, showError } = useToast();
@@ -60,32 +29,32 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
   useEffect(() => {
     const getParams = async () => {
       const resolvedParams = await params;
-      setProductId(resolvedParams.id);
+      setProductId(resolvedParams.slug);
       
-      // Check if ID is valid
-      if (!resolvedParams.id || resolvedParams.id === 'undefined') {
-        setError('Invalid product ID');
+      // Check if slug is valid
+      if (!resolvedParams.slug || resolvedParams.slug === 'undefined') {
+        setError('Invalid product slug');
         setLoading(false);
         return;
       }
       
-      fetchProduct(resolvedParams.id);
+      fetchProduct(resolvedParams.slug);
     };
     
     getParams();
   }, [params]);
 
-  const fetchProduct = async (id: string) => {
+  const fetchProduct = async (slug: string) => {
     try {
       setLoading(true);
       setError(null);
       
-      if (!id || id === 'undefined') {
-        setError('Invalid product ID');
+      if (!slug || slug === 'undefined') {
+        setError('Invalid product slug');
         return;
       }
       
-      const result = await adminApi.products.get(id);
+      const result = await adminApi.products.getBySlug(slug);
 
       if (result.success && result.data) {
         setProduct(result.data as Product);
@@ -111,7 +80,7 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {
-          const result = await adminApi.products.delete(productId);
+          const result = await adminApi.products.deleteBySlug(productId);
 
           if (result.success) {
             showSuccess('Product deleted successfully');
@@ -136,8 +105,12 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
     }).format(amount);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
+  const getStatusColor = (status: unknown) => {
+    if (!status || typeof status !== 'string') {
+      return 'bg-gray-100 text-gray-800';
+    }
+    const statusStr = status as string;
+    switch (statusStr.toLowerCase()) {
       case 'active': return 'bg-green-100 text-green-800';
       case 'draft': return 'bg-yellow-100 text-yellow-800';
       case 'inactive': return 'bg-gray-100 text-gray-800';
@@ -153,7 +126,7 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
           <div className="bg-white rounded-lg shadow">
             <div className="p-6 space-y-6">
-              {[...Array(8)].map((_, i) => (
+              {[...Array(8)].map((_, i: number) => (
                 <div key={i} className="h-4 bg-gray-200 rounded"></div>
               ))}
             </div>
@@ -190,7 +163,7 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
           </div>
           <div className="flex items-center space-x-3">
             <button
-              onClick={() => router.push(`/admin/products/${product.id}/edit`)}
+              onClick={() => router.push(`/admin/products/${productId}/edit`)}
               className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
             >
               <Edit className="h-4 w-4 mr-2" />
@@ -254,12 +227,7 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Description</h3>
                 <div className="space-y-4">
-                  {product.shortDesc && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700">Short Description</h4>
-                      <p className="mt-1 text-gray-600">{product.shortDesc}</p>
-                    </div>
-                  )}
+                  {/* Short description not available in canonical Product type */}
                   <div>
                     <h4 className="text-sm font-medium text-gray-700">Full Description</h4>
                     <div className="mt-1 text-gray-600 whitespace-pre-wrap">
@@ -269,23 +237,7 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
                 </div>
               </div>
 
-              {/* Tags */}
-              {product.tags && product.tags.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {product.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
-                      >
-                        <Tag className="h-3 w-3 mr-1" />
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Tags not available in canonical Product type */}
             </div>
 
             {/* Sidebar */}
@@ -300,22 +252,15 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
                       {formatCurrency(product.price)}
                     </span>
                   </div>
-                  {product.comparePrice && (
+                  {product.compare_price && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">Compare Price</span>
                       <span className="text-sm text-gray-500 line-through">
-                        {formatCurrency(product.comparePrice)}
+                        {formatCurrency(product.compare_price)}
                       </span>
                     </div>
                   )}
-                  {product.cost && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Cost</span>
-                      <span className="text-sm text-gray-500">
-                        {formatCurrency(product.cost)}
-                      </span>
-                    </div>
-                  )}
+                  {/* Cost not available in canonical Product type */}
                 </div>
               </div>
 
@@ -325,17 +270,17 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Track Inventory</span>
-                    <span className={`text-sm font-medium ${product.trackInventory ? 'text-green-600' : 'text-gray-500'}`}>
-                      {product.trackInventory ? 'Yes' : 'No'}
+                    <span className={`text-sm font-medium ${product.track_inventory ? 'text-green-600' : 'text-gray-500'}`}>
+                      {product.track_inventory ? 'Yes' : 'No'}
                     </span>
                   </div>
-                  {product.trackInventory && (
+                  {product.track_inventory && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">Stock</span>
                       <span className={`text-sm font-medium ${
-                        product.stock <= 10 ? 'text-red-600' : 'text-green-600'
+                        product.inventory_quantity <= 10 ? 'text-red-600' : 'text-green-600'
                       }`}>
-                        {product.stock} units
+                        {product.inventory_quantity} units
                       </span>
                     </div>
                   )}
@@ -345,33 +290,10 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
               {/* Category */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-gray-900 mb-3">Category</h3>
-                <p className="text-sm text-gray-600">{product.category.name}</p>
+                <p className="text-sm text-gray-600">{product.category?.name || 'No category'}</p>
               </div>
 
-              {/* Physical Properties */}
-              {(product.weight || product.dimensions) && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">Physical Properties</h3>
-                  <div className="space-y-2">
-                    {product.weight && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Weight</span>
-                        <span className="text-sm text-gray-900">{product.weight} kg</span>
-                      </div>
-                    )}
-                    {product.dimensions && (
-                      <div className="space-y-1">
-                        <span className="text-sm text-gray-600">Dimensions</span>
-                        <div className="text-sm text-gray-900">
-                          {product.dimensions.length && <span>L: {product.dimensions.length} cm</span>}
-                          {product.dimensions.width && <span> × W: {product.dimensions.width} cm</span>}
-                          {product.dimensions.height && <span> × H: {product.dimensions.height} cm</span>}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              {/* Physical Properties (weight, dimensions) not available in canonical Product type */}
 
               {/* Sales Info */}
               <div className="bg-gray-50 rounded-lg p-4">
@@ -379,7 +301,7 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Total Orders</span>
                   <span className="text-sm font-medium text-gray-900">
-                    {product._count.orderItems}
+                    {product._count?.orderItems || 0}
                   </span>
                 </div>
               </div>
@@ -391,13 +313,13 @@ export default function ViewProductPage({ params }: { params: Promise<{ id: stri
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Created</span>
                     <span className="text-sm text-gray-900">
-                      {new Date(product.createdAt).toLocaleDateString()}
+                      {new Date(product.created_at).toLocaleDateString()}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Last Updated</span>
                     <span className="text-sm text-gray-900">
-                      {new Date(product.updatedAt).toLocaleDateString()}
+                      {product.updated_at ? new Date(product.updated_at).toLocaleDateString() : 'N/A'}
                     </span>
                   </div>
                 </div>

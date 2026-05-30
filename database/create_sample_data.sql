@@ -1,0 +1,248 @@
+-- Create Sample Data for Afro Superstore
+-- Run this script in your Supabase SQL Editor to populate your database
+
+-- Insert sample categories
+-- INSERT INTO categories (name, slug, description, is_active, sort_order) VALUES 
+-- ('Clothing', 'clothing', 'Authentic African clothing and traditional apparel', true, 1),
+-- ('Accessories', 'accessories', 'Fashion accessories, jewelry, and personal items', true, 2),
+-- ('Home & Living', 'home-living', 'Home decor, furniture, and lifestyle products', true, 3),
+-- ('Art & Crafts', 'art-crafts', 'Traditional art, crafts, and cultural items', true, 4),
+-- ('Food & Beverages', 'food-beverages', 'Authentic African food products and beverages', true, 5)
+-- ON CONFLICT (slug) DO NOTHING;
+
+-- Get category IDs for use in product insertion
+-- DO $$
+-- DECLARE
+--     clothing_id UUID;
+--     accessories_id UUID;
+--     home_id UUID;
+--     art_id UUID;
+--     food_id UUID;
+-- BEGIN
+--     SELECT id INTO clothing_id FROM categories WHERE slug = 'clothing';
+--     SELECT id INTO accessories_id FROM categories WHERE slug = 'accessories';
+--     SELECT id INTO home_id FROM categories WHERE slug = 'home-living';
+--     SELECT id INTO art_id FROM categories WHERE slug = 'art-crafts';
+--     SELECT id INTO food_id FROM categories WHERE slug = 'food-beverages';
+-- END $$;
+
+
+    -- Insert sample products for Clothing category
+    -- INSERT INTO products (
+    --     name, slug, description, short_description, sku, price, compare_price, 
+    --     category_id, inventory_quantity, status, featured, images, tags
+    -- ) VALUES 
+    -- (
+    --     'Traditional Dashiki Shirt', 
+    --     'traditional-dashiki-shirt', 
+    --     'A beautiful traditional African dashiki shirt featuring intricate embroidery and vibrant colors. Made from high-quality cotton fabric, perfect for special occasions and cultural events.', 
+    --     'Authentic African dashiki with traditional embroidery',
+    --     'DASH-001', 
+    --     89.99, 
+    --     120.00,
+    --     clothing_id,
+    --     25,
+    --     'active',
+    --     true,
+    --     '["https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/dashiki-1.jpg"]',
+    --     '["clothing", "traditional", "dashiki", "african"]'
+    -- ),
+    -- (
+    --     'Kente Cloth Wrap', 
+    --     'kente-cloth-wrap', 
+    --     'Handwoven Kente cloth from Ghana, featuring traditional patterns and vibrant colors. This authentic textile represents African heritage and craftsmanship.', 
+    --     'Authentic handwoven Ghanaian Kente cloth',
+    --     'KENTE-001', 
+    --     150.00, 
+    --     200.00,
+    --     clothing_id,
+    --     15,
+    --     'active',
+    --     true,
+    --     '["https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/kente-1.jpg"]',
+    --     '["clothing", "kente", "ghanian", "traditional"]'
+    -- ),
+    -- (
+    --     'Ankara Print Dress', 
+    --     'ankara-print-dress', 
+    --     'Stylish Ankara print dress featuring bold African patterns. Modern design meets traditional African fabric for a unique fashion statement.', 
+    --     'Modern African Ankara print dress',
+    --     'ANKARA-001', 
+    --     75.00, 
+    --     null,
+    --     clothing_id,
+    --     30,
+    --     'active',
+    --     false,
+    --     '["https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/ankara-1.jpg"]',
+    --     '["clothing", "ankara", "dress", "modern"]'
+    -- )
+    -- ON CONFLICT (sku) DO NOTHING;
+    
+    -- Insert sample products for Accessories category
+    -- INSERT INTO products (
+    --     name, slug, description, short_description, sku, price, compare_price, 
+    --     category_id, inventory_quantity, status, featured, images, tags
+    -- ) VALUES 
+    -- (
+    --     'Maasai Beaded Bracelet', 
+    --     'maasai-beaded-bracelet', 
+    --     'Handcrafted Maasai beaded bracelet featuring traditional patterns and vibrant colors. Each piece is uniquely made by Maasai artisans.', 
+    --     'Authentic Maasai beaded jewelry',
+    --     'MAAS-001', 
+    --     35.00, 
+    --     45.00,
+    --     accessories_id,
+    --     50,
+    --     'active',
+    --     true,
+    --     '["https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/maasai-bracelet.jpg"]',
+    --     '["accessories", "jewelry", "maasai", "beaded"]'
+    -- ),
+    -- (
+    --     'African Head Wrap', 
+    --     'african-head-wrap', 
+    --     'Versatile African head wrap made from premium fabric. Perfect for styling hair or as a fashion accessory.', 
+    --     'Traditional African head wrap scarf',
+    --     'HEAD-001', 
+    --     25.00, 
+    --     null,
+    --     accessories_id,
+    --     40,
+    --     'active',
+    --     false,
+    --     '["https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/head-wrap.jpg"]',
+    --     '["accessories", "headwear", "traditional", "fabric"]'
+    -- )
+    -- ON CONFLICT (sku) DO NOTHING;
+    
+    -- Insert sample products for Home & Living category
+    -- INSERT INTO products (
+    --     name, slug, description, short_description, sku, price, compare_price, 
+    --     category_id, inventory_quantity, status, featured, images, tags
+    -- ) VALUES 
+    -- (
+    --     'African Basket Set', 
+    --     'african-basket-set', 
+    --     'Set of three handwoven African baskets in different sizes. Perfect for home organization and decoration.', 
+    --     'Handwoven African storage baskets',
+    --     'BASKET-001', 
+    --     65.00, 
+    --     85.00,
+    --     home_id,
+    --     20,
+    --     'active',
+    --     true,
+    --     '["https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/basket-set.jpg"]',
+    --     '["home", "baskets", "storage", "handwoven"]'
+    -- ),
+    -- (
+    --     'Tribal Mask Wall Art', 
+    --     'tribal-mask-wall-art', 
+    --     'Authentic African tribal mask perfect for wall decoration. Handcrafted using traditional techniques.', 
+    --     'Traditional African tribal mask decor',
+    --     'MASK-001', 
+    --     120.00, 
+    --     null,
+    --     home_id,
+    --     10,
+    --     'active',
+    --     false,
+    --     '["https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/tribal-mask.jpg"]',
+    --     '["home", "decor", "mask", "tribal"]'
+    -- )
+    -- ON CONFLICT (sku) DO NOTHING;
+    
+    -- Insert sample products for Art & Crafts category
+    -- INSERT INTO products (
+    --     name, slug, description, short_description, sku, price, compare_price, 
+    --     category_id, inventory_quantity, status, featured, images, tags
+    -- ) VALUES 
+    -- (
+    --     'African Painting', 
+    --     'african-painting', 
+    --     'Original African painting depicting village life. Acrylic on canvas by local African artist.', 
+    --     'Original African village life painting',
+    --     'ART-001', 
+    --     250.00, 
+    --     350.00,
+    --     cart_id,
+    --     5,
+    --     'active',
+    --     true,
+    --     '["https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/african-painting.jpg"]',
+    --     '["art", "painting", "original", "village"]'
+    -- )
+    -- ON CONFLICT (sku) DO NOTHING;
+    
+    -- Insert sample products for Food & Beverages category 
+--     INSERT INTO products (
+--         name, slug, description, short_description, sku, price, compare_price, 
+--         category_id, inventory_quantity, status, featured, images, tags
+--     ) VALUES 
+--     (
+--         'African Coffee Blend', 
+--         'african-coffee-blend', 
+--         'Premium African coffee blend featuring beans from Ethiopia and Kenya. Rich, bold flavor with hints of chocolate and citrus.', 
+--         'Premium African coffee beans blend',
+--         'COFFEE-001', 
+--         28.00, 
+--         35.00,
+--         food_id,
+--         100,
+--         'active',
+--         true,
+--         '["https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/african-coffee.jpg"]',
+--         '["food", "coffee", "beverage", "premium"]'
+--     ),
+--     (
+--         'Traditional African Spices', 
+--         'traditional-african-spices', 
+--         'Collection of authentic African spices including berbere, suya spice, and curry blends. Perfect for traditional African cooking.', 
+--         'Authentic African spice collection',
+--         'SPICE-001', 
+--         18.00, 
+--         null,
+--         food_id,
+--         75,
+--         'active',
+--         false,
+--         '["https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/african-spices.jpg"]',
+--         '["food", "spices", "cooking", "traditional"]'
+--     ),
+--     (
+--         'African Honey', 
+--         'african-honey', 
+--         'Pure, raw African honey harvested from local beekeepers. Rich in flavor and natural enzymes.', 
+--         'Raw African honey from local farms',
+--         'HONEY-001', 
+--         15.00, 
+--         null,
+--         food_id,
+--         60,
+--         'active',
+--         false,
+--         '["https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/african-honey.jpg"]',
+--         '["food", "honey", "natural", "sweet"]'
+--     )
+--     ON CONFLICT (sku) DO NOTHING;
+-- END $$;
+
+-- Show summary of inserted data
+-- SELECT 
+--     'Categories' as table_name, 
+--     COUNT(*) as record_count,
+--     STRING_AGG(name, ', ') as sample_records
+-- FROM categories 
+-- WHERE is_active = true
+
+-- UNION ALL
+
+-- SELECT 
+--     'Products' as table_name, 
+--     COUNT(*) as record_count,
+--     STRING_AGG(name, ', ') as sample_records
+-- FROM products 
+-- WHERE status = 'active'
+
+-- ORDER BY table_name;

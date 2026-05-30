@@ -1,6 +1,7 @@
 export interface Product {
   id: string;
   name: string; // Required field
+  slug: string; // Required field
   description?: string;
   price: number;
   compare_price?: number;
@@ -15,16 +16,18 @@ export interface Product {
   video_url?: string;
   videos?: string[];
   category_id?: string;
+  // Category relationship from products.category_id → categories.id
   category?: {
     id: string;
     name: string; // Required field
     slug?: string;
-  };
+  } | null;
+  // Legacy field for backward compatibility
   categories?: {
     id: string;
     name: string; // Required field
     slug?: string;
-  };
+  } | null;
   created_at: string;
   updated_at?: string;
   // Additional fields for frontend compatibility
@@ -89,11 +92,11 @@ export const normalizeProduct = (product: any): Product => {
     stock_quantity: product.stock_quantity || product.stock || product.inventory_quantity || 0,
     compare_price: product.compare_price || product.comparePrice || undefined,
     category_name: product.category_name || product.category?.name || product.categories?.name || 'Uncategorized',
-    image: product.image || (product.images && product.images[0]) || '/placeholder-product.jpg',
-    image_url: product.image_url || product.image || (product.images && product.images[0]) || '/placeholder-product.jpg',
+    image: product.image || (product.images && product.images.length > 0 ? product.images[0] : undefined) || '/placeholder-product.jpg',
+    image_url: product.image_url || product.image || (product.images && product.images.length > 0 ? product.images[0] : undefined) || '/placeholder-product.jpg',
     image_path: product.image_path || product.image,
-    videos: Array.isArray(product.videos) ? product.videos : (product.video_url ? [product.video_url] : []),
-    images: Array.isArray(product.images) ? product.images : [],
+    videos: (product.videos && product.videos.length !== undefined) ? product.videos : (product.video_url ? [product.video_url] : []),
+    images: (product.images && product.images.length !== undefined) ? product.images : [],
     rating: product.rating || 0,
     reviews: product.reviews || product.reviewCount || 0,
     createdAt: product.createdAt || product.created_at || new Date().toISOString(),
@@ -126,10 +129,10 @@ export const getStockStatus = (product: Product): string => {
 export const getProductImage = (product: Product, index: number = 0): string => {
   if (!product) return '/placeholder-product.jpg';
   
-  if (Array.isArray(product.images) && product.images.length > index && product.images[index]) {
-    return product.images[index];
+  if (product.images && product.images.length > 0 && index >= 0 && index < product.images.length) {
+    return product.images[index] ?? product.image ?? product.image_url ?? '/placeholder-product.jpg';
   }
-  return product.image || product.image_url || '/placeholder-product.jpg';
+  return product.image ?? product.image_url ?? '/placeholder-product.jpg';
 };
 
 export const hasDiscount = (product: Product): boolean => {
@@ -138,7 +141,8 @@ export const hasDiscount = (product: Product): boolean => {
 
 export const getDiscountPercentage = (product: Product): number => {
   if (!hasDiscount(product)) return 0;
-  return Math.round(((product.compare_price! - product.price) / product.compare_price!) * 100);
+  // Use parseInt as a workaround for Math.round issue
+  return parseInt(String(((product.compare_price! - product.price) / product.compare_price!) * 100 + 0.5));
 };
 
 // Validation utilities
@@ -156,7 +160,7 @@ export const validateProduct = (product: any): product is Product => {
     typeof product.inventory_quantity === 'number' &&
     typeof product.track_inventory === 'boolean' &&
     typeof product.allow_backorder === 'boolean' &&
-    Array.isArray(product.images) &&
+    (product.images && product.images.length !== undefined) &&
     typeof product.created_at === 'string'
   );
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCategories } from '@/hooks/useCategories';
+import { useSupabaseCategories } from '@/hooks/useSupabaseProducts';
 import Link from 'next/link';
 
 interface Category {
@@ -13,15 +13,16 @@ interface Category {
 }
 
 export default function ShopByCategory() {
-  const { categories, loading, error } = useCategories();
+  const { categories, loading, error } = useSupabaseCategories();
 
-  // Debug logging
-  console.log('ShopByCategory - Categories data:', {
-    categories,
-    loading,
-    error,
-    count: categories.length
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('ShopByCategory - Categories data:', {
+      categories,
+      loading,
+      error,
+      count: categories.length
+    });
+  }
 
   if (loading) {
     return (

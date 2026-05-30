@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     console.log(' [DEBUG] Checking SKU:', { sku, excludeId });
     
     // Initialize Supabase client
-    const supabaseClient = getSupabaseServer();
+    const supabaseClient = await getSupabaseServer();
     
     // Build query to check if SKU exists
     let query = supabaseClient

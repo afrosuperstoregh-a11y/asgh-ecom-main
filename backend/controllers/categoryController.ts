@@ -1,4 +1,5 @@
 /// <reference path="../types/express.d.ts" />
+/// <reference types="node" />
 import { Request, Response } from 'express'
 import categoryService from '../services/categoryService'
 import { asyncHandler, createError } from '../middleware/errorHandler'
@@ -13,12 +14,40 @@ class CategoryController {
   // GET /api/categories/:id - Get single category (public)
   getCategoryById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params
-    const category = await categoryService.getCategoryById(Array.isArray(id) ? id[0] : id)
+    const category = await categoryService.getCategoryById(global.Array.isArray(id) ? id[0] : id)
     
     res.json({
       success: true,
       data: category,
       message: 'Category retrieved successfully'
+    })
+  })
+
+  // GET /api/categories/slug/:slug - Get single category by slug with products
+  getCategoryBySlug = asyncHandler(async (req: Request, res: Response) => {
+    const { slug } = req.params
+    const page = parseInt(req.query.page as string) || 1
+    const limit = parseInt(req.query.limit as string) || 20
+
+    const result = await categoryService.getCategoryBySlug(
+      global.Array.isArray(slug) ? slug[0] : slug,
+      { page, limit }
+    )
+
+    if (!result.category) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'CATEGORY_NOT_FOUND',
+          message: 'Category not found'
+        }
+      })
+    }
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Category and products retrieved successfully'
     })
   })
 
@@ -51,14 +80,14 @@ class CategoryController {
       throw createError('User authentication required', 401, 'AUTH_REQUIRED')
     }
 
-    const result = await categoryService.updateCategory(Array.isArray(id) ? id[0] : id, categoryData, userId)
+    const result = await categoryService.updateCategory(global.Array.isArray(id) ? id[0] : id, categoryData, userId)
     res.json(result)
   })
 
   // DELETE /api/categories/:id - Delete category (admin only)
   deleteCategory = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params
-    const result = await categoryService.deleteCategory(Array.isArray(id) ? id[0] : id)
+    const result = await categoryService.deleteCategory(global.Array.isArray(id) ? id[0] : id)
     res.json(result)
   })
 

@@ -19,35 +19,6 @@ router.post('/auth/login', adminAuthLimiter, async (req, res) => {
       });
     }
 
-    // TEMPORARY: Hardcoded admin credentials for testing
-    if (email === 'admin@afrosuperstore.ca' && password === 'Admin123!') {
-      const testUser = {
-        id: '00000000-0000-0000-0000-000000000001',
-        email: 'admin@afrosuperstore.ca',
-        first_name: 'Super',
-        last_name: 'Admin',
-        role: 'super_admin',
-        email_verified: true
-      };
-
-      // Generate JWT token
-      const token = generateToken(testUser);
-
-      return res.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          id: testUser.id,
-          email: testUser.email,
-          name: `${testUser.first_name} ${testUser.last_name}`,
-          role: testUser.role,
-          emailVerified: testUser.email_verified
-        },
-        token,
-        redirectTo: '/admin'
-      });
-    }
-
     // Find user in Supabase first, then fall back to PostgreSQL
     let user = null;
     
@@ -188,47 +159,6 @@ router.get('/', async (req, res) => {
 // Admin dashboard endpoint
 router.get('/dashboard', async (req, res) => {
   try {
-    // TEMPORARY: Return mock data for testing
-    if (req.user.id === '00000000-0000-0000-0000-000000000001') {
-      const mockData = {
-        user: {
-          id: req.user.id,
-          email: req.user.email,
-          name: `${req.user.first_name} ${req.user.last_name}`,
-          role: req.user.role
-        },
-        stats: {
-          totalOrders: 156,
-          totalUsers: 89,
-          totalProducts: 45,
-          totalRevenue: 25430.50
-        },
-        recentOrders: [
-          {
-            order_number: 'ORD-2024-001',
-            total_amount: 129.99,
-            status: 'completed',
-            created_at: new Date().toISOString(),
-            email: 'customer1@example.com'
-          },
-          {
-            order_number: 'ORD-2024-002', 
-            total_amount: 89.50,
-            status: 'processing',
-            created_at: new Date(Date.now() - 3600000).toISOString(),
-            email: 'customer2@example.com'
-          }
-        ],
-        lastLogin: new Date().toISOString()
-      };
-
-      return res.json({
-        success: true,
-        message: 'Admin dashboard loaded successfully (mock data)',
-        data: mockData
-      });
-    }
-
     const { Pool } = require('pg');
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,

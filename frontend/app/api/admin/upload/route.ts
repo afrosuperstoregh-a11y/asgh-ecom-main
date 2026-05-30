@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Initialize Supabase client with SERVICE ROLE KEY (server-side only)
-    const supabaseClient = getSupabaseServer();
+    const supabaseClient = await getSupabaseServer();
     
     // Generate unique file path
     const fileExt = file.name.split('.').pop();

@@ -59,8 +59,8 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [DEBUG] Categories authentication successful');
     logger.log('Admin categories data request authenticated');
 
-    // Initialize Supabase client inside the handler
-    const supabase = getSupabaseAdmin();
+    // Initialize Supabase client inside handler
+    const supabase = await getSupabaseAdmin();
 
     // Fetch categories from Supabase
     const { data: categories, error } = await supabase
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match expected structure
-    const transformedCategories = categories?.map(category => ({
+    const transformedCategories = (categories as any[])?.map(category => ({
       id: category.id,
       name: category.name,
       slug: category.slug,

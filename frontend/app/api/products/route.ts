@@ -503,7 +503,7 @@ export async function GET(request: Request) {
       .select('slug')
       .eq('is_active', true);
 
-    const uniqueCategories = [...new Set(categoriesData?.map((c: any) => c.slug) || [])];
+    const uniqueCategories = Array.from(new Set(categoriesData?.map((c: any) => c.slug) || []));
 
     if (!processedProducts || processedProducts.length === 0) {
       return new Response(JSON.stringify({

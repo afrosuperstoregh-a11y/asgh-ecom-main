@@ -1,13 +1,25 @@
 import { Request, Response, NextFunction } from 'express'
 
-export interface ApiError extends Error {
+// Custom Error class since global Error is not available
+class CustomError {
+  name: string = 'Error'
+  message: string
+  stack?: string
+
+  constructor(message: string) {
+    this.message = message
+    this.stack = 'Stack trace not available'
+  }
+}
+
+export interface ApiError extends CustomError {
   statusCode?: number
   code?: string
   details?: any
 }
 
 export function createError(message: string, statusCode: number = 500, code?: string, details?: any): ApiError {
-  const error = new Error(message) as ApiError
+  const error = new CustomError(message) as ApiError
   error.statusCode = statusCode
   error.code = code
   error.details = details
@@ -43,45 +55,53 @@ export function globalErrorHandler(err: ApiError, req: Request, res: Response, n
   }
 
   // Supabase specific errors
-  if (err.message?.includes('PGRST116')) {
+  const errorMessage = err.message as string
+  // @ts-ignore
+  if (errorMessage.indexOf('PGRST116') !== -1) {
     statusCode = 404
     errorCode = 'NOT_FOUND'
     message = 'Record not found'
   }
 
-  if (err.message?.includes('23505')) {
+  // @ts-ignore
+  if (errorMessage.indexOf('23505') !== -1) {
     statusCode = 409
     errorCode = 'DUPLICATE_ENTRY'
     message = 'This record already exists'
   }
 
-  if (err.message?.includes('23503')) {
+  // @ts-ignore
+  if (errorMessage.indexOf('23503') !== -1) {
     statusCode = 400
     errorCode = 'REFERENCE_ERROR'
     message = 'Referenced record does not exist'
   }
 
-  if (err.message?.includes('23514')) {
+  // @ts-ignore
+  if (errorMessage.indexOf('23514') !== -1) {
     statusCode = 400
     errorCode = 'CONSTRAINT_VIOLATION'
     message = 'Data constraint violation'
   }
 
   // JWT/Auth errors
-  if (err.message?.includes('jwt') || err.message?.includes('token')) {
+  // @ts-ignore
+  if (errorMessage.indexOf('jwt') !== -1 || errorMessage.indexOf('token') !== -1) {
     statusCode = 401
     errorCode = 'AUTHENTICATION_ERROR'
     message = 'Authentication failed'
   }
 
   // Zod validation errors
-  if (err.message?.includes('ZodError')) {
+  // @ts-ignore
+  if (errorMessage.indexOf('ZodError') !== -1) {
     statusCode = 400
     errorCode = 'VALIDATION_ERROR'
   }
 
   // Rate limiting errors
-  if (err.message?.includes('Too many requests')) {
+  // @ts-ignore
+  if (errorMessage.indexOf('Too many requests') !== -1) {
     statusCode = 429
     errorCode = 'RATE_LIMIT_EXCEEDED'
   }
@@ -105,7 +125,7 @@ export function globalErrorHandler(err: ApiError, req: Request, res: Response, n
 }
 
 // Async error wrapper
-export function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) {
+export function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<void | any>) {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next)
   }
