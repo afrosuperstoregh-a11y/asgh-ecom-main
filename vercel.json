@@ -24,5 +24,5 @@
       "runtime": "nodejs20.x"
     }
   },
-  "installCommand": "cd .. && npm install && cd frontend && npm install"
+  "installCommand": "npm install"
 }
