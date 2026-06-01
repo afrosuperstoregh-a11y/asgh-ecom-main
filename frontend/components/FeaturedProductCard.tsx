@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Star, ShoppingCart, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { getProductImageUrl, PRODUCT_CARD_IMAGE_PROPS } from '../lib/images';
+import { getProductImageUrl, PRODUCT_CARD_IMAGE_PROPS, getSafeImageUrl } from '../lib/images';
 import { formatPrice } from '../lib/utils';
 
 interface Product {
@@ -56,7 +56,7 @@ function FeaturedProductCard({ product }: FeaturedProductCardProps) {
         id: product.id,
         name: product.name,
         price: product.price,
-        image: getProductImageUrl(product.image || product.images?.[0]),
+        image: getSafeImageUrl(getProductImageUrl(product.image || product.images?.[0]), '/placeholder-product.svg'),
         category: product.categories?.name
       });
     }
@@ -72,7 +72,7 @@ function FeaturedProductCard({ product }: FeaturedProductCardProps) {
         <Link href={`/product/${product.slug}`} className="block flex-shrink-0 w-full aspect-[4/3] sm:aspect-[16/9] overflow-hidden">
           <div className="relative w-full h-full overflow-hidden bg-gray-100 rounded-t-xl">
             <Image
-              src={imageError ? getProductImageUrl(null) : getProductImageUrl(product.image || product.images?.[0])}
+              src={imageError ? '/placeholder-product.svg' : getSafeImageUrl(getProductImageUrl(product.image || product.images?.[0]), '/placeholder-product.svg')}
               alt={product.name}
               fill
               className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105 rounded-t-xl"

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { getCategoryImageUrl, CATEGORY_CARD_IMAGE_PROPS } from '../lib/images';
+import { getCategoryImageUrl, CATEGORY_CARD_IMAGE_PROPS, getSafeImageUrl } from '../lib/images';
 
 interface Category {
   id: string;
@@ -122,15 +122,11 @@ export default function Categories({ categories: propCategories }: CategoriesPro
             <div key={category.id} className="group cursor-pointer">
               <div className="relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow">
                 <Image
-                  src={getCategoryImageUrl(category.image_url || category.image)}
+                  src={getSafeImageUrl(getCategoryImageUrl(category.image_url || category.image), '/placeholder-category.svg')}
                   alt={String(category.name) || 'Category'}
                   fill
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                   {...CATEGORY_CARD_IMAGE_PROPS}
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = '/placeholder-category.svg';
-                  }}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-30 transition-opacity"></div>
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white">

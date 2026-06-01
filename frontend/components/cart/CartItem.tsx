@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Minus, Plus, X } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { formatPrice } from '../../lib/utils';
-import { getProductImageUrl, PRODUCT_CARD_IMAGE_PROPS } from '../../lib/images';
+import { getProductImageUrl, PRODUCT_CARD_IMAGE_PROPS, getSafeImageUrl } from '../../lib/images';
 
 interface CartItemProps {
   id: number;
@@ -36,7 +36,7 @@ export default function CartItem({
         <div className="flex-shrink-0">
           <div className="relative w-24 h-24 sm:w-32 sm:h-32 bg-gray-100 rounded-lg overflow-hidden">
             <Image
-              src={getProductImageUrl(image)}
+              src={getSafeImageUrl(getProductImageUrl(image), '/placeholder-product.svg')}
               alt={name}
               fill
               className="object-cover"

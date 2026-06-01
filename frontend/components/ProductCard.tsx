@@ -7,7 +7,7 @@ import { Product } from '@/types/product';
 import { Heart, ShoppingCart, Star, Plus, Minus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
-import { getProductImageUrl, handleImageError, PRODUCT_CARD_IMAGE_PROPS } from '../lib/images';
+import { getProductImageUrl, handleImageError, PRODUCT_CARD_IMAGE_PROPS, getSafeImageUrl } from '../lib/images';
 import { formatPrice } from '../lib/utils';
 import { Button } from './ui/Button';
 
@@ -42,7 +42,7 @@ function ProductCard({ product, showQuantitySelector = false }: ProductCardProps
         id: product.id,
         name: product.name,
         price: product.price,
-        image: getProductImageUrl(product.image_url || product.images?.[0])
+        image: getSafeImageUrl(getProductImageUrl(product.image_url || product.images?.[0]), '/placeholder-product.svg')
       });
     }
     
@@ -60,7 +60,7 @@ function ProductCard({ product, showQuantitySelector = false }: ProductCardProps
         id: product.id.toString(),
         name: product.name,
         price: product.price,
-        image: getProductImageUrl(product.image_url || product.images?.[0])
+        image: getSafeImageUrl(getProductImageUrl(product.image_url || product.images?.[0]), '/placeholder-product.svg')
       });
     }
   };
@@ -70,7 +70,7 @@ function ProductCard({ product, showQuantitySelector = false }: ProductCardProps
       {/* Product Image */}
       <div className="relative flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-xl w-full aspect-[4/3] sm:aspect-[16/9]">
         <Image
-          src={imageError ? getProductImageUrl(null) : getProductImageUrl(product.image_url || product.images?.[0] || product.image)}
+          src={imageError ? '/placeholder-product.svg' : getSafeImageUrl(getProductImageUrl(product.image_url || product.images?.[0] || product.image), '/placeholder-product.svg')}
           alt={product.name}
           fill
           className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105 rounded-t-xl"

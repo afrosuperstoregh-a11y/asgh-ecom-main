@@ -11,6 +11,7 @@ import { useSupabaseProducts } from '@/hooks/useSupabaseProducts';
 import ProductVideo from '../../../components/ProductVideo';
 import ProductInfo from '../../../components/ProductInfo';
 import { formatPrice } from '../../../lib/utils';
+import { getSafeImageUrl } from '../../../lib/images';
 
 import { Product } from '@/types/product';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -198,16 +199,13 @@ export default function ProductSlugPage() {
                 ) : (
                   <div className="relative group cursor-zoom-in" onClick={() => setIsZoomed(true)}>
                     <Image
-                      src={currentMediaIndex < images.length ? images[currentMediaIndex] : '/placeholder-product.svg'}
+                      src={getSafeImageUrl(currentMediaIndex < images.length ? images[currentMediaIndex] : null, '/placeholder-product.svg')}
                       alt={product.name}
                       fill
                       className="object-cover transition-transform duration-200 group-hover:scale-105"
                       sizes="(max-width: 1024px) 100vw, 50vw"
-                      onError={() => {
-                        // Fallback to placeholder if image fails to load
-                        // Note: Next.js Image component doesn't allow direct src modification
-                        // The fallback will be handled by updating the images array
-                      }}
+                      priority
+                      loading="eager"
                     />
                     {/* Zoom Icon Overlay */}
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center pointer-events-none">
@@ -231,15 +229,11 @@ export default function ProductSlugPage() {
                     }`}
                   >
                     <Image
-                      src={image}
+                      src={getSafeImageUrl(image, '/placeholder-product.svg')}
                       alt={`${product.name} - Image ${index + 1}`}
                       fill
                       className="object-cover"
                       sizes="80px"
-                      onError={() => {
-                        // Fallback to placeholder if image fails to load
-                        // Note: Next.js Image component doesn't allow direct src modification
-                      }}
                     />
                   </button>
                 ))}
@@ -286,15 +280,11 @@ export default function ProductSlugPage() {
                       <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
                         <div className="aspect-square bg-gray-100 relative">
                           <Image
-                            src={relatedProduct.images?.[0] || relatedProduct.image_url || relatedProduct.image || '/placeholder-product.svg'}
+                            src={getSafeImageUrl(relatedProduct.images?.[0] || relatedProduct.image_url || relatedProduct.image, '/placeholder-product.svg')}
                             alt={relatedProduct.name}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-200"
                             sizes="(max-width: 768px) 50vw, 25vw"
-                            onError={() => {
-                              // Fallback to placeholder if image fails to load
-                              // Note: Next.js Image component doesn't allow direct src modification
-                            }}
                           />
                         </div>
                         <div className="p-4">
@@ -372,15 +362,11 @@ export default function ProductSlugPage() {
                   onClick={() => setZoomedImageIndex(index)}
                 >
                   <Image
-                    src={image}
+                    src={getSafeImageUrl(image, '/placeholder-product.svg')}
                     alt={`${product.name} - Image ${index + 1}`}
                     width={400}
                     height={400}
                     className="max-w-md max-h-[80vh] object-contain rounded-lg"
-                    onError={() => {
-                      // Fallback to placeholder if image fails to load
-                      // Note: Next.js Image component doesn't allow direct src modification
-                    }}
                   />
                 </div>
               ))}

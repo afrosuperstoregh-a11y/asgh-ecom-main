@@ -32,6 +32,49 @@ function isValidImagePath(path: unknown): path is string {
 }
 
 /**
+ * Safe image URL validation - prevents 400 errors from invalid URLs
+ * @param url - The URL to validate
+ * @param fallback - Fallback URL if validation fails
+ * @returns Valid URL or fallback
+ */
+export function getSafeImageUrl(url: string | null | undefined, fallback: string = FALLBACK_IMAGES.GENERIC): string {
+  // Handle null/undefined
+  if (!url || typeof url !== 'string') {
+    return fallback;
+  }
+
+  // Handle empty strings
+  const trimmedUrl = url.trim();
+  if (trimmedUrl.length === 0) {
+    return fallback;
+  }
+
+  // Handle 'undefined' or 'null' as string values
+  if (trimmedUrl === 'undefined' || trimmedUrl === 'null') {
+    return fallback;
+  }
+
+  // If it's already a full HTTP/HTTPS URL, validate it
+  if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
+    try {
+      new URL(trimmedUrl);
+      return trimmedUrl;
+    } catch {
+      // Invalid URL format
+      return fallback;
+    }
+  }
+
+  // If it's a relative path starting with /, return as-is
+  if (trimmedUrl.startsWith('/')) {
+    return trimmedUrl;
+  }
+
+  // Otherwise, treat as relative path
+  return trimmedUrl;
+}
+
+/**
  * Cleans and normalizes image paths
  * Removes duplicate prefixes, leading/trailing slashes, and special characters
  */

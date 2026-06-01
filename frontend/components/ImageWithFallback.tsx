@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { getProductImageUrl } from '../lib/images';
+import { getProductImageUrl, getSafeImageUrl } from '../lib/images';
 
 interface ImageWithFallbackProps {
   src?: string | null;
@@ -15,6 +15,7 @@ interface ImageWithFallbackProps {
   sizes?: string;
   quality?: number;
   fallback?: string;
+  loading?: 'eager' | 'lazy';
 }
 
 export default function ImageWithFallback({
@@ -28,9 +29,14 @@ export default function ImageWithFallback({
   sizes,
   quality = 85,
   fallback = '/placeholder-product.svg',
+  loading,
 }: ImageWithFallbackProps) {
   const [imageError, setImageError] = useState(false);
-  const [imageSrc, setImageSrc] = useState(() => getProductImageUrl(src, fallback));
+  const [imageSrc, setImageSrc] = useState(() => {
+    // First validate the URL, then get the Supabase URL
+    const safeUrl = getSafeImageUrl(src, fallback);
+    return getProductImageUrl(safeUrl, fallback);
+  });
 
   const handleError = () => {
     if (!imageError) {
@@ -41,12 +47,13 @@ export default function ImageWithFallback({
 
   const imageProps = {
     src: imageError ? fallback : imageSrc,
-    alt,
+    alt: alt || 'Image',
     className,
     priority,
     sizes,
     quality,
     onError: handleError,
+    loading: loading || (priority ? 'eager' : 'lazy'),
   };
 
   if (fill) {

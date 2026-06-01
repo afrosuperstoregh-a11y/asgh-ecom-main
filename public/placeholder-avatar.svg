@@ -1,0 +1,7 @@
+<svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="500" height="500" fill="#F3F4F6"/>
+  <rect x="50" y="50" width="400" height="400" rx="200" fill="#E5E7EB"/>
+  <circle cx="250" cy="200" r="80" fill="#D1D5DB"/>
+  <path d="M150 350 Q250 450 350 350" stroke="#D1D5DB" stroke-width="80" stroke-linecap="round" fill="none"/>
+  <text x="250" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6B7280">Avatar</text>
+</svg>

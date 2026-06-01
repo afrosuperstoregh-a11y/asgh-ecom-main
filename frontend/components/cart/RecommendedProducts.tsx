@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { Plus, Star } from 'lucide-react';
+import { getSafeImageUrl } from '../../lib/images';
 
 interface Product {
   id: number;
@@ -31,7 +32,7 @@ export default function RecommendedProducts({ products, onAddToCart }: Recommend
               {/* Product Image */}
               <div className="relative w-full h-48 bg-gray-100">
                 <Image
-                  src={product.image}
+                  src={getSafeImageUrl(product.image, '/placeholder-product.svg')}
                   alt={product.name}
                   fill
                   className="object-cover"

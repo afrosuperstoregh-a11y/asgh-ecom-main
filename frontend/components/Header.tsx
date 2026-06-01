@@ -8,6 +8,7 @@ import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useSupabaseAuth } from "../contexts/SupabaseAuthContext";
 import { Button } from './ui/Button';
+import { getSafeImageUrl } from '../lib/images';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -33,23 +34,15 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0 flex items-center">
-            <Image 
-              src="/logo.png" 
-              alt="AfroSuperstoreGhana" 
+            <Image
+              src={getSafeImageUrl('/logo.png', '/placeholder-product.svg')}
+              alt="AfroSuperstoreGhana"
               width={120}
               height={40}
               className="h-10 w-auto md:h-12 lg:h-14 transition-all duration-200 hover:opacity-80"
               priority
+              loading="eager"
               unoptimized={process.env.NODE_ENV === 'production'}
-              onError={(e) => {
-                // Fallback to regular img if Next.js Image fails
-                const target = e.target as HTMLImageElement;
-                const fallbackImg = document.createElement('img');
-                fallbackImg.src = '/logo.png';
-                fallbackImg.alt = 'AfroSuperstore';
-                fallbackImg.className = 'h-10 w-auto md:h-12 lg:h-14 transition-all duration-200 hover:opacity-80';
-                target.parentNode?.replaceChild(fallbackImg, target);
-              }}
             />
           </Link>
 
