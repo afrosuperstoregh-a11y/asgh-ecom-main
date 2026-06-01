@@ -124,53 +124,60 @@ function getMockProducts() {
   ]
 
   const realImages = [
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku-flour.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku-mix.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/barbeque.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/beauty&health/h&bproduct1.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/beauty&health/h&bproduct2.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/beauty&health/h&bproduct3.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/books&media/b&mproduct1.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/books&media/b&mproduct2.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/books&media/b&mproduct3.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/clothing/dashiki-shirt-1.jpeg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/clothing/dashiki-shirt-2.jpeg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/clothing/dashiki-shirt-3.jpeg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/clothing/dashiki-shirt-4.jpeg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/electronics/dell-latitude-e5440-1.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/electronics/lenovo-thinkpad-i7-2.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/electronics/lenovo-thinkpad-i7-3.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/home&living/h&lproduct1.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/home&living/h&lproduct2.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/home&living/h&lproduct3.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/jewelry&accessories/j&aproduct1.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/jewelry&accessories/j&aproduct2.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/jewelry&accessories/j&aproduct3.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/sport&fitness/s&fproduct1.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/sport&fitness/s&fproduct2.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/sport&fitness/s&fproduct3.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/women-fashion/w&fproduct1.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/women-fashion/w&fproduct2.jpg',
-    'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/women-fashion/w&fproduct3.jpg'
+    'banku-flour.jpg',
+    'banku-mix.jpg',
+    'barbeque.jpg',
+    'beauty&health/h&bproduct1.jpg',
+    'beauty&health/h&bproduct2.jpg',
+    'beauty&health/h&bproduct3.jpg',
+    'books&media/b&mproduct1.jpg',
+    'books&media/b&mproduct2.jpg',
+    'books&media/b&mproduct3.jpg',
+    'clothing/dashiki-shirt-1.jpeg',
+    'clothing/dashiki-shirt-2.jpeg',
+    'clothing/dashiki-shirt-3.jpeg',
+    'clothing/dashiki-shirt-4.jpeg',
+    'electronics/dell-latitude-e5440-1.jpg',
+    'electronics/lenovo-thinkpad-i7-2.jpg',
+    'electronics/lenovo-thinkpad-i7-3.jpg',
+    'home&living/h&lproduct1.jpg',
+    'home&living/h&lproduct2.jpg',
+    'home&living/h&lproduct3.jpg',
+    'jewelry&accessories/j&aproduct1.jpg',
+    'jewelry&accessories/j&aproduct2.jpg',
+    'jewelry&accessories/j&aproduct3.jpg',
+    'sport&fitness/s&fproduct1.jpg',
+    'sport&fitness/s&fproduct2.jpg',
+    'sport&fitness/s&fproduct3.jpg',
+    'women-fashion/w&fproduct1.jpg',
+    'women-fashion/w&fproduct2.jpg',
+    'women-fashion/w&fproduct3.jpg'
   ]
 
-  return productNames.map((name, index) => ({
-    id: index + 1,
-    name: name,
-    slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-    description: `High-quality ${name.toLowerCase()} from our authentic African collection`,
-    price: Math.floor(Math.random() * 100) + 10,
-    compare_price: Math.floor(Math.random() * 100) + 20,
-    sku: `PRD-${String(index + 1).padStart(3, '0')}`,
-    status: 'active',
-    inventory_quantity: Math.floor(Math.random() * 50) + 10,
-    track_inventory: true,
-    allow_backorder: false,
-    images: [realImages[index % realImages.length]], // Use real images in rotation
-    categories: { name: 'Featured Products', slug: 'featured' },
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }))
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+  
+  return productNames.map((name, index) => {
+    const imagePath = realImages[index % realImages.length];
+    const fullImageUrl = getServerProductImageUrl(supabaseUrl, imagePath);
+    
+    return {
+      id: index + 1,
+      name: name,
+      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      description: `High-quality ${name.toLowerCase()} from our authentic African collection`,
+      price: Math.floor(Math.random() * 100) + 10,
+      compare_price: Math.floor(Math.random() * 100) + 20,
+      sku: `PRD-${String(index + 1).padStart(3, '0')}`,
+      status: 'active',
+      inventory_quantity: Math.floor(Math.random() * 50) + 10,
+      track_inventory: true,
+      allow_backorder: false,
+      images: [fullImageUrl], // Use real images with proper Supabase URL
+      categories: { name: 'Featured Products', slug: 'featured' },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+  })
 }
 
 export async function GET(request: Request) {

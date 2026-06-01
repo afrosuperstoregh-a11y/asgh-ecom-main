@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { getProductImageUrl as getServerProductImageUrl } from '../../../lib/server-images'
 
 // Validate required environment variables
 function validateEnvironment() {
@@ -18,7 +19,9 @@ function validateEnvironment() {
 
 // Mock products for fallback when database is not available
 function getMockProducts() {
-  return [
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+  
+  const mockProducts = [
     {
       id: 1,
       name: 'Handwoven Basket',
@@ -31,7 +34,7 @@ function getMockProducts() {
       inventory_quantity: 15,
       track_inventory: true,
       allow_backorder: false,
-      images: ['https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/home&living/h&lproduct1.jpg'],
+      imagePath: 'home&living/h&lproduct1.jpg',
       categories: { name: 'Home & Living', slug: 'home-living' },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -48,7 +51,7 @@ function getMockProducts() {
       inventory_quantity: 8,
       track_inventory: true,
       allow_backorder: false,
-      images: ['https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/clothing/dashiki-shirt-1.jpeg'],
+      imagePath: 'clothing/dashiki-shirt-1.jpeg',
       categories: { name: 'Clothing', slug: 'clothing' },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -65,7 +68,7 @@ function getMockProducts() {
       inventory_quantity: 100,
       track_inventory: true,
       allow_backorder: false,
-      images: ['https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/banku-flour.jpg'],
+      imagePath: 'banku-flour.jpg',
       categories: { name: 'Food & Beverages', slug: 'food-beverages' },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -82,7 +85,7 @@ function getMockProducts() {
       inventory_quantity: 55,
       track_inventory: true,
       allow_backorder: false,
-      images: ['https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/electronics/dell-latitude-e5440-1.jpg'],
+      imagePath: 'electronics/dell-latitude-e5440-1.jpg',
       categories: { name: 'Electronics', slug: 'electronics' },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -99,12 +102,17 @@ function getMockProducts() {
       inventory_quantity: 64,
       track_inventory: true,
       allow_backorder: false,
-      images: ['https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/product-images/beauty&health/h&bproduct1.jpg'],
+      imagePath: 'beauty&health/h&bproduct1.jpg',
       categories: { name: 'Beauty & Health', slug: 'beauty-health' },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
-  ]
+  ];
+  
+  return mockProducts.map(product => ({
+    ...product,
+    images: [getServerProductImageUrl(supabaseUrl, product.imagePath)]
+  }));
 }
 
 export async function GET(request: Request) {

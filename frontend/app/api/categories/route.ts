@@ -3,107 +3,47 @@ import { getCategoryImageUrl as getServerCategoryImageUrl } from '../../../lib/s
 
 // Mock categories for fallback when database is not available
 function getMockCategories() {
-  return [
-    {
-      id: '1',
-      name: 'Women Fashion',
-      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/women.png',
-      created_at: new Date().toISOString(),
-      is_active: true,
-      sort_order: 1,
-      product_count: 15
-    },
-    {
-      id: '2', 
-      name: 'Men Fashion',
-      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/men.png',
-      created_at: new Date().toISOString(),
-      is_active: true,
-      sort_order: 2,
-      product_count: 12
-    },
-    {
-      id: '3',
-      name: 'Beauty & Health',
-      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/beauty.png',
-      created_at: new Date().toISOString(),
-      is_active: true,
-      sort_order: 3,
-      product_count: 8
-    },
-    {
-      id: '4',
-      name: 'Clothing',
-      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/clothing.jpg',
-      created_at: new Date().toISOString(),
-      is_active: true,
-      sort_order: 4,
-      product_count: 10
-    },
-    {
-      id: '5',
-      name: 'Electronics',
-      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/electronics.png',
-      created_at: new Date().toISOString(),
-      is_active: true,
-      sort_order: 5,
-      product_count: 6
-    },
-    {
-      id: '6',
-      name: 'Home & Living',
-      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/home-decor.jpg',
-      created_at: new Date().toISOString(),
-      is_active: true,
-      sort_order: 6,
-      product_count: 7
-    },
-    {
-      id: '7',
-      name: 'Food & Beverages',
-      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/food.png',
-      created_at: new Date().toISOString(),
-      is_active: true,
-      sort_order: 7,
-      product_count: 5
-    },
-    {
-      id: '8',
-      name: 'Accessories',
-      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/accessories.jpg',
-      created_at: new Date().toISOString(),
-      is_active: true,
-      sort_order: 8,
-      product_count: 9
-    },
-    {
-      id: '9',
-      name: 'Sport Fitness',
-      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/sports.png',
-      created_at: new Date().toISOString(),
-      is_active: true,
-      sort_order: 9,
-      product_count: 4
-    },
-    {
-      id: '10',
-      name: 'Books Media',
-      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/books.png',
-      created_at: new Date().toISOString(),
-      is_active: true,
-      sort_order: 10,
-      product_count: 3
-    },
-    {
-      id: '11',
-      name: 'Art & Crafts',
-      image_url: 'https://azpgqsmgyorjbqsgxuxw.supabase.co/storage/v1/object/public/category-images/Jewelry.png',
-      created_at: new Date().toISOString(),
-      is_active: true,
-      sort_order: 11,
-      product_count: 2
-    }
-  ]
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+  
+  const categoryImages = [
+    'category-images/women.png',
+    'category-images/men.png',
+    'category-images/beauty.png',
+    'category-images/clothing.jpg',
+    'category-images/electronics.png',
+    'category-images/home-decor.jpg',
+    'category-images/food.png',
+    'category-images/accessories.jpg',
+    'category-images/sports.png',
+    'category-images/books.png',
+    'category-images/Jewelry.png'
+  ];
+  
+  const categoryNames = [
+    'Women Fashion',
+    'Men Fashion',
+    'Beauty & Health',
+    'Clothing',
+    'Electronics',
+    'Home & Living',
+    'Food & Beverages',
+    'Accessories',
+    'Sport Fitness',
+    'Books Media',
+    'Art & Crafts'
+  ];
+  
+  const productCounts = [15, 12, 8, 10, 6, 7, 5, 9, 4, 3, 2];
+  
+  return categoryNames.map((name, index) => ({
+    id: String(index + 1),
+    name: name,
+    image_url: getServerCategoryImageUrl(supabaseUrl, categoryImages[index]),
+    created_at: new Date().toISOString(),
+    is_active: true,
+    sort_order: index + 1,
+    product_count: productCounts[index]
+  }));
 }
 
 export async function GET() {
