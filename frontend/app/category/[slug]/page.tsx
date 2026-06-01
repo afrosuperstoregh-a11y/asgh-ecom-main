@@ -113,11 +113,14 @@ export default function CategoryPage() {
                 {/* Product Image */}
                 <div className="relative flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-lg" style={{ height: '200px' }}>
                   <img
-                    src={getProductImageUrl(product.images?.[0] || product.image_url || product.image)}
+                    src={getSafeImageUrl(getProductImageUrl(product.images?.[0] || product.image_url || product.image), '/placeholder-product.svg')}
                     alt={product.name || 'Product'}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+                      const target = e.target as HTMLImageElement;
+                      if (!target.src.includes('/placeholder-product.svg')) {
+                        target.src = '/placeholder-product.svg';
+                      }
                     }}
                   />
                 </div>
