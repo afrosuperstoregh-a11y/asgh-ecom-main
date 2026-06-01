@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Truck, Package, Clock, CheckCircle, AlertCircle } from 'lucide-react';
-import { useCanadaPostShipping, ShippingAddress, ShippingRate } from '../hooks/useCanadaPostShipping';
+import { useInternalDelivery, ShippingAddress, ShippingRate } from '../hooks/useInternalDelivery';
 
 interface ShippingCalculatorProps {
   onShippingSelected?: (rate: ShippingRate) => void;
@@ -27,7 +27,7 @@ export default function ShippingCalculator({ onShippingSelected, className = '' 
     getShippingRates, 
     selectRate,
     validatePostalCode 
-  } = useCanadaPostShipping();
+  } = useInternalDelivery();
 
   const provinces = [
     { code: 'AB', name: 'Alberta' },
@@ -223,18 +223,11 @@ export default function ShippingCalculator({ onShippingSelected, className = '' 
         </div>
       )}
 
-      {/* Canada Post Branding */}
+      {/* Internal Delivery Branding */}
       <div className="mt-6 pt-4 border-t border-gray-200">
         <div className="flex items-center justify-between text-xs text-gray-500">
-          <span>Powered by Canada Post</span>
-          <img 
-            src="/canada-post-logo.svg" 
-            alt="Canada Post" 
-            className="h-6"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
+          <span>Powered by ASGH Internal Delivery</span>
+          <span className="font-semibold text-blue-600">ASGH Delivery</span>
         </div>
       </div>
     </div>

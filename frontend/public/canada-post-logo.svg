@@ -1,7 +1,0 @@
-<svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="120" height="40" fill="#E31837"/>
-  <path d="M10 10H20V30H10V10Z" fill="white"/>
-  <path d="M25 15H35V25H25V15Z" fill="white"/>
-  <path d="M40 12H50V28H40V12Z" fill="white"/>
-  <text x="60" y="25" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="bold">Canada Post</text>
-</svg>

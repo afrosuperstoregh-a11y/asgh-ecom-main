@@ -6,7 +6,7 @@ import { ArrowLeft, CreditCard, Truck, Shield, ShoppingBag } from 'lucide-react'
 import { useCart } from '../../context/CartContext';
 import ShippingCalculator from '../../components/ShippingCalculator';
 import PaymentMethodSelector from '../../components/PaymentMethodSelector';
-import { ShippingRate } from '../../hooks/useCanadaPostShipping';
+import { ShippingRate } from '../../hooks/useInternalDelivery';
 
 interface CartItem {
   id: number;
@@ -353,7 +353,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                   
-                  {/* Canada Post Shipping Calculator */}
+                  {/* ASGH Internal Delivery Calculator */}
                   <div className="mt-6">
                     <ShippingCalculator 
                       onShippingSelected={handleShippingSelected}
