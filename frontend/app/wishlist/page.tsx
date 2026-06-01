@@ -31,7 +31,7 @@ export default function WishlistPage() {
       id: product.id,
       name: product.name || 'Unnamed Product',
       price: product.compare_price || product.price || 0,
-      image: product.images?.[0] || '/placeholder-product.jpg',
+      image: product.images?.[0] || '/placeholder-product.svg',
       category: product.category_name || 'Uncategorized'
     });
   };
@@ -53,11 +53,11 @@ export default function WishlistPage() {
                 <div className="relative">
                   <Link href={`/product/${item.id}`}>
                     <img
-                      src={item.images?.[0] || '/placeholder-product.jpg'}
+                      src={item.images?.[0] || '/placeholder-product.svg'}
                       alt={item.name || 'Product'}
                       className="w-full h-48 object-cover rounded-t-lg"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+                        (e.target as HTMLImageElement).src = '/placeholder-product.svg';
                       }}
                     />
                   </Link>

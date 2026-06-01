@@ -92,8 +92,8 @@ export const normalizeProduct = (product: any): Product => {
     stock_quantity: product.stock_quantity || product.stock || product.inventory_quantity || 0,
     compare_price: product.compare_price || product.comparePrice || undefined,
     category_name: product.category_name || product.category?.name || product.categories?.name || 'Uncategorized',
-    image: product.image || (product.images && product.images.length > 0 ? product.images[0] : undefined) || '/placeholder-product.jpg',
-    image_url: product.image_url || product.image || (product.images && product.images.length > 0 ? product.images[0] : undefined) || '/placeholder-product.jpg',
+    image: product.image || (product.images && product.images.length > 0 ? product.images[0] : undefined) || '/placeholder-product.svg',
+    image_url: product.image_url || product.image || (product.images && product.images.length > 0 ? product.images[0] : undefined) || '/placeholder-product.svg',
     image_path: product.image_path || product.image,
     videos: (product.videos && product.videos.length !== undefined) ? product.videos : (product.video_url ? [product.video_url] : []),
     images: (product.images && product.images.length !== undefined) ? product.images : [],
@@ -127,12 +127,12 @@ export const getStockStatus = (product: Product): string => {
 };
 
 export const getProductImage = (product: Product, index: number = 0): string => {
-  if (!product) return '/placeholder-product.jpg';
+  if (!product) return '/placeholder-product.svg';
   
   if (product.images && product.images.length > 0 && index >= 0 && index < product.images.length) {
-    return product.images[index] ?? product.image ?? product.image_url ?? '/placeholder-product.jpg';
+    return product.images[index] ?? product.image ?? product.image_url ?? '/placeholder-product.svg';
   }
-  return product.image ?? product.image_url ?? '/placeholder-product.jpg';
+  return product.image ?? product.image_url ?? '/placeholder-product.svg';
 };
 
 export const hasDiscount = (product: Product): boolean => {

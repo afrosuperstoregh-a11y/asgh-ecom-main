@@ -167,7 +167,7 @@ export async function GET(
 
     const processedProduct = {
       ...product,
-      images: images.length > 0 ? images : ['/placeholder-product.jpg']
+      images: images.length > 0 ? images : ['/placeholder-product.svg']
     };
 
     return new Response(JSON.stringify({

@@ -326,11 +326,11 @@ const AccountWishlistPage = () => {
                   <div key={item.id} className="bg-white shadow-lg rounded-lg overflow-hidden group hover:shadow-xl transition-shadow w-[275px] h-[375px] flex flex-col">
                     <div className="relative flex-shrink-0 overflow-hidden rounded-t-lg" style={{ height: '200px' }}>
                       <img
-                        src={item.image || '/placeholder-product.jpg'}
+                        src={item.image || '/placeholder-product.svg'}
                         alt={item.name || 'Product'}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+                          (e.target as HTMLImageElement).src = '/placeholder-product.svg';
                         }}
                       />
                       {item.discount > 0 && (

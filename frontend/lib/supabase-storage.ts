@@ -194,7 +194,7 @@ export function fixImageUrl(imageUrl?: string): string {
  */
 export function fixImageUrlWithFallback(imageUrl?: string): string {
   if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
-    return '/placeholder-product.jpg'
+    return '/placeholder-product.svg'
   }
 
   // If it's already a full HTTP/HTTPS URL, check for .png extension

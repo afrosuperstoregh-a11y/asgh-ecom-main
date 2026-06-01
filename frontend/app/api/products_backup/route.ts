@@ -301,7 +301,7 @@ export async function GET(request: Request) {
 
       return {
         ...product,
-        images: images.length > 0 ? images : ['/placeholder-product.jpg']
+        images: images.length > 0 ? images : ['/placeholder-product.svg']
       };
     });
 

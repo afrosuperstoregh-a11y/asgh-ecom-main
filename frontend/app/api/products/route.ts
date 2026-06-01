@@ -442,7 +442,7 @@ export async function GET(request: Request) {
       // Use server-side utility to process image URLs
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
       const processedImages = images.map((img: any) => {
-        if (!img || typeof img !== 'string') return '/placeholder-product.jpg';
+        if (!img || typeof img !== 'string') return '/placeholder-product.svg';
         
         // Normalize extension
         const normalizedImg = normalizeImageExtension(img);
@@ -453,7 +453,7 @@ export async function GET(request: Request) {
 
       return {
         ...product,
-        images: processedImages.length > 0 ? processedImages : ['/placeholder-product.jpg']
+        images: processedImages.length > 0 ? processedImages : ['/placeholder-product.svg']
       };
     });
 

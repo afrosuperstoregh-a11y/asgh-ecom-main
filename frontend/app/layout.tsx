@@ -105,17 +105,6 @@ export default function RootLayout({
           }}
         />
       </body>
-      {process.env.NODE_ENV === 'production' && (
-        <>
-          <Analytics 
-            mode="production"
-            debug={false}
-          />
-          <SpeedInsights 
-            debug={false}
-          />
-        </>
-      )}
     </html>
   );
 }

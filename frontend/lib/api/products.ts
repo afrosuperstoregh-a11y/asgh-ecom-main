@@ -255,7 +255,7 @@ export const getProductImage = (product: Product): string => {
   if (product.images && product.images.length > 0) {
     return product.images[0];
   }
-  return '/placeholder-product.jpg'; // Fallback image
+  return '/placeholder-product.svg'; // Fallback image
 };
 
 export const isInStock = (product: Product): boolean => {
@@ -283,7 +283,7 @@ export const getDefaultProduct = (categoryName: string): Product => ({
   price: 0,
   category_id: '',
   category_name: categoryName,
-  images: ['/placeholder-product.jpg'],
+  images: ['/placeholder-product.svg'],
   tags: [],
   inventory_quantity: 0,
   track_inventory: false,
