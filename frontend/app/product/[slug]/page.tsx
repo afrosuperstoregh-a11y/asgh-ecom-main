@@ -10,6 +10,7 @@ import { useProductBySlug } from '@/hooks/useProductBySlug';
 import { useSupabaseProducts } from '@/hooks/useSupabaseProducts';
 import ProductVideo from '../../../components/ProductVideo';
 import ProductInfo from '../../../components/ProductInfo';
+import { formatPrice } from '../../../lib/utils';
 
 import { Product } from '@/types/product';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -129,7 +130,7 @@ export default function ProductSlugPage() {
     "offers": {
       "@type": "Offer",
       "price": displayPrice,
-      "priceCurrency": "USD",
+      "priceCurrency": "GHS",
       "availability": isInStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       "seller": {
         "@type": "Organization",
@@ -303,11 +304,11 @@ export default function ProductSlugPage() {
                           <div className="flex items-center justify-between">
                             <div>
                               <span className="text-lg font-bold text-gray-900">
-                                ${relatedProduct.compare_price || relatedProduct.price}
+                                {formatPrice(relatedProduct.compare_price || relatedProduct.price)}
                               </span>
                               {relatedProduct.compare_price && (
                                 <span className="text-sm text-gray-500 line-through ml-2">
-                                  ${relatedProduct.price}
+                                  {formatPrice(relatedProduct.price)}
                                 </span>
                               )}
                             </div>

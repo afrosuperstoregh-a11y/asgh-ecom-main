@@ -95,11 +95,11 @@ const DealProductCard: React.FC<DealProductCardProps> = ({ product, viewMode = '
 
             <div className="flex items-center gap-3 mb-3">
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-red-600">{formatPrice(product.discountedPrice * 100)}</span>
-                <span className="text-lg text-gray-400 line-through">{formatPrice(product.originalPrice * 100)}</span>
+                <span className="text-2xl font-bold text-red-600">{formatPrice(product.discountedPrice)}</span>
+                <span className="text-lg text-gray-400 line-through">{formatPrice(product.originalPrice)}</span>
               </div>
               <div className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-                Save {formatPrice(savings * 100)}
+                Save {formatPrice(savings)}
               </div>
             </div>
 
@@ -208,10 +208,10 @@ const DealProductCard: React.FC<DealProductCardProps> = ({ product, viewMode = '
           </div>
 
           <div className="flex items-baseline gap-2">
-            <span className="text-base font-bold text-red-600">{formatPrice(product.discountedPrice * 100)}</span>
-            <span className="text-xs text-gray-400 line-through">{formatPrice(product.originalPrice * 100)}</span>
+            <span className="text-base font-bold text-red-600">{formatPrice(product.discountedPrice)}</span>
+            <span className="text-xs text-gray-400 line-through">{formatPrice(product.originalPrice)}</span>
             <div className="bg-green-100 text-green-800 px-1 py-0.5 rounded-full text-xs font-medium">
-              Save {formatPrice(savings * 100)}
+              Save {formatPrice(savings)}
             </div>
           </div>
 

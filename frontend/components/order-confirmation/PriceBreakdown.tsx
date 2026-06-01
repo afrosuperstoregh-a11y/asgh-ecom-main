@@ -1,5 +1,7 @@
 'use client';
 
+import { formatPrice } from '../../lib/utils';
+
 interface OrderItem {
   id: number;
   name: string;
@@ -24,7 +26,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ items, totals }) => {
   // Calculate totals if not provided
   const calculatedSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const calculatedTax = calculatedSubtotal * 0.08; // 8% tax
-  const calculatedShipping = calculatedSubtotal > 100 ? 0 : 9.99;
+  const calculatedShipping = calculatedSubtotal > 50 ? 0 : 9.99;
   const calculatedTotal = calculatedSubtotal + calculatedTax + calculatedShipping;
 
   const finalTotals = totals || {
@@ -39,21 +41,21 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ items, totals }) => {
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Subtotal</span>
-          <span className="font-medium">${finalTotals.subtotal.toFixed(2)}</span>
+          <span className="font-medium">{formatPrice(finalTotals.subtotal)}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Tax</span>
-          <span className="font-medium">${finalTotals.tax.toFixed(2)}</span>
+          <span className="font-medium">{formatPrice(finalTotals.tax)}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Shipping</span>
           <span className="font-medium">
-            {finalTotals.shipping === 0 ? 'FREE' : `$${finalTotals.shipping.toFixed(2)}`}
+            {finalTotals.shipping === 0 ? 'FREE' : formatPrice(finalTotals.shipping)}
           </span>
         </div>
         <div className="flex justify-between text-lg font-semibold text-gray-900 pt-2 border-t border-gray-200">
           <span>Total</span>
-          <span>${finalTotals.total.toFixed(2)}</span>
+          <span>{formatPrice(finalTotals.total)}</span>
         </div>
       </div>
     </div>
