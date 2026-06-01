@@ -15,13 +15,5 @@
       "destination": "/api/$1"
     }
   ],
-  "functions": {
-    "app/api/**/*.js": {
-      "runtime": "nodejs20.x"
-    },
-    "app/api/**/*.ts": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "installCommand": "npm install"
 }
