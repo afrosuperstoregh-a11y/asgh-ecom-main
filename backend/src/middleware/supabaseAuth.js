@@ -1,12 +1,16 @@
 const { createClient } = require('@supabase/supabase-js')
 const config = require('../config/env')
 const { ApiResponse } = require('./apiResponse')
+const ws = require('ws')
 
-// Initialize Supabase client for JWT verification
+// Initialize Supabase client for JWT verification with WebSocket transport for Node.js < 22
 const supabase = createClient(config.supabase.url, config.supabase.serviceRoleKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
+  },
+  realtime: {
+    ws: ws
   }
 })
 
