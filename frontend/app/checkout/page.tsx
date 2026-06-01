@@ -7,6 +7,7 @@ import { useCart } from '../../context/CartContext';
 import ShippingCalculator from '../../components/ShippingCalculator';
 import PaymentMethodSelector from '../../components/PaymentMethodSelector';
 import { ShippingRate } from '../../hooks/useInternalDelivery';
+import { formatPrice } from '../../lib/utils';
 
 interface CartItem {
   id: number;
@@ -410,7 +411,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-gray-900">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        {formatPrice(item.price * item.quantity)}
                       </p>
                     </div>
                   </div>
@@ -421,11 +422,11 @@ export default function CheckoutPage() {
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span>${calculateSubtotal().toFixed(2)}</span>
+                  <span>{formatPrice(calculateSubtotal())}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Tax</span>
-                  <span>${calculateTax().toFixed(2)}</span>
+                  <span>{formatPrice(calculateTax())}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>
@@ -439,12 +440,12 @@ export default function CheckoutPage() {
                     )}
                   </span>
                   <span>
-                    {calculateShipping() === 0 ? 'FREE' : `$${calculateShipping().toFixed(2)}`}
+                    {calculateShipping() === 0 ? 'FREE' : formatPrice(calculateShipping())}
                   </span>
                 </div>
                 <div className="flex justify-between text-lg font-semibold text-gray-900 pt-2 border-t">
                   <span>Total</span>
-                  <span>${calculateTotal().toFixed(2)}</span>
+                  <span>{formatPrice(calculateTotal())}</span>
                 </div>
               </div>
               
@@ -452,7 +453,7 @@ export default function CheckoutPage() {
               <div className="mt-6 space-y-2 text-sm text-gray-600">
                 <div className="flex items-center space-x-2">
                   <Truck className="h-4 w-4 text-green-600" />
-                  <span>Free shipping on orders over $50</span>
+                  <span>Free shipping on orders over GHS 50</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Shield className="h-4 w-4 text-green-600" />

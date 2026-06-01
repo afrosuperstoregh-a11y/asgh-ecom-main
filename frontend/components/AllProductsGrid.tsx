@@ -85,7 +85,7 @@ export default function AllProductsGrid() {
           updated_at: item.updated_at,
           rating: item.rating || 0,
           reviews: item.reviews || 0,
-          image_url: item.image_url || (Array.isArray(item.images) && item.images[0]) || '/placeholder-product.jpg',
+          image_url: item.image_url || (Array.isArray(item.images) && item.images[0]) || '/placeholder-product.svg',
           category_name: item.category?.name || item.categories?.name || 'Uncategorized',
           inStock: (item.inventory_quantity > 0 || item.allow_backorder) ?? false,
         }));

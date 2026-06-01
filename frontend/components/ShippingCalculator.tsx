@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Truck, Package, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useInternalDelivery, ShippingAddress, ShippingRate } from '../hooks/useInternalDelivery';
+import { formatPrice } from '../lib/utils';
 
 interface ShippingCalculatorProps {
   onShippingSelected?: (rate: ShippingRate) => void;
@@ -206,8 +207,8 @@ export default function ShippingCalculator({ onShippingSelected, className = '' 
                 </div>
                 
                 <div className="text-right ml-4">
-                  <p className="text-lg font-bold text-gray-900">${rate.price.toFixed(2)}</p>
-                  <p className="text-xs text-gray-500">CAD</p>
+                  <p className="text-lg font-bold text-gray-900">{formatPrice(rate.price)}</p>
+                  <p className="text-xs text-gray-500">GHS</p>
                 </div>
               </div>
             </div>
@@ -216,7 +217,7 @@ export default function ShippingCalculator({ onShippingSelected, className = '' 
           {selectedRate && (
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-green-800 text-sm">
-                <strong>Selected:</strong> {selectedRate.service_name} - ${selectedRate.price.toFixed(2)}
+                <strong>Selected:</strong> {selectedRate.service_name} - {formatPrice(selectedRate.price)}
               </p>
             </div>
           )}

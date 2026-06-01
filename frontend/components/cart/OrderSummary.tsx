@@ -2,6 +2,7 @@
 
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { formatPrice } from '../../lib/utils';
 
 interface OrderSummaryProps {
   subtotal: number;
@@ -26,32 +27,32 @@ export default function OrderSummary({
       <div className="space-y-3 mb-6">
         <div className="flex justify-between text-gray-600">
           <span>Subtotal</span>
-          <span className="font-medium">${subtotal.toFixed(2)}</span>
+          <span className="font-medium">{formatPrice(subtotal)}</span>
         </div>
         
         <div className="flex justify-between text-gray-600">
           <span>Estimated Shipping</span>
           <span className="font-medium">
-            {shippingCost === 0 ? 'Free' : `$${shippingCost.toFixed(2)}`}
+            {shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}
           </span>
         </div>
         
         <div className="flex justify-between text-gray-600">
           <span>Tax</span>
-          <span className="font-medium">${tax.toFixed(2)}</span>
+          <span className="font-medium">{formatPrice(tax)}</span>
         </div>
         
         {discount > 0 && (
           <div className="flex justify-between text-green-600">
             <span>Discount</span>
-            <span className="font-medium">-${discount.toFixed(2)}</span>
+            <span className="font-medium">-{formatPrice(discount)}</span>
           </div>
         )}
         
         <div className="border-t border-gray-200 pt-3">
           <div className="flex justify-between text-lg font-bold text-gray-900">
             <span>Total</span>
-            <span>${total.toFixed(2)}</span>
+            <span>{formatPrice(total)}</span>
           </div>
         </div>
       </div>

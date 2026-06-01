@@ -17,11 +17,11 @@ export const BUCKETS = {
 
 // Fallback images
 export const FALLBACK_IMAGES = {
-  PRODUCT: '/placeholder-product.jpg',
+  PRODUCT: '/placeholder-product.svg',
   CATEGORY: '/placeholder-category.svg',
   AVATAR: '/placeholder-avatar.svg',
-  BANNER: '/placeholder-banner.jpg',
-  GENERIC: '/placeholder-generic.jpg',
+  BANNER: '/placeholder-category.svg', // Use category as fallback for banner
+  GENERIC: '/placeholder-product.svg',
 } as const;
 
 /**

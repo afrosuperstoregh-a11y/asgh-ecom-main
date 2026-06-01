@@ -61,7 +61,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+        // Only log in development to avoid console noise
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Auth state changed:', event, session?.user?.email);
+        }
         
         setSession(session);
         setUser(session ? formatUser(session.user) : null);
@@ -102,7 +105,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         return { success: false, error: error.message };
       }
 
-      console.log('Sign up successful:', data);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Sign up successful:', data);
+      }
       return { success: true };
     } catch (error) {
       console.error('Unexpected sign up error:', error);
@@ -122,7 +127,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         return { success: false, error: error.message };
       }
 
-      console.log('Sign in successful:', data);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Sign in successful:', data);
+      }
       return { success: true };
     } catch (error) {
       console.error('Unexpected sign in error:', error);
@@ -136,7 +143,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       
       if (error) {
         console.error('Sign out error:', error);
-      } else {
+      } else if (process.env.NODE_ENV === 'development') {
         console.log('Sign out successful');
       }
     } catch (error) {
@@ -155,7 +162,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         return { success: false, error: error.message };
       }
 
-      console.log('Password reset email sent');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Password reset email sent');
+      }
       return { success: true };
     } catch (error) {
       console.error('Unexpected reset password error:', error);
@@ -174,7 +183,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         return { success: false, error: error.message };
       }
 
-      console.log('Password updated successfully');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Password updated successfully');
+      }
       return { success: true };
     } catch (error) {
       console.error('Unexpected update password error:', error);
@@ -205,7 +216,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       
       if (error) {
         console.error('Refresh session error:', error);
-      } else {
+      } else if (process.env.NODE_ENV === 'development') {
         console.log('Session refreshed successfully');
       }
     } catch (error) {

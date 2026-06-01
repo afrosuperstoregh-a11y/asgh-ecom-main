@@ -2,7 +2,7 @@
  * Centralized image handling utility for consistent product image processing
  */
 
-export const FALLBACK_IMAGE = '/placeholder-product.jpg';
+export const FALLBACK_IMAGE = '/placeholder-product.svg';
 
 /**
  * Get product image URL with proper Supabase URL formatting and fallback

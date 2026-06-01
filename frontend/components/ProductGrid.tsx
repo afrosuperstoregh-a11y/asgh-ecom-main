@@ -52,7 +52,7 @@ function ProductGridComponent({ products: propProducts, loading: propLoading }: 
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.images?.[0] || '/placeholder-product.jpg'
+      image: product.images?.[0] || '/placeholder-product.svg'
     });
   };
 
@@ -80,7 +80,7 @@ function ProductGridComponent({ products: propProducts, loading: propLoading }: 
             <div key={product.id} className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow">
               <div className="relative aspect-square">
                 <Image
-                  src={product.images?.[0] || product.image || '/placeholder-product.jpg'}
+                  src={product.images?.[0] || product.image || '/placeholder-product.svg'}
                   alt={product.name || 'Product'}
                   fill
                   className="object-cover rounded-t-lg"

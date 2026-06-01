@@ -54,8 +54,8 @@ const nextConfig = {
     qualities: [75, 85],
     // Minimum cache TTL
     minimumCacheTTL: 60,
-    // Disable dangerouslyAllowSVG for security - SVG can contain XSS payloads
-    dangerouslyAllowSVG: false,
+    // Enable SVG for placeholder images
+    dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   

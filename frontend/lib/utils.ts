@@ -1,15 +1,13 @@
 /**
  * Formats a number as a price string with 2 decimal places and a currency symbol
- * @param price - The price to format (in pesewas or GHS, depending on your application)
- * @returns Formatted price string (e.g., "₵19.99")
+ * @param price - The price to format (in GHS)
+ * @returns Formatted price string (e.g., "GHS 19.99")
  */
 export function formatPrice(price: number): string {
-  // Convert to GHS if your prices are stored in pesewas (cents)
-  const amount = price / 100;
   return new Intl.NumberFormat('en-GH', {
     style: 'currency',
     currency: 'GHS',
-  }).format(amount);
+  }).format(price);
 }
 
 /**

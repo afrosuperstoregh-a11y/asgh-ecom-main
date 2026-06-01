@@ -59,7 +59,7 @@ export default function CartItem({
                 {variant}
               </p>
               <p className="text-lg font-bold text-gray-900 mt-2 sm:hidden">
-                {formatPrice(lineTotal * 100)}
+                {formatPrice(lineTotal)}
               </p>
             </div>
 
@@ -111,14 +111,14 @@ export default function CartItem({
 
               {/* Unit Price (Mobile) */}
               <div className="sm:hidden text-sm text-gray-500">
-                {formatPrice(price * 100)} each
+                {formatPrice(price)} each
               </div>
             </div>
           </div>
 
           {/* Unit Price (Desktop) */}
           <div className="hidden sm:block mt-2 text-sm text-gray-500">
-            {formatPrice(price * 100)} each
+            {formatPrice(price)} each
           </div>
         </div>
       </div>
