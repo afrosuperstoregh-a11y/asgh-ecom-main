@@ -4,7 +4,7 @@ import React from 'react';
 import { ShoppingCart, Star } from 'lucide-react';
 import { Product } from '@/lib/api/products';
 import { Button } from '@/components/ui/Button';
-import { fixImageUrlWithFallback } from '@/lib/supabase-storage';
+import { getSafeImageUrl } from '@/lib/images';
 
 interface ProductCardProps {
   product: Product;
@@ -24,10 +24,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onBuyNow }) =
       {/* Product Image */}
       <div className="relative overflow-hidden bg-gray-100 flex-shrink-0 rounded-t-xl" style={{ height: '200px' }}>
         <img
-          src={fixImageUrlWithFallback(product.images && product.images.length > 0 ? product.images[0] : undefined)}
+          src={getSafeImageUrl(product.images && product.images.length > 0 ? product.images[0] : undefined, '/placeholder-product.svg')}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 rounded-t-xl"
           sizes="275px"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            if (!target.src.includes('/placeholder-product.svg')) {
+              target.src = '/placeholder-product.svg';
+            }
+          }}
         />
         
         {/* Discount Badge */}

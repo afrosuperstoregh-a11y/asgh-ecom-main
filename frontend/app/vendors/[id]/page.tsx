@@ -23,6 +23,7 @@ import {
   Grid,
   List
 } from 'lucide-react';
+import { getSafeImageUrl } from '../../../lib/images';
 
 interface Vendor {
   id: string;
@@ -179,9 +180,15 @@ export default function VendorStorefront() {
         <div className="relative h-48 bg-gradient-to-r from-blue-500 to-purple-600">
           {vendor.bannerUrl && (
             <img
-              src={vendor.bannerUrl}
+              src={getSafeImageUrl(vendor.bannerUrl, '/placeholder-category.svg')}
               alt={`${vendor.businessName} banner`}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (!target.src.includes('/placeholder-category.svg')) {
+                  target.src = '/placeholder-category.svg';
+                }
+              }}
             />
           )}
         </div>
@@ -190,9 +197,15 @@ export default function VendorStorefront() {
             <div className="w-32 h-32 bg-white rounded-lg shadow-lg p-2">
               {vendor.logoUrl ? (
                 <img
-                  src={vendor.logoUrl}
+                  src={getSafeImageUrl(vendor.logoUrl, '/placeholder-avatar.svg')}
                   alt={vendor.businessName}
                   className="w-full h-full object-contain rounded"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (!target.src.includes('/placeholder-avatar.svg')) {
+                      target.src = '/placeholder-avatar.svg';
+                    }
+                  }}
                 />
               ) : (
                 <div className="w-full h-full bg-gray-200 rounded flex items-center justify-center">
@@ -389,9 +402,15 @@ export default function VendorStorefront() {
                     <div className="aspect-square bg-gray-100 relative">
                       {vendorProduct.product.images && vendorProduct.product.images.length > 0 ? (
                         <img
-                          src={vendorProduct.product.images[0]}
+                          src={getSafeImageUrl(vendorProduct.product.images[0], '/placeholder-product.svg')}
                           alt={vendorProduct.product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            if (!target.src.includes('/placeholder-product.svg')) {
+                              target.src = '/placeholder-product.svg';
+                            }
+                          }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
@@ -446,9 +465,15 @@ export default function VendorStorefront() {
                       <div className="w-24 h-24 bg-gray-100 rounded-lg flex-shrink-0">
                         {vendorProduct.product.images && vendorProduct.product.images.length > 0 ? (
                           <img
-                            src={vendorProduct.product.images[0]}
+                            src={getSafeImageUrl(vendorProduct.product.images[0], '/placeholder-product.svg')}
                             alt={vendorProduct.product.name}
                             className="w-full h-full object-cover rounded-lg"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              if (!target.src.includes('/placeholder-product.svg')) {
+                                target.src = '/placeholder-product.svg';
+                              }
+                            }}
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">

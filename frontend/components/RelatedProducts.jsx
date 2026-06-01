@@ -1,6 +1,22 @@
 import { ShoppingCart, Heart } from 'lucide-react';
 import Link from 'next/link';
 
+const getSafeImageUrl = (url, fallback = '/placeholder-product.svg') => {
+  if (!url || typeof url !== 'string') return fallback;
+  const trimmed = url.trim();
+  if (trimmed.length === 0 || trimmed === 'undefined' || trimmed === 'null') return fallback;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    try {
+      new URL(trimmed);
+      return trimmed;
+    } catch {
+      return fallback;
+    }
+  }
+  if (trimmed.startsWith('/')) return trimmed;
+  return trimmed;
+};
+
 export default function RelatedProducts({ products }) {
   const handleAddToCart = (e, productId) => {
     e.preventDefault();
@@ -29,9 +45,15 @@ export default function RelatedProducts({ products }) {
           >
             <div className="aspect-square bg-gray-100 overflow-hidden">
               <img
-                src={product.image}
+                src={getSafeImageUrl(product.image)}
                 alt={product.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                onError={(e) => {
+                  const target = e.target;
+                  if (!target.src.includes('/placeholder-product.svg')) {
+                    target.src = '/placeholder-product.svg';
+                  }
+                }}
               />
             </div>
             

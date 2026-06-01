@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { getSafeImageUrl } from '../lib/images';
 
 export default function ProductGallery({ images }) {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -19,9 +20,15 @@ export default function ProductGallery({ images }) {
       {/* Main Image */}
       <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
         <img
-          src={images[selectedImage]}
+          src={getSafeImageUrl(images[selectedImage], '/placeholder-product.svg')}
           alt={`Product image ${selectedImage + 1}`}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            const target = e.target;
+            if (!target.src.includes('/placeholder-product.svg')) {
+              target.src = '/placeholder-product.svg';
+            }
+          }}
         />
         
         {/* Navigation Buttons */}
@@ -65,9 +72,15 @@ export default function ProductGallery({ images }) {
               aria-label={`View image ${index + 1}`}
             >
               <img
-                src={image}
+                src={getSafeImageUrl(image, '/placeholder-product.svg')}
                 alt={`Thumbnail ${index + 1}`}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target;
+                  if (!target.src.includes('/placeholder-product.svg')) {
+                    target.src = '/placeholder-product.svg';
+                  }
+                }}
               />
             </button>
           ))}

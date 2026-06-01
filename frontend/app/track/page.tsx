@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { getSafeImageUrl } from '../../lib/images';
 
 interface TrackingUpdate {
   date: string;
@@ -321,9 +322,15 @@ const TrackPage = () => {
                   <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <img
-                        src={item.image}
+                        src={getSafeImageUrl(item.image, '/placeholder-product.svg')}
                         alt={item.name}
                         className="w-12 h-12 object-cover rounded"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          if (!target.src.includes('/placeholder-product.svg')) {
+                            target.src = '/placeholder-product.svg';
+                          }
+                        }}
                       />
                       <div>
                         <p className="font-medium">{item.name}</p>

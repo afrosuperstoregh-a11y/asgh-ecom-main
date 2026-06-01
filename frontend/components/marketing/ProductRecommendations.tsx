@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Star, Heart, ShoppingCart, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import { getSafeImageUrl } from '../../lib/images';
 
 interface Product {
   id: string;
@@ -225,9 +226,15 @@ export default function ProductRecommendations({
                 <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden group-hover:opacity-90 transition-opacity">
                   {product.image ? (
                     <img
-                      src={product.image}
+                      src={getSafeImageUrl(product.image, '/placeholder-product.svg')}
                       alt={product.name}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (!target.src.includes('/placeholder-product.svg')) {
+                          target.src = '/placeholder-product.svg';
+                        }
+                      }}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">

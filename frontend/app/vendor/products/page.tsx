@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Package, 
-  Eye, 
-  Edit, 
+import {
+  Plus,
+  Search,
+  Filter,
+  Package,
+  Eye,
+  Edit,
   Trash2,
   Upload,
   MoreHorizontal,
@@ -20,6 +20,7 @@ import {
   XCircle,
   AlertTriangle
 } from 'lucide-react';
+import { getSafeImageUrl } from '../../../lib/images';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -211,11 +212,14 @@ export default function VendorProducts() {
             <div className="aspect-square bg-gray-100 relative">
               {product.product?.images && product.product.images.length > 0 ? (
                 <img
-                  src={product.product.images[0]}
+                  src={getSafeImageUrl(product.product.images[0], '/placeholder-product.svg')}
                   alt={product.product.name || 'Product'}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+                    const target = e.target as HTMLImageElement;
+                    if (!target.src.includes('/placeholder-product.svg')) {
+                      target.src = '/placeholder-product.svg';
+                    }
                   }}
                 />
               ) : (

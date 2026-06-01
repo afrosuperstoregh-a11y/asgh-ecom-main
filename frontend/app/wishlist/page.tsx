@@ -7,6 +7,7 @@ import Footer from '../../components/Footer';
 import { Heart, ShoppingCart, Trash2, Star } from 'lucide-react';
 import { Product } from '../../data/products';
 import { useCart } from "../../context/CartContext";
+import { getSafeImageUrl } from "../../lib/images";
 
 export default function WishlistPage() {
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
@@ -31,7 +32,7 @@ export default function WishlistPage() {
       id: product.id,
       name: product.name || 'Unnamed Product',
       price: product.compare_price || product.price || 0,
-      image: product.images?.[0] || '/placeholder-product.svg',
+      image: getSafeImageUrl(product.images?.[0], '/placeholder-product.svg'),
       category: product.category_name || 'Uncategorized'
     });
   };
@@ -53,11 +54,14 @@ export default function WishlistPage() {
                 <div className="relative">
                   <Link href={`/product/${item.id}`}>
                     <img
-                      src={item.images?.[0] || '/placeholder-product.svg'}
+                      src={getSafeImageUrl(item.images?.[0], '/placeholder-product.svg')}
                       alt={item.name || 'Product'}
                       className="w-full h-48 object-cover rounded-t-lg"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/placeholder-product.svg';
+                        const target = e.target as HTMLImageElement;
+                        if (!target.src.includes('/placeholder-product.svg')) {
+                          target.src = '/placeholder-product.svg';
+                        }
                       }}
                     />
                   </Link>

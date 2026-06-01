@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, ShoppingCart, Clock, Mail } from 'lucide-react';
+import { getSafeImageUrl } from '../../lib/images';
 
 interface AbandonedCartModalProps {
   isOpen: boolean;
@@ -132,9 +133,15 @@ export default function AbandonedCartModal({
                       <div key={item.id || index} className="flex items-center gap-3">
                         {item.image && (
                           <img
-                            src={item.image}
+                            src={getSafeImageUrl(item.image, '/placeholder-product.svg')}
                             alt={item.name}
                             className="w-12 h-12 object-cover rounded-md"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              if (!target.src.includes('/placeholder-product.svg')) {
+                                target.src = '/placeholder-product.svg';
+                              }
+                            }}
                           />
                         )}
                         <div className="flex-1 min-w-0">

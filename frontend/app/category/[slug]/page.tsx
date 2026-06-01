@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useSupabaseProducts, useSupabaseCategories } from '@/hooks/useSupabaseProducts';
 import { formatPrice } from '@/lib/utils';
 import { getProductImageUrl } from '@/lib/image-utils';
+import { getSafeImageUrl } from '../../../lib/images';
 
 export default function CategoryPage() {
   const params = useParams();
