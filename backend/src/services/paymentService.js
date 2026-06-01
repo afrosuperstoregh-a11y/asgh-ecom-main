@@ -2,11 +2,21 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { createClient } = require('@supabase/supabase-js');
 const logger = require('../utils/logger');
 const { ApiResponse } = require('../middleware/apiResponse');
+const ws = require('ws');
 
-// Initialize Supabase client
+// Initialize Supabase client with WebSocket transport for Node.js < 22
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    },
+    realtime: {
+      ws: ws
+    }
+  }
 );
 
 class PaymentService {

@@ -10,6 +10,24 @@ const path = require('path');
 const configPath = path.join(__dirname, 'config', 'env');
 const config = require(configPath);
 
+// Validate required environment variables
+const requiredEnvVars = [
+  'SUPABASE_URL',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'DATABASE_URL',
+  'SESSION_SECRET',
+  'PORT'
+];
+
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+if (missingEnvVars.length > 0) {
+  console.error('❌ Missing required environment variables:', missingEnvVars.join(', '));
+  console.error('Please set these environment variables before starting the server');
+  process.exit(1);
+}
+
+console.log('✅ Environment variables validated');
+
 const rateLimiterPath = path.join(__dirname, 'middleware', 'rateLimiter');
 const { generalLimiter } = require(rateLimiterPath);
 
@@ -304,27 +322,89 @@ app.use('*', (req, res) => {
 // Global error handler using standardized middleware
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, '0.0.0.0', async () => {
+// Start server with error handling
+const server = app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Afro Superstore Backend API running on port ${PORT}`);
   console.log(`📊 Health check available at /api/health`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   
   // Test Supabase connection
-  const dbConnected = await testConnection();
-  if (dbConnected) {
-    console.log('🔐 Supabase connection established');
-  } else {
-    console.log('❌ Supabase connection failed');
+  try {
+    const dbConnected = await testConnection();
+    if (dbConnected) {
+      console.log('🔐 Supabase connection established');
+    } else {
+      console.log('❌ Supabase connection failed');
+    }
+  } catch (error) {
+    console.error('❌ Supabase connection test error:', error.message);
   }
   
   // Test Redis connection
-  const redisConnected = await testRedisConnection();
-  if (redisConnected) {
-    console.log('🔥 Redis connection established');
-  } else {
-    console.log('❌ Redis connection failed - caching disabled');
+  try {
+    const redisConnected = await testRedisConnection();
+    if (redisConnected) {
+      console.log('🔥 Redis connection established');
+    } else {
+      console.log('❌ Redis connection failed - caching disabled');
+    }
+  } catch (error) {
+    console.error('❌ Redis connection test error:', error.message);
   }
 });
+
+// Handle server errors
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use`);
+    process.exit(1);
+  } else {
+    console.error('❌ Server error:', error);
+    process.exit(1);
+  }
+});
+
+// Global error handlers for unhandled rejections and exceptions
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit the process, just log the error
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  process.exit(1);
+});
+
+// Graceful shutdown handling
+const gracefulShutdown = async (signal) => {
+  console.log(`\n${signal} received. Starting graceful shutdown...`);
+  
+  server.close(async () => {
+    console.log('✅ Server closed');
+    
+    // Close Redis connection if it exists
+    try {
+      const redisClient = require('./config/session').redisClient;
+      if (redisClient && redisClient.isOpen) {
+        await redisClient.quit();
+        console.log('✅ Redis connection closed');
+      }
+    } catch (error) {
+      console.error('❌ Error closing Redis connection:', error);
+    }
+    
+    console.log('✅ Graceful shutdown complete');
+    process.exit(0);
+  });
+  
+  // Force shutdown after 10 seconds
+  setTimeout(() => {
+    console.error('❌ Forced shutdown after timeout');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 module.exports = app;

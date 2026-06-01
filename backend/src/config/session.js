@@ -1,4 +1,54 @@
 const session = require('express-session');
+const RedisStore = require('connect-redis').default;
+const { createClient } = require('redis');
+
+// Initialize Redis client for session storage
+let redisClient;
+let sessionStore;
+
+try {
+  redisClient = createClient({
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    socket: {
+      reconnectStrategy: (retries) => {
+        if (retries > 10) {
+          console.error('❌ Redis reconnection failed after 10 retries');
+          return new Error('Redis reconnection failed');
+        }
+        return Math.min(retries * 100, 3000);
+      }
+    }
+  });
+
+  redisClient.on('error', (err) => {
+    console.error('❌ Redis Client Error:', err);
+  });
+
+  redisClient.on('connect', () => {
+    console.log('✅ Redis client connected');
+  });
+
+  // Only connect in production or if REDIS_ENABLED is true
+  if (process.env.NODE_ENV === 'production' || process.env.REDIS_ENABLED === 'true') {
+    redisClient.connect().catch(err => {
+      console.error('❌ Failed to connect to Redis:', err);
+      console.warn('⚠️  Falling back to MemoryStore (not recommended for production)');
+    });
+  }
+
+  // Create Redis store if Redis is available
+  if (process.env.NODE_ENV === 'production' || process.env.REDIS_ENABLED === 'true') {
+    sessionStore = new RedisStore({
+      client: redisClient,
+      prefix: 'asca:sess:',
+      ttl: parseInt(process.env.SESSION_MAX_AGE) || 24 * 60 * 60, // 24 hours in seconds
+    });
+    console.log('✅ Redis session store configured');
+  }
+} catch (error) {
+  console.error('❌ Failed to initialize Redis:', error);
+  console.warn('⚠️  Falling back to MemoryStore (not recommended for production)');
+}
 
 const sessionConfig = {
   name: 'asca_session',
@@ -14,14 +64,17 @@ const sessionConfig = {
     sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
     domain: process.env.SESSION_DOMAIN || undefined,
   },
-  // Use memory store for development to avoid Redis issues
-  store: undefined,
+  // Use Redis store in production, MemoryStore in development
+  store: sessionStore,
 };
 
 // Development session configuration adjustments
 if (process.env.NODE_ENV !== 'production') {
   sessionConfig.cookie.secure = false;
   sessionConfig.cookie.sameSite = 'lax';
+  if (!sessionStore) {
+    console.warn('⚠️  Using MemoryStore for sessions (not recommended for production)');
+  }
 }
 
 // Session middleware factory
@@ -34,10 +87,9 @@ const sessionHelpers = {
   // Get session data from Redis directly
   async getSession(sessionId) {
     try {
-      const client = redis();
-      if (!client) return null;
+      if (!redisClient || !redisClient.isOpen) return null;
       
-      const sessionData = await client.get(`sess:${sessionId}`);
+      const sessionData = await redisClient.get(`asca:sess:${sessionId}`);
       return sessionData ? JSON.parse(sessionData) : null;
     } catch (error) {
       console.error('Error getting session:', error);
@@ -48,10 +100,9 @@ const sessionHelpers = {
   // Destroy session
   async destroySession(sessionId) {
     try {
-      const client = redis();
-      if (!client) return false;
+      if (!redisClient || !redisClient.isOpen) return false;
       
-      await client.del(`sess:${sessionId}`);
+      await redisClient.del(`asca:sess:${sessionId}`);
       return true;
     } catch (error) {
       console.error('Error destroying session:', error);
@@ -62,15 +113,15 @@ const sessionHelpers = {
   // Update session data
   async updateSession(sessionId, data) {
     try {
-      const client = redis();
-      if (!client) return false;
+      if (!redisClient || !redisClient.isOpen) return false;
       
       const existingSession = await this.getSession(sessionId);
       if (existingSession) {
         const updatedSession = { ...existingSession, ...data };
-        await client.setex(
-          `sess:${sessionId}`,
-          sessionConfig.store.ttl,
+        const ttl = parseInt(process.env.SESSION_MAX_AGE) || 24 * 60 * 60;
+        await redisClient.setex(
+          `asca:sess:${sessionId}`,
+          ttl,
           JSON.stringify(updatedSession)
         );
         return true;
@@ -85,19 +136,18 @@ const sessionHelpers = {
   // Get all active sessions for a user
   async getUserSessions(userId) {
     try {
-      const client = redis();
-      if (!client) return [];
+      if (!redisClient || !redisClient.isOpen) return [];
       
-      const keys = await client.keys('sess:*');
+      const keys = await redisClient.keys('asca:sess:*');
       const userSessions = [];
       
       for (const key of keys) {
-        const sessionData = await client.get(key);
+        const sessionData = await redisClient.get(key);
         if (sessionData) {
           const parsed = JSON.parse(sessionData);
           if (parsed.userId === userId) {
             userSessions.push({
-              sessionId: key.replace('sess:', ''),
+              sessionId: key.replace('asca:sess:', ''),
               ...parsed
             });
           }
@@ -115,12 +165,11 @@ const sessionHelpers = {
   async invalidateUserSessions(userId) {
     try {
       const sessions = await this.getUserSessions(userId);
-      const client = redis();
       
-      if (!client) return false;
+      if (!redisClient || !redisClient.isOpen) return false;
       
       for (const session of sessions) {
-        await client.del(`sess:${session.sessionId}`);
+        await redisClient.del(`asca:sess:${session.sessionId}`);
       }
       
       return true;

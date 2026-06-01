@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const multer = require('multer');
 const path = require('path');
+const ws = require('ws');
 require('dotenv').config({ path: '.env.local' });
 
 // Supabase configuration
@@ -16,6 +17,9 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
+  },
+  realtime: {
+    ws: ws
   }
 });
 
