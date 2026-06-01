@@ -56,9 +56,19 @@ function normalizeImagePath(path: string): string {
 
 /**
  * Encodes path components for URL safety
+ * Preserves special characters like & that are valid in Supabase Storage paths
  */
 function encodePathComponents(path: string): string {
-  return path.split('/').map(encodeURIComponent).join('/');
+  return path.split('/').map(segment => {
+    // Encode only unsafe characters, preserve & and other valid characters
+    return encodeURIComponent(segment)
+      .replace(/%26/g, '&')  // Preserve &
+      .replace(/%2F/g, '/')  // Preserve /
+      .replace(/%3F/g, '?')  // Preserve ?
+      .replace(/%23/g, '#')  // Preserve #
+      .replace(/%5B/g, '[')  // Preserve [
+      .replace(/%5D/g, ']'); // Preserve ]
+  }).join('/');
 }
 
 /**
