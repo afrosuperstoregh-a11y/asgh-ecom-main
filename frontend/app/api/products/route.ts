@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { getProductImageUrl as getServerProductImageUrl, processImageUrls, normalizeImageExtension } from '../../../lib/server-images'
 
 // Validate required environment variables
 function validateEnvironment() {
@@ -438,62 +439,21 @@ export async function GET(request: Request) {
         }
       }
 
-      // Ensure all image URLs are properly formatted for production
-      images = images.map((img: any) => {
+      // Use server-side utility to process image URLs
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const processedImages = images.map((img: any) => {
         if (!img || typeof img !== 'string') return '/placeholder-product.jpg';
         
-        // If it's already a full URL, check for .png extension
-        if (img.startsWith('http')) {
-          // If it's a Supabase URL with .png extension, convert to .jpg
-          if (img.includes('storage/v1/object/public/product-images/') && img.endsWith('.png')) {
-            const convertedUrl = img.replace(/\.png$/, '.jpg');
-            if (process.env.NODE_ENV !== 'production') {
-              console.log(`API: Converting full URL .png to .jpg: ${img} -> ${convertedUrl}`);
-            }
-            return convertedUrl;
-          }
-          return img;
-        }
+        // Normalize extension
+        const normalizedImg = normalizeImageExtension(img);
         
-        // If it's a Supabase storage path, construct full URL
-        if (img.startsWith('/') || !img.includes('://')) {
-          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-          if (supabaseUrl) {
-            // Remove leading slash if present
-            let cleanPath = img.startsWith('/') ? img.slice(1) : img;
-            
-            // Handle image extension mismatches - normalize .png to .jpg for product images
-            if (cleanPath.endsWith('.png')) {
-              cleanPath = cleanPath.replace(/\.png$/, '.jpg');
-              if (process.env.NODE_ENV !== 'production') {
-                console.log(`Normalized image path: ${img} -> ${cleanPath}`);
-              }
-            }
-            
-            // Check if it's already a full storage path
-            if (cleanPath.includes('storage/v1/object/public/')) {
-              return img.startsWith('/') ? `${supabaseUrl}${img}` : `${supabaseUrl}/${img}`;
-            }
-            
-            // Construct storage URL for product images
-            if (cleanPath.includes('product-images/') || cleanPath.includes('&')) {
-              // Properly encode the path for special characters like &
-              const encodedPath = cleanPath.split('/').map(encodeURIComponent).join('/');
-              return `${supabaseUrl}/storage/v1/object/public/product-images/${encodedPath}`;
-            }
-            
-            // Default storage path with proper encoding
-            const encodedPath = cleanPath.split('/').map(encodeURIComponent).join('/');
-            return `${supabaseUrl}/storage/v1/object/public/product-images/${encodedPath}`;
-          }
-        }
-        
-        return img;
+        // Use server-side utility to get proper URL
+        return getServerProductImageUrl(supabaseUrl, normalizedImg);
       });
 
       return {
         ...product,
-        images: images.length > 0 ? images : ['/placeholder-product.jpg']
+        images: processedImages.length > 0 ? processedImages : ['/placeholder-product.jpg']
       };
     });
 

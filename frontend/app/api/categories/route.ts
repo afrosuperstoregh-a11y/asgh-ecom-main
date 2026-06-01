@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { getCategoryImageUrl as getServerCategoryImageUrl } from '../../../lib/server-images'
 
 // Mock categories for fallback when database is not available
 function getMockCategories() {
@@ -208,21 +209,9 @@ export async function GET() {
             console.warn('Error getting product count for category', category.id, countError);
           }
 
-          // Process image URL for production
-          let imageUrl = category.image_url;
-          if (imageUrl && typeof imageUrl === 'string') {
-            // If it's already a full URL, return as is
-            if (!imageUrl.startsWith('http')) {
-              // If it's a Supabase storage path, construct full URL
-              const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-              if (supabaseUrl && (imageUrl.startsWith('category-images/') || imageUrl.startsWith('/'))) {
-                const cleanPath = imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl;
-                imageUrl = `${supabaseUrl}/storage/v1/object/public/categories/${cleanPath}`;
-              }
-            }
-          } else {
-            imageUrl = '/placeholder-category.svg';
-          }
+          // Process image URL for production using server-side utility
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+          const imageUrl = getServerCategoryImageUrl(supabaseUrl, category.image_url);
 
           return {
             ...category,

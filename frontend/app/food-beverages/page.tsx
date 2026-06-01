@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '../../context/CartContext';
 import { Loader2, Search, Grid, List, ShoppingCart, ArrowLeft, Star } from 'lucide-react';
-import { fixImageUrl } from '@/lib/supabase-storage';
+import { getProductImageUrl } from '@/lib/images';
 import { supabase } from '@/lib/supabase-client';
 import ProductCard from '@/components/ProductCard';
 import { Product } from '@/types/product';
@@ -92,7 +92,6 @@ export default function FoodBeveragesPage() {
         'spaghetti.jpg',
         'tuozafi-2.jpg',
         'tuozafi.jpg',
-        'rice-with-green-pea.png', // Working replacement for vegetables-&-bake-beans.png
         'waakye-with-fish-combo-1.jpg',
         'waakye-with-fish-combo-2.jpg',
         'waakye.png',
@@ -100,23 +99,9 @@ export default function FoodBeveragesPage() {
         'all-ghanaian-foods-party-orders-1.jpg',
         'all-ghanaian-foods-party-orders-2.jpg',
         'all-ghanaian-foods-party-orders-3.jpg',
-        // Additional food & beverage items to reach 55 total (16 real images replacing broken ones)
+        // Additional food & beverage items
         'banku-flour.jpg',
-        'barbeque.png', // Working replacement for banku-mix.jpg
-        'barbeque.png', // Working replacement for red-red.jpg  
-        'chicken.png', // Working replacement for shito.jpg
-        'chicken.png', // Working replacement for gari.jpg
-        'chicken-wings-ghanaian-style-2.jpg', // Working replacement for kelewele.jpg
-        'fried-fish.jpg', // Working replacement for fried-plantain.jpg
-        'kontomire-stew.jpg', // Working replacement for groundnut-soup.jpg
-        'kontomire-stew.jpg', // Working replacement for light-soup.jpg
-        'nigerian-egusi-stew.jpg', // Working replacement for banga-soup.jpg
-        'nigerian-egusi-stew.jpg', // Working replacement for egusi-soup.jpg
-        'nigerian-egusi-stew.jpg', // Working replacement for okro-soup.jpg
-        'meat-pie.png', // Working replacement for african-salad.jpg
-        'pasta.png', // Working replacement for fruit-juice-mix.jpg
-        'pasta.png', // Working replacement for sobolo.jpg
-        'pasta.png', // Working replacement for zobo.jpg
+        'barbeque.png',
       ];
 
       // Generate mock storage file objects
@@ -132,7 +117,9 @@ export default function FoodBeveragesPage() {
         };
       });
 
-      console.log(`Generated ${mockFiles.length} food & beverage products (55 with real working images, 0 with placeholders)`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Generated ${mockFiles.length} food & beverage products`);
+      }
       
       if (mockFiles.length > 0) {
         setStorageFiles(mockFiles);
@@ -145,7 +132,9 @@ export default function FoodBeveragesPage() {
         console.log('No predefined images found');
       }
     } catch (error) {
-      console.error('Error fetching storage files:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching storage files:', error);
+      }
       setError(error instanceof Error ? error.message : 'Failed to fetch products');
     } finally {
       setLoading(false);
@@ -174,7 +163,7 @@ export default function FoodBeveragesPage() {
       }
 
       return {
-        id: file.id || file.name,
+        id: `fb-${index}-${file.id || file.name}`, // Use composite key with index for uniqueness
         name: productName,
         description: `Delicious ${productName} from our authentic African food collection. Perfect for any occasion.`,
         price: price,
@@ -199,65 +188,39 @@ export default function FoodBeveragesPage() {
   const preloadImageUrls = async (files: StorageFile[]) => {
     const urls: Record<string, string> = {};
     const loadStates: Record<string, { loaded: boolean; failed: boolean }> = {};
-    const supabaseClient = supabase();
     
-    console.log(`Preloading URLs for ${files.length} files...`);
-    
-    if (!supabaseClient) {
-      console.error('Supabase client not initialized');
-      setImageUrls(urls);
-      setImageLoadStates(loadStates);
-      return;
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Preloading URLs for ${files.length} files...`);
     }
     
-    // Generate URLs first
+    // Generate URLs using centralized utility
     for (const file of files) {
-      try {
-        const key = file.id || file.name;
-        const fullPath = `${folderPath}/${file.name}`;
-        
-        // Use proper Supabase getPublicUrl method
-        const { data } = supabaseClient.storage
-          .from(bucketName)
-          .getPublicUrl(fullPath);
-        
-        // Ensure URL is properly encoded using encodeURIComponent for reliability
-        const encodedPath = encodeURIComponent(folderPath) + '/' + encodeURIComponent(file.name);
-        const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${encodedPath}`;
-        
-        urls[key] = url;
-        loadStates[key] = { loaded: false, failed: false };
-        
-        // Log first few URLs for debugging
-        if (files.indexOf(file) < 5) {
-          console.log(`Image URL for ${file.name}: ${url}`);
-        }
-      } catch (error) {
-        console.error(`Error getting URL for ${file.name}:`, error);
-        // Use fallback URL with proper encoding
-        const key = file.id || file.name;
-        const encodedPath = encodeURIComponent(folderPath) + '/' + encodeURIComponent(file.name);
-        const fallbackUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${encodedPath}`;
-        urls[key] = fallbackUrl;
-        loadStates[key] = { loaded: false, failed: false };
+      const key = file.id || file.name;
+      const fullPath = `${folderPath}/${file.name}`;
+      const url = getProductImageUrl(fullPath);
+      
+      urls[key] = url;
+      loadStates[key] = { loaded: false, failed: false };
+      
+      // Log first few URLs for debugging in development only
+      if (process.env.NODE_ENV === 'development' && files.indexOf(file) < 5) {
+        console.log(`Image URL for ${file.name}: ${url}`);
       }
     }
     
-    console.log(`Successfully generated ${Object.keys(urls).length} image URLs`);
-    
-    // Debug: Log all generated URLs
-    console.log('🔍 Generated Image URLs:');
-    Object.entries(urls).forEach(([key, url]) => {
-      console.log(`  ${key}: ${url}`);
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Successfully generated ${Object.keys(urls).length} image URLs`);
+    }
     
     setImageUrls(urls);
     setImageLoadStates(loadStates);
     
     // Skip preloading verification to avoid timeout issues
     // Images will load on-demand with fallback system
-    console.log(`📊 Skipping preloading - ${Object.keys(urls).length} images configured`);
-    console.log(`🔄 Images will load on-demand with smart fallback system`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📊 Skipping preloading - ${Object.keys(urls).length} images configured`);
+      console.log(`🔄 Images will load on-demand with smart fallback system`);
+    }
     
     // Store initial results for UI display
     setImageVerificationResults({
@@ -288,7 +251,9 @@ export default function FoodBeveragesPage() {
         
         const img = document.createElement('img');
         const timeoutId = setTimeout(() => {
-          console.log(`⏰ Image preload timeout: ${key}`);
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`⏰ Image preload timeout: ${key}`);
+          }
           loadStates[key] = { loaded: false, failed: true };
           failedImages.push(key);
           failCount++;
@@ -299,7 +264,9 @@ export default function FoodBeveragesPage() {
           clearTimeout(timeoutId);
           loadStates[key] = { loaded: true, failed: false };
           successCount++;
-          console.log(`✅ Image preloaded successfully: ${key}`);
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`✅ Image preloaded successfully: ${key}`);
+          }
           resolve();
         };
         
@@ -318,7 +285,9 @@ export default function FoodBeveragesPage() {
     
     await Promise.all(preloadPromises);
     
-    console.log(`📊 Preload complete: ${successCount} loaded, ${failCount} failed`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📊 Preload complete: ${successCount} loaded, ${failCount} failed`);
+    }
     
     // Update load states
     setImageLoadStates(loadStates);
@@ -353,7 +322,9 @@ export default function FoodBeveragesPage() {
     
     // Only handle error if not already loaded and not already failed
     if (!currentState.loaded && !currentState.failed) {
-      console.log(`❌ Image failed to load: ${productName} - ${imageUrl}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`❌ Image failed to load: ${productName} - ${imageUrl}`);
+      }
       
       // Update state to mark as failed
       setImageLoadStates(prev => ({
@@ -375,7 +346,9 @@ export default function FoodBeveragesPage() {
     
     // Only log success if not already loaded and not previously failed
     if (!currentState.loaded && !currentState.failed) {
-      console.log(`✅ Image loaded successfully: ${productName}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`✅ Image loaded successfully: ${productName}`);
+      }
       
       // Update state to mark as loaded
       setImageLoadStates(prev => ({
@@ -530,9 +503,9 @@ export default function FoodBeveragesPage() {
         {/* Products Grid/List */}
         {filteredProducts.length > 0 ? (
           <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6' : 'space-y-6'}>
-            {filteredProducts.map((product) => (
+            {filteredProducts.map((product, index) => (
               <ProductCard 
-                key={product.id} 
+                key={`${product.id}-${index}`} 
                 product={product}
                 showQuantitySelector={false}
               />

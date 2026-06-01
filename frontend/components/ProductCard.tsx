@@ -7,7 +7,7 @@ import { Product } from '@/types/product';
 import { Heart, ShoppingCart, Star, Plus, Minus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
-import { getProductImageUrl, handleImageError, PRODUCT_IMAGE_PROPS } from '../lib/image-utils';
+import { getProductImageUrl, handleImageError, PRODUCT_CARD_IMAGE_PROPS } from '../lib/images';
 import { formatPrice } from '../lib/utils';
 import { Button } from './ui/Button';
 
@@ -16,7 +16,7 @@ interface ProductCardProps {
   showQuantitySelector?: boolean;
 }
 
-export default function ProductCard({ product, showQuantitySelector = false }: ProductCardProps) {
+function ProductCard({ product, showQuantitySelector = false }: ProductCardProps) {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [imageError, setImageError] = useState(false);
@@ -74,7 +74,7 @@ export default function ProductCard({ product, showQuantitySelector = false }: P
           alt={product.name}
           fill
           className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105 rounded-t-xl"
-          {...PRODUCT_IMAGE_PROPS}
+          {...PRODUCT_CARD_IMAGE_PROPS}
           priority={false}
           onError={() => setImageError(true)}
           sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
@@ -220,3 +220,5 @@ export default function ProductCard({ product, showQuantitySelector = false }: P
     </div>
   );
 }
+
+export default React.memo(ProductCard);

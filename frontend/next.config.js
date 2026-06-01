@@ -50,6 +50,8 @@ const nextConfig = {
     unoptimized: false,
     // Enable image formats
     formats: ['image/webp', 'image/avif'],
+    // Image quality settings
+    qualities: [75, 85],
     // Minimum cache TTL
     minimumCacheTTL: 60,
     // Disable dangerouslyAllowSVG for security - SVG can contain XSS payloads

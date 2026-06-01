@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { supabase } from '../lib/supabase-client';
+import { getCategoryImageUrl, CATEGORY_CARD_IMAGE_PROPS } from '../lib/images';
 
 interface Category {
   id: string;
@@ -20,36 +20,6 @@ interface CategoriesProps {
   categories?: Category[];
 }
 
-const getSupabaseImageUrl = (imageName?: string) => {
-  if (!imageName || typeof imageName !== 'string') return '/placeholder-category.svg';
-  
-  // If it's already a full URL (like Unsplash or Supabase), return as is
-  if (imageName.startsWith('http')) {
-    return imageName;
-  }
-  
-  // For local files that don't exist in Supabase storage, return placeholder
-  if (imageName.endsWith('.png') || imageName.endsWith('.jpg') || imageName.endsWith('.jpeg')) {
-    return '/placeholder-category.svg';
-  }
-  
-  // Try Supabase storage as last resort - use category-images bucket
-  try {
-    const supabaseClient = supabase();
-    if (!supabaseClient) {
-      return '/placeholder-category.svg';
-    }
-    const { data } = supabaseClient
-      .storage
-      .from('category-images')
-      .getPublicUrl(imageName);
-    
-    return data.publicUrl;
-  } catch (error) {
-    console.warn('Failed to get Supabase image URL:', error);
-    return '/placeholder-category.svg';
-  }
-};
 
 // Skeleton loader component
 const CategorySkeleton = () => (
@@ -152,11 +122,11 @@ export default function Categories({ categories: propCategories }: CategoriesPro
             <div key={category.id} className="group cursor-pointer">
               <div className="relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow">
                 <Image
-                  src={getSupabaseImageUrl(category.image_url || category.image)}
+                  src={getCategoryImageUrl(category.image_url || category.image)}
                   alt={String(category.name) || 'Category'}
-                  width={400}
-                  height={300}
+                  fill
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  {...CATEGORY_CARD_IMAGE_PROPS}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = '/placeholder-category.svg';

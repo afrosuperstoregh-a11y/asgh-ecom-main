@@ -2,6 +2,8 @@
 
 import { useSupabaseCategories } from '@/hooks/useSupabaseProducts';
 import Link from 'next/link';
+import Image from 'next/image';
+import { getCategoryImageUrl, CATEGORY_CARD_IMAGE_PROPS } from '../lib/images';
 
 interface Category {
   id: string | number;
@@ -96,13 +98,14 @@ export default function ShopByCategory() {
             >
               <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 {/* Category Image */}
-                <div className="aspect-square bg-gray-100 overflow-hidden">
-                  <img
-                    src={String(category.image_url) || '/placeholder-category.svg'}
+                <div className="aspect-square bg-gray-100 overflow-hidden relative">
+                  <Image
+                    src={getCategoryImageUrl(category.image_url)}
                     alt={String(category.name) || 'Category'}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    {...CATEGORY_CARD_IMAGE_PROPS}
                     onError={(e) => {
-                      // Fallback to placeholder if image fails to load
                       const target = e.target as HTMLImageElement;
                       target.src = '/placeholder-category.svg';
                     }}

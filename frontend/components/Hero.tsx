@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 export default function Hero() {
   return (
     <section className="relative bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
@@ -22,10 +24,13 @@ export default function Hero() {
             </div>
           </div>
           <div className="relative">
-            <img
+            <Image
               src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop"
               alt="Hero product showcase"
+              width={600}
+              height={400}
               className="rounded-lg shadow-2xl w-full h-auto"
+              priority
             />
           </div>
         </div>

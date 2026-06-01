@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { adminApi } from '../../../lib/admin-api-client';
 import { tokenManager } from '../../../lib/token-manager';
 import { useConfirmModal } from '../../../components/admin/ConfirmModal';
 import { useToast } from '../../../components/admin/Toast';
+import { getCategoryImageUrl, CATEGORY_CARD_IMAGE_PROPS } from '../../../lib/images';
 import {
   Plus,
   Search,
@@ -261,12 +263,14 @@ export default function CategoriesPage() {
           {!hasChildren && <div className="w-7 mr-2" />}
           
           {/* Category image */}
-          <div className="flex-shrink-0 w-12 h-12 mr-4">
+          <div className="flex-shrink-0 w-12 h-12 mr-4 relative">
             {category.image ? (
-              <img
-                src={category.image}
+              <Image
+                src={getCategoryImageUrl(category.image)}
                 alt={category.name}
-                className="w-12 h-12 rounded-lg object-cover"
+                fill
+                className="rounded-lg object-cover"
+                {...CATEGORY_CARD_IMAGE_PROPS}
               />
             ) : (
               <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">

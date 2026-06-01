@@ -1,6 +1,8 @@
 import React from 'react';
+import Image from 'next/image';
 import { Star, ShoppingCart, Heart, Clock, TrendingDown, ExternalLink } from 'lucide-react';
 import { formatPrice } from '../lib/utils';
+import { getProductImageUrl, PRODUCT_CARD_IMAGE_PROPS } from '../lib/images';
 
 interface DealProductCardProps {
   product: {
@@ -46,10 +48,12 @@ const DealProductCard: React.FC<DealProductCardProps> = ({ product, viewMode = '
       <div className="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-shadow p-4">
         <div className="flex gap-4">
           <div className="relative w-32 h-32 flex-shrink-0">
-            <img
-              src={product.image}
+            <Image
+              src={getProductImageUrl(product.image)}
               alt={product.name}
-              className="w-full h-full object-cover rounded-lg"
+              fill
+              className="object-cover rounded-lg"
+              {...PRODUCT_CARD_IMAGE_PROPS}
             />
             <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
               -{product.discount}%
@@ -129,12 +133,12 @@ const DealProductCard: React.FC<DealProductCardProps> = ({ product, viewMode = '
   return (
     <div className="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 group w-[275px] h-[375px] flex flex-col">
       <div className="relative overflow-hidden rounded-t-xl flex-shrink-0" style={{ height: '200px' }}>
-        <img
-          src={product.image}
+        <Image
+          src={getProductImageUrl(product.image)}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 rounded-t-xl"
-          sizes="275px"
-          loading="eager"
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-300 rounded-t-xl"
+          {...PRODUCT_CARD_IMAGE_PROPS}
         />
         
         {/* Badges */}

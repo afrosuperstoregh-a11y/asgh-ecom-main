@@ -1,7 +1,5 @@
 // Real API service for products - replaces mock data
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? '' // Use relative URLs for serverless functions in production
-  : 'http://localhost:3002'; // Use local backend in development
+const API_BASE_URL = ''; // Use relative URLs for Next.js API routes
 
 export interface Product {
   id: string;

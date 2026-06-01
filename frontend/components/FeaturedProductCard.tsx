@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Star, ShoppingCart, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { getProductImageUrl, handleImageError, PRODUCT_IMAGE_PROPS } from '../lib/image-utils';
+import { getProductImageUrl, PRODUCT_CARD_IMAGE_PROPS } from '../lib/images';
 import { formatPrice } from '../lib/utils';
 
 interface Product {
@@ -29,7 +29,7 @@ interface FeaturedProductCardProps {
   product: Product;
 }
 
-export default function FeaturedProductCard({ product }: FeaturedProductCardProps) {
+function FeaturedProductCard({ product }: FeaturedProductCardProps) {
   const [quantity, setQuantity] = useState(1);
   const [imageError, setImageError] = useState(false);
   const { addToCart } = useCart();
@@ -76,15 +76,18 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
               alt={product.name}
               fill
               className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105 rounded-t-xl"
-              {...PRODUCT_IMAGE_PROPS}
+              {...PRODUCT_CARD_IMAGE_PROPS}
               priority={false}
-              onError={(e) => {
-                console.log('FeaturedProductCard - Image error for product:', product.name);
-                console.log('FeaturedProductCard - Image URL:', e.currentTarget.src);
+              onError={() => {
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('FeaturedProductCard - Image error for product:', product.name);
+                }
                 setImageError(true);
               }}
               onLoad={() => {
-                console.log('FeaturedProductCard - Image loaded successfully for product:', product.name);
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('FeaturedProductCard - Image loaded successfully for product:', product.name);
+                }
               }}
             />
           </div>
@@ -174,3 +177,5 @@ export default function FeaturedProductCard({ product }: FeaturedProductCardProp
     </div>
   );
 }
+
+export default React.memo(FeaturedProductCard);

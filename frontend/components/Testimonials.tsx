@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { getAvatarImageUrl, AVATAR_IMAGE_PROPS } from '../lib/images';
 
 interface Testimonial {
   id: number;
@@ -59,11 +61,15 @@ export default function Testimonials() {
           {testimonials.map((testimonial) => (
             <div key={testimonial.id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
               <div className="flex items-center mb-4">
-                <img
-                  src={testimonial.avatar}
-                  alt={testimonial.name}
-                  className="w-12 h-12 rounded-full mr-4"
-                />
+                <div className="relative w-12 h-12 rounded-full mr-4 overflow-hidden">
+                  <Image
+                    src={getAvatarImageUrl(testimonial.avatar)}
+                    alt={testimonial.name}
+                    fill
+                    className="object-cover"
+                    {...AVATAR_IMAGE_PROPS}
+                  />
+                </div>
                 <div>
                   <h4 className="font-semibold">{testimonial.name}</h4>
                   <p className="text-sm text-gray-600">{testimonial.location}</p>

@@ -84,10 +84,10 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Contact Info</h4>
             <div className="space-y-2 text-white/80 text-sm sm:text-base">
-              <p>620 Seventh Ave,</p>
-              <p>New Westminster, BC V3M5T6 Canada</p>
-              <p>Phone: +1 (604) 866-3550</p>
-              <p>Email: info@afrosuperstore.ca</p>
+              <p>16 Odanta Street</p>
+              <p>Asylum Down, Greater Accra, Ghana</p>
+              <p>Phone: +233 (55) 117-9635</p>
+              <p>Email: afrosuperstoregh@gmail.com</p>
               <div className="mt-4">
                 <p className="text-sm mb-2">We Accept:</p>
                 <div className="flex flex-wrap gap-2">
@@ -102,7 +102,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/20 mt-8 pt-8 text-center text-white/80">
-          <p className="text-sm sm:text-base">&copy; {currentYear} Afro Superstore. All rights reserved.</p>
+          <p className="text-sm sm:text-base">&copy; {currentYear} Afro Superstore Ghana. All rights reserved.</p>
         </div>
       </div>
     </footer>
