@@ -98,7 +98,7 @@ export default function ShopByCategory() {
             >
               <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 {/* Category Image */}
-                <div className="aspect-square bg-gray-100 overflow-hidden relative">
+                <div className="aspect-square bg-gray-100 overflow-hidden relative w-full h-full">
                   <Image
                     src={getSafeImageUrl(getCategoryImageUrl(category.image_url), '/placeholder-category.svg')}
                     alt={String(category.name) || 'Category'}

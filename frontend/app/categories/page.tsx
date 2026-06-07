@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Grid, List, Search, Filter, Package } from 'lucide-react';
-import { useCategories } from '@/hooks/useCategories';
+import { useSupabaseCategories } from '@/hooks/useSupabaseProducts';
 
 export default function CategoriesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const { categories, loading, error } = useCategories();
+  const { categories, loading, error } = useSupabaseCategories();
 
   // Filter categories based on search query
   const filteredCategories = categories.filter(category =>

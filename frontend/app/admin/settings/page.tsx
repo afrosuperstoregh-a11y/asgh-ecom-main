@@ -384,11 +384,11 @@ export default function SettingsPage() {
                             <div>
                               <span className="text-sm font-medium">{rate.name}</span>
                               <span className="text-sm text-gray-500 ml-2">
-                                ${rate.price.toFixed(2)}
+                                ₵{rate.price.toFixed(2)}
                               </span>
                               {rate.freeOverAmount && (
                                 <span className="text-xs text-green-600 ml-2">
-                                  Free over ${rate.freeOverAmount.toFixed(2)}
+                                  Free over ₵{rate.freeOverAmount.toFixed(2)}
                                 </span>
                               )}
                               {rate.deliveryTime && (

@@ -4,9 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   output: 'standalone',
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'nodemailer'],
-  },
+  serverExternalPackages: ['@prisma/client', 'nodemailer'],
   staticPageGenerationTimeout: 0,
   
   // Configure image optimization
@@ -14,15 +12,46 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: 'lljxxaejmueoxsaqaowf.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'azpgqsmgyorjbqsgxuxw.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
       },
       {
         protocol: 'http',
-        hostname: '**',
+        hostname: '127.0.0.1',
+        port: '54321',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '54321',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
       },
     ],
-    // Disable image optimization in development for faster builds
-    unoptimized: process.env.NODE_ENV === 'development',
+    unoptimized: true, // Temporarily disabled due to missing images in Supabase storage
+    formats: ['image/webp', 'image/avif'],
+    qualities: [75, 85],
+    minimumCacheTTL: 60,
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   
   // Configure environment variables

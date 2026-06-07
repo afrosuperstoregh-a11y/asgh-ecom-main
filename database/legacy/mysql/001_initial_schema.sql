@@ -1,3 +1,8 @@
+-- LEGACY MYSQL FILE
+-- DO NOT USE FOR SUPABASE
+-- This file is kept for historical reference only
+-- Supabase uses PostgreSQL - see supabase/migrations/001_initial_schema.sql
+
 -- AfroSuperStore Initial Schema
 -- MySQL Migration
 

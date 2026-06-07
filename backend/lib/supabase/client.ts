@@ -1,21 +1,25 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Singleton Supabase client for client-side operations
+// Singleton Supabase client for backend operations
 let supabaseClient: ReturnType<typeof createClient> | null = null
 
 export function getSupabaseClient() {
   if (!supabaseClient) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseUrl = process.env.SUPABASE_URL
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase environment variables')
+    if (!supabaseUrl) {
+      throw new Error('SUPABASE_URL is not configured in environment variables')
+    }
+
+    if (!supabaseAnonKey) {
+      throw new Error('SUPABASE_ANON_KEY is not configured in environment variables')
     }
 
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
-        persistSession: true,
-        autoRefreshToken: true
+        persistSession: false,
+        autoRefreshToken: false
       }
     })
   }

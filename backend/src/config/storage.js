@@ -5,11 +5,16 @@ const ws = require('ws');
 require('dotenv').config({ path: '.env.local' });
 
 // Supabase configuration
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('❌ Supabase credentials not found');
+if (!supabaseUrl) {
+  console.error('❌ SUPABASE_URL is not configured in environment variables');
+  process.exit(1);
+}
+
+if (!supabaseServiceKey) {
+  console.error('❌ SUPABASE_SERVICE_ROLE_KEY is not configured in environment variables');
   process.exit(1);
 }
 

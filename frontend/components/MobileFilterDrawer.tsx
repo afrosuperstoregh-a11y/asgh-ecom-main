@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { brands, allColors, allSizes } from '@/data/products';
-import { useCategories } from '@/hooks/useCategories';
+import { useSupabaseCategories } from '@/hooks/useSupabaseProducts';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from './ui/Button';
 
@@ -33,7 +33,7 @@ export default function MobileFilterDrawer({
   onClearFilters, 
   onApplyFilters 
 }: MobileFilterDrawerProps) {
-  const { categories } = useCategories();
+  const { categories } = useSupabaseCategories();
   const [expandedSections, setExpandedSections] = useState({
     category: true,
     price: true,
