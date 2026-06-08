@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabase-server';
 import { validateAdminToken } from '@/lib/auth';
 
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 // GET - Check if SKU exists

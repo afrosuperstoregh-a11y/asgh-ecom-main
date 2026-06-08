@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateTokenFormat } from '../../../../lib/auth';
 import { getSupabaseAdmin } from '../../../../lib/supabase-server';
 
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 // Environment-safe logging

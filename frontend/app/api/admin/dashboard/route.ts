@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateTokenFormat } from '../../../../lib/auth';
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 // Environment-safe logging
 const isDevelopment = process.env.NODE_ENV === 'development';
 const logger = {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabase-server';
 import { validateTokenFormat } from '@/lib/auth';
 
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 // Maximum file size (10MB)

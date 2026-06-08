@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 // Environment-safe logging
 const isDevelopment = process.env.NODE_ENV === 'development';
 

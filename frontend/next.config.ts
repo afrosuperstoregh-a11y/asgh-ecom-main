@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   output: 'standalone',
   serverExternalPackages: ['@prisma/client', 'nodemailer'],
-  staticPageGenerationTimeout: 0,
+  staticPageGenerationTimeout: 60,
   
   // Configure image optimization
   images: {

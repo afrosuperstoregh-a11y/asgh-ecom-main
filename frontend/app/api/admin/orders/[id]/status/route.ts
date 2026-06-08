@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabase-server';
 
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 // Shared token validation logic

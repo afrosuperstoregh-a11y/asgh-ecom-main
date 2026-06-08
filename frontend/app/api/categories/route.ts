@@ -1,6 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import { getCategoryImageUrl as getServerCategoryImageUrl } from '../../../lib/server-images'
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 // Mock categories for fallback when database is not available
 function getMockCategories() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';

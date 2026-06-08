@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 // Production features proxy - handles CORS and forwards to backend
 export async function GET(request: NextRequest) {
   try {

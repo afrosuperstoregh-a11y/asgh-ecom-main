@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 // Test endpoint to verify environment variables
 export async function GET(request: NextRequest) {
   try {

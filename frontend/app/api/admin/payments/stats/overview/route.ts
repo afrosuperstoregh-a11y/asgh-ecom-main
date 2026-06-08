@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateTokenFormat } from '@/lib/auth';
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 // GET /api/admin/payments/stats/overview - Get payment statistics
 export async function GET(request: NextRequest) {
   try {

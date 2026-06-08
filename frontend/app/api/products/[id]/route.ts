@@ -1,5 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 // Validate required environment variables
 function validateEnvironment() {
   const required = [
