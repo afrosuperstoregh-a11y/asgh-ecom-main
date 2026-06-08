@@ -140,7 +140,7 @@ export function getCategoryImageUrl(
 /**
  * Processes an array of image paths and returns formatted URLs (server-side)
  */
-export function processImageUrls(
+export function processImageUrlsServer(
   supabaseUrl: string,
   bucket: string,
   paths: (string | null | undefined)[] | null | undefined,

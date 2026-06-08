@@ -1,17 +1,17 @@
 import { createClient } from '@supabase/supabase-js'
-import { getProductImageUrl as getServerProductImageUrl, processImageUrls, normalizeImageExtension } from '../../../lib/server-images'
+import { getProductImageUrl as getServerProductImageUrl, normalizeImageExtension } from '../../../lib/server-images'
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 // Validate required environment variables
 function validateEnvironment() {
-  const required = [
-    'NEXT_PUBLIC_SUPABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY'
-  ]
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
-  const missing = required.filter(key => !process.env[key])
+  const missing = [];
+  if (!supabaseUrl) missing.push('SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL');
+  if (!supabaseAnonKey) missing.push('SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY');
   
   if (missing.length > 0) {
     console.warn(`Missing environment variables: ${missing.join(', ')}. Will use fallback data.`);
@@ -157,7 +157,7 @@ function getMockProducts() {
     'women-fashion/w&fproduct3.jpg'
   ]
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
   
   return productNames.map((name, index) => {
     const imagePath = realImages[index % realImages.length];
@@ -185,24 +185,6 @@ function getMockProducts() {
 
 export async function GET(request: Request) {
   try {
-    // Validate environment variables first
-    const hasValidEnv = validateEnvironment()
-    
-    // Create Supabase client inside the function to avoid build-time issues
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    const supabase = createClient(
-      supabaseUrl || "https://placeholder.supabase.co",
-      supabaseAnonKey || "placeholder-key",
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
-
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limitParam = searchParams.get('limit');
@@ -218,38 +200,51 @@ export async function GET(request: Request) {
     const shouldLimit = limitParam !== null;
     const limit = shouldLimit ? parseInt(limitParam) : null;
 
+    // Validate environment variables first
+    const hasValidEnv = validateEnvironment();
+    
     // If environment variables are missing, use mock data immediately
     if (!hasValidEnv) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Environment variables missing, using mock products');
-    }
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Environment variables missing, using mock products');
+      }
       const mockProducts = getMockProducts();
       const limitedMockProducts = limit ? mockProducts.slice(0, limit) : mockProducts;
-      
       return new Response(JSON.stringify({
         success: true,
-        data: {
-          products: limitedMockProducts,
-          categories: ['featured', 'clothing', 'food', 'home', 'beauty'],
-          pagination: {
-            current_page: page,
-            total_pages: limit ? Math.ceil(mockProducts.length / limit) : 1,
-            total_items: mockProducts.length,
-            items_per_page: limit || mockProducts.length,
-            has_next: limit ? page < Math.ceil(mockProducts.length / limit) : false,
-            has_prev: page > 1
-          }
-        }
+        data: limitedMockProducts,
+        count: mockProducts.length
       }), {
         status: 200,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      })
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
+
+    // Create Supabase client inside the function to avoid build-time issues
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return new Response(JSON.stringify({
+        success: true,
+        data: getMockProducts(),
+        count: 0
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const supabase = createClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
     // Test database connection but don't immediately fallback to mock data
     let databaseAvailable = false;
@@ -450,7 +445,7 @@ export async function GET(request: Request) {
       }
 
       // Use server-side utility to process image URLs
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
       const processedImages = images.map((img: any) => {
         if (!img || typeof img !== 'string') return '/placeholder-product.svg';
         
