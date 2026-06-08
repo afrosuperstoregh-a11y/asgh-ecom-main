@@ -461,9 +461,14 @@ export async function GET(request: Request) {
         return getServerProductImageUrl(supabaseUrl, normalizedImg);
       });
 
+      // Add image_url field for compatibility with frontend components
+      const mainImage = processedImages.length > 0 ? processedImages[0] : '/placeholder-product.svg';
+
       return {
         ...product,
-        images: processedImages.length > 0 ? processedImages : ['/placeholder-product.svg']
+        images: processedImages.length > 0 ? processedImages : ['/placeholder-product.svg'],
+        image_url: mainImage, // Add this field for frontend compatibility
+        image: mainImage // Add this field for additional compatibility
       };
     });
 

@@ -12,11 +12,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'lljxxaejmueoxsaqaowf.supabase.co',
-        pathname: '/storage/v1/object/public/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'azpgqsmgyorjbqsgxuxw.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
@@ -46,7 +41,7 @@ const nextConfig: NextConfig = {
         hostname: 'images.unsplash.com',
       },
     ],
-    unoptimized: true, // Temporarily disabled due to missing images in Supabase storage
+    unoptimized: false, // Re-enable optimization now that storage is properly configured
     formats: ['image/webp', 'image/avif'],
     qualities: [75, 85],
     minimumCacheTTL: 60,

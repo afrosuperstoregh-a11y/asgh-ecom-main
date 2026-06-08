@@ -1,35 +1,24 @@
 /**
  * Centralized Image Handling Utility for Supabase Storage
  * Provides consistent image URL generation, error handling, and fallbacks
+ * 
+ * This utility now uses the shared image-utils helper for consistency
  */
 
 // Environment configuration
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_PROJECT_REF = SUPABASE_URL?.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
 
-// Bucket names
-export const BUCKETS = {
-  PRODUCTS: 'product-images',
-  CATEGORIES: 'categories',
-  AVATARS: 'avatars',
-  BANNERS: 'banners',
-} as const;
-
-// Fallback images
-export const FALLBACK_IMAGES = {
-  PRODUCT: '/placeholder-product.svg',
-  CATEGORY: '/placeholder-category.svg',
-  AVATAR: '/placeholder-avatar.svg',
-  BANNER: '/placeholder-category.svg', // Use category as fallback for banner
-  GENERIC: '/placeholder-product.svg',
-} as const;
-
-/**
- * Validates if a string is a valid image path
- */
-function isValidImagePath(path: unknown): path is string {
-  return typeof path === 'string' && path.trim().length > 0;
+// Validate environment variables at module load time
+if (typeof window !== 'undefined') {
+  // Client-side validation
+  if (!SUPABASE_URL || SUPABASE_URL.includes('your-project')) {
+    console.error('[IMAGES] CRITICAL: NEXT_PUBLIC_SUPABASE_URL is not configured or using placeholder value. Images will not load.');
+  }
 }
+
+// Re-export from shared utils for backward compatibility
+export { BUCKETS, FALLBACK_IMAGES, constructSupabaseUrl, getSupabaseImageUrl, processImageUrls, getFirstAvailableImage } from '../../shared/lib/image-utils';
 
 /**
  * Safe image URL validation - prevents 400 errors from invalid URLs
@@ -75,97 +64,6 @@ export function getSafeImageUrl(url: string | null | undefined, fallback: string
 }
 
 /**
- * Cleans and normalizes image paths
- * Removes duplicate prefixes, leading/trailing slashes, and special characters
- */
-function normalizeImagePath(path: string): string {
-  let cleanPath = path.trim();
-  
-  // Remove leading slash
-  if (cleanPath.startsWith('/')) {
-    cleanPath = cleanPath.slice(1);
-  }
-  
-  // Remove bucket prefix if it exists (to avoid duplication)
-  Object.values(BUCKETS).forEach(bucket => {
-    const prefix = `${bucket}/`;
-    if (cleanPath.startsWith(prefix)) {
-      cleanPath = cleanPath.slice(prefix.length);
-    }
-  });
-  
-  // Remove 'storage/v1/object/public/' prefix if it exists
-  if (cleanPath.includes('storage/v1/object/public/')) {
-    cleanPath = cleanPath.split('storage/v1/object/public/').pop() || cleanPath;
-  }
-  
-  return cleanPath;
-}
-
-/**
- * Encodes path components for URL safety
- * Preserves special characters like & that are valid in Supabase Storage paths
- */
-function encodePathComponents(path: string): string {
-  return path.split('/').map(segment => {
-    // Encode only unsafe characters, preserve & and other valid characters
-    return encodeURIComponent(segment)
-      .replace(/%26/g, '&')  // Preserve &
-      .replace(/%2F/g, '/')  // Preserve /
-      .replace(/%3F/g, '?')  // Preserve ?
-      .replace(/%23/g, '#')  // Preserve #
-      .replace(/%5B/g, '[')  // Preserve [
-      .replace(/%5D/g, ']'); // Preserve ]
-  }).join('/');
-}
-
-/**
- * Constructs a full Supabase Storage public URL
- */
-function constructSupabaseUrl(bucket: string, path: string): string {
-  if (!SUPABASE_URL) {
-    console.warn('NEXT_PUBLIC_SUPABASE_URL is not configured');
-    return FALLBACK_IMAGES.GENERIC;
-  }
-  
-  const normalizedPath = normalizeImagePath(path);
-  const encodedPath = encodePathComponents(normalizedPath);
-  
-  return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${encodedPath}`;
-}
-
-/**
- * Gets a public URL for a Supabase Storage image
- * @param bucket - The bucket name (use BUCKETS constants)
- * @param path - The image path within the bucket
- * @param fallback - Fallback image URL if image is invalid
- * @returns Properly formatted image URL
- */
-export function getSupabaseImageUrl(
-  bucket: string,
-  path: string | null | undefined,
-  fallback: string = FALLBACK_IMAGES.GENERIC
-): string {
-  // Handle null/undefined/empty paths
-  if (!isValidImagePath(path)) {
-    return fallback;
-  }
-  
-  // If it's already a full HTTP/HTTPS URL, return as-is
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return path;
-  }
-  
-  // If it's already a full Supabase storage URL, return as-is
-  if (path.includes('storage/v1/object/public/')) {
-    return path;
-  }
-  
-  // Construct full Supabase URL
-  return constructSupabaseUrl(bucket, path);
-}
-
-/**
  * Gets a product image URL with automatic bucket selection
  * @param imagePath - The image path (can be relative or full URL)
  * @param fallback - Fallback image URL
@@ -175,7 +73,13 @@ export function getProductImageUrl(
   imagePath: string | null | undefined,
   fallback: string = FALLBACK_IMAGES.PRODUCT
 ): string {
-  return getSupabaseImageUrl(BUCKETS.PRODUCTS, imagePath, fallback);
+  if (!SUPABASE_URL) {
+    console.warn('[IMAGES] NEXT_PUBLIC_SUPABASE_URL is not configured, using fallback');
+    return fallback;
+  }
+  // Import the shared function dynamically to avoid circular dependencies
+  const { getProductImageUrl: sharedGetProductImageUrl } = require('../../shared/lib/image-utils');
+  return sharedGetProductImageUrl(SUPABASE_URL, imagePath, fallback);
 }
 
 /**
@@ -188,7 +92,12 @@ export function getCategoryImageUrl(
   imagePath: string | null | undefined,
   fallback: string = FALLBACK_IMAGES.CATEGORY
 ): string {
-  return getSupabaseImageUrl(BUCKETS.CATEGORIES, imagePath, fallback);
+  if (!SUPABASE_URL) {
+    console.warn('[IMAGES] NEXT_PUBLIC_SUPABASE_URL is not configured, using fallback');
+    return fallback;
+  }
+  const { getSupabaseImageUrl } = require('../../shared/lib/image-utils');
+  return getSupabaseImageUrl(SUPABASE_URL, BUCKETS.CATEGORIES, imagePath, fallback);
 }
 
 /**
@@ -201,7 +110,12 @@ export function getAvatarImageUrl(
   imagePath: string | null | undefined,
   fallback: string = FALLBACK_IMAGES.AVATAR
 ): string {
-  return getSupabaseImageUrl(BUCKETS.AVATARS, imagePath, fallback);
+  if (!SUPABASE_URL) {
+    console.warn('[IMAGES] NEXT_PUBLIC_SUPABASE_URL is not configured, using fallback');
+    return fallback;
+  }
+  const { getSupabaseImageUrl } = require('../../shared/lib/image-utils');
+  return getSupabaseImageUrl(SUPABASE_URL, BUCKETS.AVATARS, imagePath, fallback);
 }
 
 /**
@@ -214,7 +128,12 @@ export function getBannerImageUrl(
   imagePath: string | null | undefined,
   fallback: string = FALLBACK_IMAGES.BANNER
 ): string {
-  return getSupabaseImageUrl(BUCKETS.BANNERS, imagePath, fallback);
+  if (!SUPABASE_URL) {
+    console.warn('[IMAGES] NEXT_PUBLIC_SUPABASE_URL is not configured, using fallback');
+    return fallback;
+  }
+  const { getSupabaseImageUrl } = require('../../shared/lib/image-utils');
+  return getSupabaseImageUrl(SUPABASE_URL, BUCKETS.BANNERS, imagePath, fallback);
 }
 
 /**

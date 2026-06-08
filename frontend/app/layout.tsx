@@ -37,6 +37,17 @@ export const viewport = {
   userScalable: true,
 };
 
+// Validate required environment variables at build time
+if (typeof window === 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  // Server-side validation
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project')) {
+    console.error('CRITICAL: NEXT_PUBLIC_SUPABASE_URL is not configured or using placeholder value');
+  }
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('your_supabase')) {
+    console.error('CRITICAL: NEXT_PUBLIC_SUPABASE_ANON_KEY is not configured or using placeholder value');
+  }
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -47,6 +58,7 @@ export default function RootLayout({
       <head>
         {/* Preconnect to important third-party domains */}
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL || ''} crossOrigin="anonymous" />
       </head>
       <body className={`${inter.variable} font-sans min-h-screen bg-gray-50 antialiased overflow-x-hidden`}
             suppressHydrationWarning={true}>

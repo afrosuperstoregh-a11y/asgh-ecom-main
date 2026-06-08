@@ -57,14 +57,26 @@ function processProductImages(product) {
     }
   }
   
-  // Transform image URLs
-  processed.images = imagesArray.map(img => getSupabaseImageUrl(img)).filter(img => img);
+  // Transform image URLs - but only if they're not already full URLs
+  processed.images = imagesArray.map(img => {
+    // If it's already a full Supabase URL, return as-is
+    if (img && typeof img === 'string' && (img.startsWith('http://') || img.startsWith('https://'))) {
+      return img;
+    }
+    // Otherwise, construct the URL
+    return getSupabaseImageUrl(img);
+  }).filter(img => img);
+  
   // Ensure at least one placeholder image
   if (processed.images.length === 0) {
     processed.images = ['/placeholder-product.jpg'];
   }
+  
   // Set image_url to the first image for compatibility
   processed.image_url = processed.images[0] || '/placeholder-product.jpg';
+  
+  // Set image field for additional compatibility
+  processed.image = processed.image_url;
   
   return processed;
 }
