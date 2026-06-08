@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  experimental: {
+    externalDir: true,
+  },
   reactCompiler: true,
   output: 'standalone',
   serverExternalPackages: ['@prisma/client', 'nodemailer'],
@@ -18,6 +21,12 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        // Explicitly allow the other Supabase project ref used in .env.production
+        hostname: 'lljxxaejmueoxsaqaowf.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
       {
