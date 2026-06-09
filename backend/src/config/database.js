@@ -1,14 +1,25 @@
 const { Pool } = require('pg');
 
 // Database connection configuration
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || process.env.SUPABASE_DB_URL || 'postgresql://postgres:postgres123@localhost:5432/ecommerce',
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  family: 4 // Force IPv4
-});
+// Note: This is optional - the application primarily uses Supabase client
+// Direct PostgreSQL connection is only needed for specific operations
+const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL;
+
+let pool = null;
+if (connectionString) {
+  pool = new Pool({
+    connectionString,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    family: 4 // Force IPv4
+  });
+}
 
 // Test database connection
 async function testConnection() {
+  if (!pool) {
+    console.log('⚠️  Direct PostgreSQL connection not configured (using Supabase client instead)');
+    return true; // Not an error since we use Supabase client primarily
+  }
   try {
     const client = await pool.connect();
     console.log('✅ Database connected successfully');
@@ -22,10 +33,13 @@ async function testConnection() {
 
 // Find user by email
 async function findUserByEmail(email) {
+  if (!pool) {
+    throw new Error('Direct PostgreSQL connection not available. Use Supabase client instead.');
+  }
   try {
     const query = `
-      SELECT id, email, password_hash, first_name, last_name, phone, role, email_verified 
-      FROM users 
+      SELECT id, email, password_hash, first_name, last_name, phone, role, email_verified
+      FROM users
       WHERE email = $1
     `;
     const result = await pool.query(query, [email]);
@@ -38,6 +52,9 @@ async function findUserByEmail(email) {
 
 // Create user
 async function createUser(userData) {
+  if (!pool) {
+    throw new Error('Direct PostgreSQL connection not available. Use Supabase client instead.');
+  }
   try {
     const { email, password_hash, first_name, last_name, phone, role, email_verified } = userData;
     const query = `

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const paystackService = require('../services/paystackService');
 const { supabase } = require('../config/supabase');
-const { validateToken } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 /**
  * POST /api/paystack/initialize
@@ -279,7 +279,7 @@ router.get('/status/:reference', async (req, res) => {
  * POST /api/paystack/refund
  * Process a refund (if needed)
  */
-router.post('/refund', validateToken, async (req, res) => {
+router.post('/refund', authenticateToken, async (req, res) => {
   try {
     const { reference, amount, reason } = req.body;
 

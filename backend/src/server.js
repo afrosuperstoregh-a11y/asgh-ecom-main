@@ -14,15 +14,17 @@ const config = require(configPath);
 const requiredEnvVars = [
   'SUPABASE_URL',
   'SUPABASE_SERVICE_ROLE_KEY',
-  'DATABASE_URL',
+  'JWT_SECRET',
   'SESSION_SECRET',
   'PORT'
 ];
 
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 if (missingEnvVars.length > 0) {
-  console.error('❌ Missing required environment variables:', missingEnvVars.join(', '));
-  console.error('Please set these environment variables before starting the server');
+  console.error('❌ Missing required environment variables:');
+  missingEnvVars.forEach(v => console.error(`   - ${v}`));
+  console.error('\nPlease set these environment variables before starting the server');
+  console.error('See backend/.env.example for required variables');
   process.exit(1);
 }
 
