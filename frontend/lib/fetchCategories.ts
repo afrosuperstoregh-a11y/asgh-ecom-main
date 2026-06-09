@@ -18,8 +18,7 @@ export async function fetchCategories() {
       message: error.message,
       details: error.details,
       hint: error.hint,
-      code: error.code,
-      status: error.status
+      code: error.code
     })
     return []
   }
