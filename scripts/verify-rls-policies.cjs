@@ -82,7 +82,7 @@ async function verifyRLSPolicies() {
         `
       });
 
-    if (recursiveError) {
+    if (recursiveError) { 
       console.error('Error checking for recursive policies:', recursiveError);
     } else if (recursiveCheck && recursiveCheck.length > 0) {
       console.log('⚠️  FOUND RECURSIVE POLICIES:');
