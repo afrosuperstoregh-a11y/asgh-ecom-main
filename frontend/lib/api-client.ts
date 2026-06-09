@@ -51,7 +51,15 @@ class ApiClient {
 
     const { data, error, count } = await query
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase products query error:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
+      throw error
+    }
 
     // Process products to add image URLs from Supabase Storage
     const productsWithImages = await Promise.all(
@@ -113,7 +121,15 @@ class ApiClient {
         .order('sort_order', { ascending: true })
         .order('name', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase categories query error:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        throw error
+      }
 
       // Get product counts and image URLs for each category
       const categoriesWithCountsAndImages = await Promise.all(

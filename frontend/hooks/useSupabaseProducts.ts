@@ -142,7 +142,12 @@ export function useSupabaseProduct(slug: string) {
         .single()
 
       if (error) {
-        console.error('Supabase error fetching product:', error)
+        console.error('Supabase error fetching product:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
         throw new Error(error.message)
       }
 
@@ -190,7 +195,12 @@ export function useSupabaseCategories() {
         .order('sort_order', { ascending: true })
 
       if (error) {
-        console.error('Supabase error fetching categories:', error)
+        console.error('Supabase error fetching categories:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
         throw new Error(error.message)
       }
 
@@ -239,7 +249,12 @@ export function useFeaturedProducts(limit: number = 8) {
         .limit(limit)
 
       if (error) {
-        console.error('Supabase error fetching featured products:', error)
+        console.error('Supabase error fetching featured products:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
         throw new Error(error.message)
       }
 

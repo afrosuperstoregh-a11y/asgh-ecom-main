@@ -14,7 +14,13 @@ export async function fetchCategories() {
     .order('sort_order', { ascending: true })
 
   if (error) {
-    console.error('Error fetching categories:', error)
+    console.error('Error fetching categories:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+      status: error.status
+    })
     return []
   }
 
