@@ -1,9 +1,13 @@
+import path from 'path';
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
     externalDir: true,
+  },
+  turbopack: {
+    root: path.join(__dirname, '..'),
   },
   reactCompiler: true,
   output: 'standalone',

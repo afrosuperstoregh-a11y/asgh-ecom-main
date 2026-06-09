@@ -5,6 +5,14 @@
  * This utility now uses the shared image-utils helper for consistency
  */
 
+import {
+  BUCKETS,
+  FALLBACK_IMAGES,
+  getSupabaseImageUrl,
+  getProductImageUrl as sharedGetProductImageUrl,
+} from '@shared/lib/image-utils';
+export { constructSupabaseUrl, getSupabaseImageUrl } from '@shared/lib/image-utils';
+
 // Environment configuration
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_PROJECT_REF = SUPABASE_URL?.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
@@ -16,9 +24,6 @@ if (typeof window !== 'undefined') {
     console.error('[IMAGES] CRITICAL: NEXT_PUBLIC_SUPABASE_URL is not configured or using placeholder value. Images will not load.');
   }
 }
-
-// Re-export from shared utils for backward compatibility
-export { BUCKETS, FALLBACK_IMAGES, constructSupabaseUrl, getSupabaseImageUrl, processImageUrls, getFirstAvailableImage } from '../../shared/lib/image-utils';
 
 /**
  * Safe image URL validation - prevents 400 errors from invalid URLs
@@ -64,6 +69,13 @@ export function getSafeImageUrl(url: string | null | undefined, fallback: string
 }
 
 /**
+ * Validates if a value can be used as an image path
+ */
+function isValidImagePath(path: unknown): path is string {
+  return typeof path === 'string' && path.trim().length > 0;
+}
+
+/**
  * Gets a product image URL with automatic bucket selection
  * @param imagePath - The image path (can be relative or full URL)
  * @param fallback - Fallback image URL
@@ -77,8 +89,6 @@ export function getProductImageUrl(
     console.warn('[IMAGES] NEXT_PUBLIC_SUPABASE_URL is not configured, using fallback');
     return fallback;
   }
-  // Import the shared function dynamically to avoid circular dependencies
-  const { getProductImageUrl: sharedGetProductImageUrl } = require('../../shared/lib/image-utils');
   return sharedGetProductImageUrl(SUPABASE_URL, imagePath, fallback);
 }
 
@@ -96,7 +106,6 @@ export function getCategoryImageUrl(
     console.warn('[IMAGES] NEXT_PUBLIC_SUPABASE_URL is not configured, using fallback');
     return fallback;
   }
-  const { getSupabaseImageUrl } = require('../../shared/lib/image-utils');
   return getSupabaseImageUrl(SUPABASE_URL, BUCKETS.CATEGORIES, imagePath, fallback);
 }
 
@@ -114,7 +123,6 @@ export function getAvatarImageUrl(
     console.warn('[IMAGES] NEXT_PUBLIC_SUPABASE_URL is not configured, using fallback');
     return fallback;
   }
-  const { getSupabaseImageUrl } = require('../../shared/lib/image-utils');
   return getSupabaseImageUrl(SUPABASE_URL, BUCKETS.AVATARS, imagePath, fallback);
 }
 
@@ -132,7 +140,6 @@ export function getBannerImageUrl(
     console.warn('[IMAGES] NEXT_PUBLIC_SUPABASE_URL is not configured, using fallback');
     return fallback;
   }
-  const { getSupabaseImageUrl } = require('../../shared/lib/image-utils');
   return getSupabaseImageUrl(SUPABASE_URL, BUCKETS.BANNERS, imagePath, fallback);
 }
 
@@ -148,13 +155,18 @@ export function processImageUrls(
   paths: (string | null | undefined)[] | null | undefined,
   fallback: string = FALLBACK_IMAGES.GENERIC
 ): string[] {
+  if (!SUPABASE_URL) {
+    console.warn('[IMAGES] NEXT_PUBLIC_SUPABASE_URL is not configured, using fallback');
+    return [fallback];
+  }
+
   if (!paths || !Array.isArray(paths) || paths.length === 0) {
     return [fallback];
   }
   
   const processedUrls = paths
     .filter(path => isValidImagePath(path))
-    .map(path => getSupabaseImageUrl(bucket, path, fallback))
+    .map(path => getSupabaseImageUrl(SUPABASE_URL, bucket, path, fallback))
     .filter(url => url !== fallback); // Remove fallbacks from main array
   
   // Ensure at least one image
