@@ -7,23 +7,33 @@ const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL
 
 let pool = null;
 if (connectionString) {
-  // Force IPv4 by modifying connection string if needed
-  let modifiedConnectionString = connectionString;
+  // Detect IPv6 literal addresses in connection string
+  // IPv6 addresses can be in format [xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx] or as bare IPv6
+  const ipv6Pattern = /\[([0-9a-fA-F:]+)\]|([0-9a-fA-F:]+):\d+/;
+  if (ipv6Pattern.test(connectionString)) {
+    console.warn('⚠️  IPv6 address detected in DATABASE_URL/SUPABASE_DB_URL');
+    console.warn('   Direct PostgreSQL pool disabled to prevent connection errors');
+    console.warn('   Application will use Supabase client for database operations');
+    // Don't create pool - use Supabase client only
+  } else {
+    // Force IPv4 by modifying connection string if needed
+    let modifiedConnectionString = connectionString;
 
-  // If connection string contains a hostname (not IP), add family hint
-  if (!connectionString.match(/\/\d+\.\d+\.\d+\.\d+/) && !connectionString.includes('family=')) {
-    // Add family parameter to force IPv4
-    const separator = connectionString.includes('?') ? '&' : '?';
-    modifiedConnectionString = `${connectionString}${separator}family=4`;
+    // If connection string contains a hostname (not IP), add family hint
+    if (!connectionString.match(/\/\d+\.\d+\.\d+\.\d+/) && !connectionString.includes('family=')) {
+      // Add family parameter to force IPv4
+      const separator = connectionString.includes('?') ? '&' : '?';
+      modifiedConnectionString = `${connectionString}${separator}family=4`;
+    }
+
+    pool = new Pool({
+      connectionString: modifiedConnectionString,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      family: 4, // Force IPv4 to prevent IPv6 connection issues
+      connectionTimeoutMillis: 10000, // 10 second timeout
+      idleTimeoutMillis: 30000, // 30 second idle timeout
+    });
   }
-
-  pool = new Pool({
-    connectionString: modifiedConnectionString,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    family: 4, // Force IPv4 to prevent IPv6 connection issues
-    connectionTimeoutMillis: 10000, // 10 second timeout
-    idleTimeoutMillis: 30000, // 30 second idle timeout
-  });
 }
 
 // Test database connection

@@ -866,6 +866,79 @@ Before deploying to Railway, verify:
 ✓ Server startup complete
 ```
 
+## June 2026 Additional Fixes
+
+### IPv6 Connection Detection and Prevention
+**Issue:** Despite `family: 4` setting, PostgreSQL connection attempts were still using IPv6 addresses, causing `ENETUNREACH` errors during table initialization.
+
+**Fix Applied:**
+- Enhanced `backend/src/config/database.js` to detect IPv6 literal addresses in connection strings
+- If IPv6 address is detected, the direct PostgreSQL pool is now disabled entirely
+- Application falls back to Supabase client for all database operations
+- Added clear warning messages when IPv6 is detected
+
+**Code Changes:**
+```javascript
+// Detect IPv6 literal addresses in connection string
+const ipv6Pattern = /\[([0-9a-fA-F:]+)\]|([0-9a-fA-F:]+):\d+/;
+if (ipv6Pattern.test(connectionString)) {
+  console.warn('⚠️  IPv6 address detected in DATABASE_URL/SUPABASE_DB_URL');
+  console.warn('   Direct PostgreSQL pool disabled to prevent connection errors');
+  console.warn('   Application will use Supabase client for database operations');
+  // Don't create pool - use Supabase client only
+}
+```
+
+### Email Transporter Timeout Prevention
+**Issue:** Email transporter initialization was calling `verify()` during startup, causing long timeouts when SMTP server was unavailable or misconfigured.
+
+**Fix Applied:**
+- Removed `verify()` call during transporter initialization in `backend/src/services/emailService.js`
+- Added timeout configurations (5 seconds) for connection, greeting, and socket operations
+- Verification now deferred to first email send attempt
+- Changed success message to indicate verification is deferred
+
+**Code Changes:**
+```javascript
+this.transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT || 587,
+  secure: process.env.SMTP_SECURE === 'true',
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  },
+  connectionTimeout: 5000, // 5 second connection timeout
+  greetingTimeout: 5000,   // 5 second greeting timeout
+  socketTimeout: 5000      // 5 second socket timeout
+});
+
+// Skip verification during startup to prevent timeout delays
+console.log('✅ Email transporter initialized (verification deferred to first use)');
+```
+
+### Enhanced Error Handling in Table Initialization
+**Issue:** Table initialization errors were logging full error objects and not providing clear context for network-related failures.
+
+**Fix Applied:**
+- Updated error handling in `backend/src/middleware/auditLog.js` to log only error message
+- Updated error handling in `backend/src/routes/settings.js` for both table creation and default settings
+- Added specific handling for `ENETUNREACH` and `ECONNREFUSED` error codes
+- Added clear warning messages when network errors occur
+
+**Code Changes:**
+```javascript
+try {
+  await pool.query(query);
+  console.log('✅ Audit log table ready');
+} catch (error) {
+  console.error('❌ Error creating audit log table:', error.message);
+  if (error.code === 'ENETUNREACH' || error.code === 'ECONNREFUSED') {
+    console.warn('⚠️  Network error - audit log table creation skipped');
+  }
+}
+```
+
 ## Conclusion
 
 All backend startup issues have been resolved. The application now:
@@ -879,11 +952,15 @@ All backend startup issues have been resolved. The application now:
 - ✅ Provides clear error messages for missing configuration
 - ✅ Fails fast on critical errors, degrades gracefully on optional services
 - ✅ Forces IPv4 connections to prevent IPv6 ENETUNREACH errors
+- ✅ Detects and disables pool when IPv6 addresses are present in connection strings
 - ✅ Exports createSettingsTable and initializeDefaultSettings functions
 - ✅ Wraps table initialization in separate try/catch blocks
 - ✅ Uses actual Supabase client instead of database pool for Supabase operations
 - ✅ Returns null for Redis client when REDIS_URL not set (no connection attempts)
 - ✅ Provides concise, clear logging messages
 - ✅ Hardened startup sequence with proper ordering
+- ✅ Defers email transporter verification to prevent startup timeouts
+- ✅ Enhanced error handling for network-related failures
+- ✅ Added timeout configurations for email transporter connections
 
 The backend is now production-ready for Railway deployment.

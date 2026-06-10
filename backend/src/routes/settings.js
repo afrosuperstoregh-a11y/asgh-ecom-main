@@ -33,7 +33,10 @@ async function createSettingsTable() {
     await pool.query(query);
     console.log('✅ Settings table ready');
   } catch (error) {
-    console.error('❌ Error creating settings table:', error);
+    console.error('❌ Error creating settings table:', error.message);
+    if (error.code === 'ENETUNREACH' || error.code === 'ECONNREFUSED') {
+      console.warn('⚠️  Network error - settings table creation skipped');
+    }
   }
 }
 
@@ -103,7 +106,10 @@ async function initializeDefaultSettings() {
     }
     console.log('✅ Default settings initialized');
   } catch (error) {
-    console.error('❌ Error initializing default settings:', error);
+    console.error('❌ Error initializing default settings:', error.message);
+    if (error.code === 'ENETUNREACH' || error.code === 'ECONNREFUSED') {
+      console.warn('⚠️  Network error - default settings initialization skipped');
+    }
   }
 }
 

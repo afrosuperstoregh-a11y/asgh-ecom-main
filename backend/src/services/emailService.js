@@ -19,7 +19,7 @@ class EmailService {
     try {
       // Configure transporter based on provider
       const provider = process.env.EMAIL_PROVIDER || 'smtp';
-      
+
       if (provider === 'resend') {
         // Resend configuration
         if (!process.env.RESEND_API_KEY) {
@@ -34,7 +34,10 @@ class EmailService {
           auth: {
             user: process.env.RESEND_API_KEY,
             pass: process.env.RESEND_API_KEY
-          }
+          },
+          connectionTimeout: 5000, // 5 second connection timeout
+          greetingTimeout: 5000,   // 5 second greeting timeout
+          socketTimeout: 5000      // 5 second socket timeout
         });
       } else if (provider === 'sendgrid') {
         // SendGrid configuration
@@ -50,7 +53,10 @@ class EmailService {
           auth: {
             user: 'apikey',
             pass: process.env.SENDGRID_API_KEY
-          }
+          },
+          connectionTimeout: 5000, // 5 second connection timeout
+          greetingTimeout: 5000,   // 5 second greeting timeout
+          socketTimeout: 5000      // 5 second socket timeout
         });
       } else {
         // Default SMTP configuration
@@ -66,15 +72,18 @@ class EmailService {
           auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS
-          }
+          },
+          connectionTimeout: 5000, // 5 second connection timeout
+          greetingTimeout: 5000,   // 5 second greeting timeout
+          socketTimeout: 5000      // 5 second socket timeout
         });
       }
 
-      // Verify transporter
-      await this.transporter.verify();
-      console.log('✅ Email transporter initialized successfully');
+      // Skip verification during startup to prevent timeout delays
+      // Verification will happen on first send attempt
+      console.log('✅ Email transporter initialized (verification deferred to first use)');
     } catch (error) {
-      console.error('❌ Failed to initialize email transporter:', error);
+      console.error('❌ Failed to initialize email transporter:', error.message);
       console.warn('⚠️  Email functionality disabled');
       this.transporter = null;
     }

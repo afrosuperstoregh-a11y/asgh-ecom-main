@@ -32,7 +32,10 @@ async function createAuditLogTable() {
     await pool.query(query);
     console.log('✅ Audit log table ready');
   } catch (error) {
-    console.error('❌ Error creating audit log table:', error);
+    console.error('❌ Error creating audit log table:', error.message);
+    if (error.code === 'ENETUNREACH' || error.code === 'ECONNREFUSED') {
+      console.warn('⚠️  Network error - audit log table creation skipped');
+    }
   }
 }
 
