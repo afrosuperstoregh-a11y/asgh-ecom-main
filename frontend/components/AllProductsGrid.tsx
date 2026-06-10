@@ -37,6 +37,7 @@ interface SupabaseProduct {
   rating?: number;
   reviews?: number;
   image_url?: string;
+  image_urls?: string[];
 }
 
 export default function AllProductsGrid() {
@@ -75,7 +76,7 @@ export default function AllProductsGrid() {
           inventory_quantity: item.inventory_quantity || 0,
           track_inventory: item.track_inventory || false,
           allow_backorder: item.allow_backorder || false,
-          images: Array.isArray(item.images) ? item.images : [],
+          images: (item.image_urls && Array.isArray(item.image_urls)) ? item.image_urls : Array.isArray(item.images) ? item.images : [],
           video_url: item.video_url,
           videos: Array.isArray(item.videos) ? item.videos : [],
           category_id: item.category_id,
@@ -85,7 +86,8 @@ export default function AllProductsGrid() {
           updated_at: item.updated_at,
           rating: item.rating || 0,
           reviews: item.reviews || 0,
-          image_url: item.image_url || (Array.isArray(item.images) && item.images[0]) || '/placeholder-product.svg',
+          image_url: item.image_url || (item.image_urls && Array.isArray(item.image_urls) && item.image_urls[0]) || (Array.isArray(item.images) && item.images[0]) || '/placeholder-product.svg',
+          image_urls: item.image_urls,
           category_name: item.category?.name || item.categories?.name || 'Uncategorized',
           inStock: (item.inventory_quantity > 0 || item.allow_backorder) ?? false,
         }));

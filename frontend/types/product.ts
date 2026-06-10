@@ -39,6 +39,7 @@ export interface Product {
   // Legacy field mappings
   image?: string;
   image_url?: string;
+  image_urls?: string[];
   image_path?: string;
   stock?: number;
   comparePrice?: number;
@@ -92,11 +93,11 @@ export const normalizeProduct = (product: any): Product => {
     stock_quantity: product.stock_quantity || product.stock || product.inventory_quantity || 0,
     compare_price: product.compare_price || product.comparePrice || undefined,
     category_name: product.category_name || product.category?.name || product.categories?.name || 'Uncategorized',
-    image: product.image || (product.images && product.images.length > 0 ? product.images[0] : undefined) || '/placeholder-product.svg',
-    image_url: product.image_url || product.image || (product.images && product.images.length > 0 ? product.images[0] : undefined) || '/placeholder-product.svg',
+    image: product.image || (product.image_urls && product.image_urls.length > 0 ? product.image_urls[0] : undefined) || (product.images && product.images.length > 0 ? product.images[0] : undefined) || '/placeholder-product.svg',
+    image_url: product.image_url || (product.image_urls && product.image_urls.length > 0 ? product.image_urls[0] : undefined) || product.image || (product.images && product.images.length > 0 ? product.images[0] : undefined) || '/placeholder-product.svg',
     image_path: product.image_path || product.image,
     videos: (product.videos && product.videos.length !== undefined) ? product.videos : (product.video_url ? [product.video_url] : []),
-    images: (product.images && product.images.length !== undefined) ? product.images : [],
+    images: (product.image_urls && product.image_urls.length > 0) ? product.image_urls : (product.images && product.images.length !== undefined) ? product.images : [],
     rating: product.rating || 0,
     reviews: product.reviews || product.reviewCount || 0,
     createdAt: product.createdAt || product.created_at || new Date().toISOString(),
