@@ -13,12 +13,20 @@ class RedisClient {
       return null;
     }
 
+    // Require REDIS_URL or individual Redis config
+    if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
+      console.log('ℹ️ Redis configuration not provided - Redis disabled');
+      this.isEnabled = false;
+      return null;
+    }
+
     try {
       this.client = new Redis({
-        host: process.env.REDIS_HOST || 'localhost',
-        port: process.env.REDIS_PORT || 6379,
+        url: process.env.REDIS_URL,
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : undefined,
         password: process.env.REDIS_PASSWORD || undefined,
-        db: process.env.REDIS_DB || 0,
+        db: process.env.REDIS_DB ? parseInt(process.env.REDIS_DB) : 0,
         retryDelayOnFailover: 100,
         maxRetriesPerRequest: 3,
         lazyConnect: true,

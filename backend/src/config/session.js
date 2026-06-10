@@ -7,43 +7,48 @@ let redisClient;
 let sessionStore;
 
 try {
-  redisClient = createClient({
-    url: process.env.REDIS_URL || 'redis://localhost:6379',
-    socket: {
-      reconnectStrategy: (retries) => {
-        if (retries > 10) {
-          console.error('❌ Redis reconnection failed after 10 retries');
-          return new Error('Redis reconnection failed');
+  // Only initialize Redis if REDIS_URL is provided
+  if (!process.env.REDIS_URL) {
+    console.log('ℹ️  REDIS_URL not configured - using MemoryStore for sessions');
+  } else {
+    redisClient = createClient({
+      url: process.env.REDIS_URL,
+      socket: {
+        reconnectStrategy: (retries) => {
+          if (retries > 10) {
+            console.error('❌ Redis reconnection failed after 10 retries');
+            return new Error('Redis reconnection failed');
+          }
+          return Math.min(retries * 100, 3000);
         }
-        return Math.min(retries * 100, 3000);
       }
+    });
+
+    redisClient.on('error', (err) => {
+      console.error('❌ Redis Client Error:', err);
+    });
+
+    redisClient.on('connect', () => {
+      console.log('✅ Redis client connected');
+    });
+
+    // Only connect in production or if REDIS_ENABLED is true and REDIS_URL is set
+    if (process.env.NODE_ENV === 'production' || process.env.REDIS_ENABLED === 'true') {
+      redisClient.connect().catch(err => {
+        console.error('❌ Failed to connect to Redis:', err);
+        console.warn('⚠️  Falling back to MemoryStore (not recommended for production)');
+      });
     }
-  });
 
-  redisClient.on('error', (err) => {
-    console.error('❌ Redis Client Error:', err);
-  });
-
-  redisClient.on('connect', () => {
-    console.log('✅ Redis client connected');
-  });
-
-  // Only connect in production or if REDIS_ENABLED is true
-  if (process.env.NODE_ENV === 'production' || process.env.REDIS_ENABLED === 'true') {
-    redisClient.connect().catch(err => {
-      console.error('❌ Failed to connect to Redis:', err);
-      console.warn('⚠️  Falling back to MemoryStore (not recommended for production)');
-    });
-  }
-
-  // Create Redis store if Redis is available
-  if (process.env.NODE_ENV === 'production' || process.env.REDIS_ENABLED === 'true') {
-    sessionStore = new RedisStore({
-      client: redisClient,
-      prefix: 'asca:sess:',
-      ttl: parseInt(process.env.SESSION_MAX_AGE) || 24 * 60 * 60, // 24 hours in seconds
-    });
-    console.log('✅ Redis session store configured');
+    // Create Redis store if Redis is available
+    if (process.env.NODE_ENV === 'production' || process.env.REDIS_ENABLED === 'true') {
+      sessionStore = new RedisStore({
+        client: redisClient,
+        prefix: 'asca:sess:',
+        ttl: parseInt(process.env.SESSION_MAX_AGE) || 24 * 60 * 60, // 24 hours in seconds
+      });
+      console.log('✅ Redis session store configured');
+    }
   }
 } catch (error) {
   console.error('❌ Failed to initialize Redis:', error);

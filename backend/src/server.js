@@ -330,6 +330,23 @@ const server = app.listen(PORT, '0.0.0.0', async () => {
   console.log(`📊 Health check available at /api/health`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   
+  // Initialize database tables if direct PostgreSQL connection is available
+  const { pool } = require('./config/database');
+  const { createAuditLogTable } = require('./middleware/auditLog');
+  const { createSettingsTable, initializeDefaultSettings } = require('./routes/settings');
+  
+  if (pool) {
+    try {
+      await createAuditLogTable();
+      await createSettingsTable();
+      await initializeDefaultSettings();
+    } catch (error) {
+      console.error('❌ Error initializing database tables:', error);
+    }
+  } else {
+    console.log('ℹ️  Direct PostgreSQL connection not available - skipping table initialization');
+  }
+  
   // Test Supabase connection
   try {
     const dbConnected = await testConnection();

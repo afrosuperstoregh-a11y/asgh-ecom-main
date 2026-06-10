@@ -2,6 +2,7 @@ const { createClient } = require('@supabase/supabase-js')
 const ws = require('ws')
 const config = require('../config/env')
 const { ApiResponse } = require('./apiResponse')
+const { pool } = require('../config/database')
 
 // Validate environment variables before initializing Supabase client
 if (!config.supabase.url || !config.supabase.serviceRoleKey) {
@@ -64,11 +65,22 @@ const verifySupabaseUser = async (req, res, next) => {
     }
 
     // Get user profile from our database to include role information
-    const { Pool } = require('pg')
-    const pool = new Pool({
-      connectionString: config.database.url,
-      ssl: config.nodeEnv === 'production' ? { rejectUnauthorized: false } : false
-    })
+    if (!pool) {
+      console.warn('⚠️  Direct PostgreSQL connection not available - using Supabase auth only')
+      req.user = {
+        id: user.id,
+        email: user.email,
+        role: user.user_metadata?.role || 'customer',
+        first_name: user.user_metadata?.first_name || user.user_metadata?.name?.split(' ')[0] || null,
+        last_name: user.user_metadata?.last_name || user.user_metadata?.name?.split(' ')[1] || null,
+        email_verified: !!user.email_confirmed_at,
+        phone: user.phone,
+        is_admin: false,
+        admin_permissions: null,
+        created_at: user.created_at
+      }
+      return next()
+    }
 
     // Check if user exists in our users table
     const userResult = await pool.query(

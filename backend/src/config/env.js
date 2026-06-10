@@ -7,10 +7,10 @@ const config = {
   
   // Database Configuration
   database: {
-    url: process.env.DATABASE_URL,
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    name: process.env.DB_NAME || 'asca_ecom',
+    url: process.env.DATABASE_URL || process.env.SUPABASE_DB_URL,
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : undefined,
+    name: process.env.DB_NAME,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
   },
@@ -47,10 +47,10 @@ const config = {
   // Redis Configuration
   redis: {
     url: process.env.REDIS_URL,
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT) || 6379,
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : undefined,
     password: process.env.REDIS_PASSWORD,
-    db: parseInt(process.env.REDIS_DB) || 0,
+    db: process.env.REDIS_DB ? parseInt(process.env.REDIS_DB) : 0,
     keyPrefix: process.env.REDIS_KEY_PREFIX || 'asca_ecom:',
   },
   

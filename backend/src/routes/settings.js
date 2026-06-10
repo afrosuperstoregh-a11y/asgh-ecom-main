@@ -1,17 +1,16 @@
 const express = require('express');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const { auditLog } = require('../middleware/auditLog');
-const { Pool } = require('pg');
+const { pool } = require('../config/database');
 const router = express.Router();
-
-// Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
 
 // Create settings table if it doesn't exist
 async function createSettingsTable() {
+  if (!pool) {
+    console.log('ℹ️  Direct PostgreSQL connection not available - skipping settings table creation');
+    return;
+  }
+
   const query = `
     CREATE TABLE IF NOT EXISTS settings (
       id SERIAL PRIMARY KEY,
@@ -40,6 +39,11 @@ async function createSettingsTable() {
 
 // Initialize default settings
 async function initializeDefaultSettings() {
+  if (!pool) {
+    console.log('ℹ️  Direct PostgreSQL connection not available - skipping default settings initialization');
+    return;
+  }
+
   const defaultSettings = [
     // Store Settings
     { key: 'store_name', value: 'Afro Superstore', type: 'string', category: 'store', description: 'Store name displayed throughout the site', is_public: true },
@@ -105,6 +109,13 @@ async function initializeDefaultSettings() {
 
 // Get public settings (no auth required)
 router.get('/public', async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database connection not available'
+    });
+  }
+
   try {
     const result = await pool.query(`
       SELECT key, value, type, category
@@ -154,6 +165,13 @@ router.get('/public', async (req, res) => {
 
 // Get all settings (admin only)
 router.get('/', authenticateToken, requireAdmin, async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database connection not available'
+    });
+  }
+
   try {
     const { category } = req.query;
     
@@ -205,6 +223,13 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
 
 // Get single setting (admin only)
 router.get('/:key', authenticateToken, requireAdmin, async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database connection not available'
+    });
+  }
+
   try {
     const { key } = req.params;
     
@@ -235,6 +260,13 @@ router.get('/:key', authenticateToken, requireAdmin, async (req, res) => {
 
 // Update setting (admin only)
 router.put('/:key', authenticateToken, requireAdmin, auditLog('UPDATE', 'setting'), async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database connection not available'
+    });
+  }
+
   try {
     const { key } = req.params;
     const { value, type, description, is_public } = req.body;
@@ -337,6 +369,13 @@ router.put('/:key', authenticateToken, requireAdmin, auditLog('UPDATE', 'setting
 
 // Create new setting (admin only)
 router.post('/', authenticateToken, requireAdmin, auditLog('CREATE', 'setting'), async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database connection not available'
+    });
+  }
+
   try {
     const { key, value, type = 'string', category = 'general', description, is_public = false } = req.body;
     
@@ -418,6 +457,13 @@ router.post('/', authenticateToken, requireAdmin, auditLog('CREATE', 'setting'),
 
 // Delete setting (admin only)
 router.delete('/:key', authenticateToken, requireAdmin, auditLog('DELETE', 'setting'), async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database connection not available'
+    });
+  }
+
   try {
     const { key } = req.params;
     
@@ -458,6 +504,13 @@ router.delete('/:key', authenticateToken, requireAdmin, auditLog('DELETE', 'sett
 
 // Bulk update settings (admin only)
 router.put('/', authenticateToken, requireAdmin, auditLog('BULK_UPDATE', 'setting'), async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database connection not available'
+    });
+  }
+
   try {
     const { settings } = req.body;
     
@@ -536,9 +589,5 @@ router.put('/', authenticateToken, requireAdmin, auditLog('BULK_UPDATE', 'settin
     });
   }
 });
-
-// Initialize settings table and default values
-createSettingsTable();
-initializeDefaultSettings();
 
 module.exports = router;

@@ -27,6 +27,7 @@ async function testConnection() {
     return true;
   } catch (error) {
     console.error('❌ Database connection failed:', error);
+    console.error('   Ensure DATABASE_URL or SUPABASE_DB_URL is set correctly');
     return false;
   }
 }

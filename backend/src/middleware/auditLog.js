@@ -1,13 +1,12 @@
-const { Pool } = require('pg');
-
-// Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+const { pool } = require('../config/database');
 
 // Create audit log table if it doesn't exist
 async function createAuditLogTable() {
+  if (!pool) {
+    console.log('ℹ️  Direct PostgreSQL connection not available - skipping audit log table creation');
+    return;
+  }
+
   const query = `
     CREATE TABLE IF NOT EXISTS audit_logs (
       id SERIAL PRIMARY KEY,
@@ -49,6 +48,11 @@ async function logAdminAction({
   ipAddress = null,
   userAgent = null
 }) {
+  if (!pool) {
+    console.warn('⚠️  Direct PostgreSQL connection not available - skipping audit log');
+    return null;
+  }
+
   try {
     const query = `
       INSERT INTO audit_logs (
@@ -81,6 +85,11 @@ async function logAdminAction({
 
 // Get audit logs (admin only)
 async function getAuditLogs(filters = {}) {
+  if (!pool) {
+    console.warn('⚠️  Direct PostgreSQL connection not available - cannot fetch audit logs');
+    return [];
+  }
+
   try {
     let query = `
       SELECT 
@@ -173,11 +182,9 @@ function auditLog(action, entityType) {
   };
 }
 
-// Initialize audit log table
-createAuditLogTable();
-
 module.exports = {
   logAdminAction,
   getAuditLogs,
-  auditLog
+  auditLog,
+  createAuditLogTable
 };

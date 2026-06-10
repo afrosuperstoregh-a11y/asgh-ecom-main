@@ -5,13 +5,7 @@
 
 const nodemailer = require('nodemailer');
 const { supabase } = require('../config/supabase');
-const { Pool } = require('pg');
-
-// Fallback PostgreSQL connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+const { pool } = require('../config/database');
 
 class EmailService {
   constructor() {
@@ -28,6 +22,11 @@ class EmailService {
       
       if (provider === 'resend') {
         // Resend configuration
+        if (!process.env.RESEND_API_KEY) {
+          console.warn('⚠️  RESEND_API_KEY not configured - email disabled');
+          this.transporter = null;
+          return;
+        }
         this.transporter = nodemailer.createTransport({
           host: 'smtp.resend.com',
           port: 587,
@@ -39,6 +38,11 @@ class EmailService {
         });
       } else if (provider === 'sendgrid') {
         // SendGrid configuration
+        if (!process.env.SENDGRID_API_KEY) {
+          console.warn('⚠️  SENDGRID_API_KEY not configured - email disabled');
+          this.transporter = null;
+          return;
+        }
         this.transporter = nodemailer.createTransport({
           host: 'smtp.sendgrid.net',
           port: 587,
@@ -50,8 +54,13 @@ class EmailService {
         });
       } else {
         // Default SMTP configuration
+        if (!process.env.SMTP_HOST) {
+          console.warn('⚠️  SMTP_HOST not configured - email disabled');
+          this.transporter = null;
+          return;
+        }
         this.transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST || 'localhost',
+          host: process.env.SMTP_HOST,
           port: process.env.SMTP_PORT || 587,
           secure: process.env.SMTP_SECURE === 'true',
           auth: {
@@ -66,6 +75,7 @@ class EmailService {
       console.log('✅ Email transporter initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize email transporter:', error);
+      console.warn('⚠️  Email functionality disabled');
       this.transporter = null;
     }
   }
@@ -92,6 +102,10 @@ class EmailService {
         return data;
       } else {
         // Fallback to PostgreSQL
+        if (!pool) {
+          console.warn('⚠️  Direct PostgreSQL connection not available');
+          return null;
+        }
         const isUUID = templateIdOrName.includes('-');
         const field = isUUID ? 'id' : 'name';
         
@@ -139,6 +153,9 @@ class EmailService {
         return data;
       } else {
         // Fallback to PostgreSQL
+        if (!pool) {
+          throw new Error('Direct PostgreSQL connection not available');
+        }
         const query = `
           INSERT INTO email_templates (
             name, subject, html_content, text_content, template_type, 
@@ -178,6 +195,9 @@ class EmailService {
         return data;
       } else {
         // Fallback to PostgreSQL
+        if (!pool) {
+          throw new Error('Direct PostgreSQL connection not available');
+        }
         const setClause = Object.keys(updates)
           .map((key, index) => `${key} = $${index + 2}`)
           .join(', ');
@@ -255,17 +275,22 @@ class EmailService {
         emailLog = data;
       } else {
         // Fallback to PostgreSQL
-        const query = `
-          INSERT INTO email_logs (template_id, customer_id, recipient_email, subject, content, status, provider)
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
-          RETURNING *
-        `;
+        if (!pool) {
+          console.warn('⚠️  Direct PostgreSQL connection not available - skipping email log');
+          emailLog = { id: null };
+        } else {
+          const query = `
+            INSERT INTO email_logs (template_id, customer_id, recipient_email, subject, content, status, provider)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *
+          `;
 
-        const result = await pool.query(query, [
-          template.id, customerId, logData.recipient_email, 
-          processedSubject, processedHtml, 'pending', logData.provider
-        ]);
-        emailLog = result.rows[0];
+          const result = await pool.query(query, [
+            template.id, customerId, logData.recipient_email, 
+            processedSubject, processedHtml, 'pending', logData.provider
+          ]);
+          emailLog = result.rows[0];
+        }
       }
 
       // Send email
@@ -286,11 +311,13 @@ class EmailService {
         const result = await this.transporter.sendMail(mailOptions);
 
         // Update email log with success
-        await this.updateEmailLog(emailLog.id, {
-          status: 'sent',
-          provider_id: result.messageId,
-          sent_at: new Date().toISOString()
-        });
+        if (emailLog && emailLog.id) {
+          await this.updateEmailLog(emailLog.id, {
+            status: 'sent',
+            provider_id: result.messageId,
+            sent_at: new Date().toISOString()
+          });
+        }
 
         return {
           success: true,
@@ -299,10 +326,12 @@ class EmailService {
         };
       } catch (sendError) {
         // Update email log with error
-        await this.updateEmailLog(emailLog.id, {
-          status: 'failed',
-          error_message: sendError.message
-        });
+        if (emailLog && emailLog.id) {
+          await this.updateEmailLog(emailLog.id, {
+            status: 'failed',
+            error_message: sendError.message
+          });
+        }
 
         throw sendError;
       }
@@ -438,6 +467,9 @@ class EmailService {
         return data;
       } else {
         // Fallback to PostgreSQL
+        if (!pool) {
+          throw new Error('Direct PostgreSQL connection not available');
+        }
         const query = `
           INSERT INTO email_campaigns (
             name, subject, content, template_id, segment_id, 
@@ -570,6 +602,18 @@ class EmailService {
         return analytics;
       } else {
         // Fallback to PostgreSQL
+        if (!pool) {
+          console.warn('⚠️  Direct PostgreSQL connection not available');
+          return {
+            total: 0,
+            sent: 0,
+            delivered: 0,
+            opened: 0,
+            clicked: 0,
+            failed: 0,
+            byType: {}
+          };
+        }
         const query = `
           SELECT 
             COUNT(*) as total,
@@ -623,6 +667,10 @@ class EmailService {
         if (error) throw error;
       } else {
         // Fallback to PostgreSQL
+        if (!pool) {
+          console.warn('⚠️  Direct PostgreSQL connection not available - skipping email log update');
+          return;
+        }
         const setClause = Object.keys(updates)
           .map((key, index) => `${key} = $${index + 2}`)
           .join(', ');
