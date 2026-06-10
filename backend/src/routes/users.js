@@ -170,15 +170,11 @@ router.delete('/:id', verifySupabaseUser, requireAdmin, async (req, res) => {
     // Delete from Supabase auth (this will cascade delete from profiles due to ON DELETE CASCADE)
     const { createClient } = require('@supabase/supabase-js');
     const config = require('../config/env');
-    const ws = require('ws');
     
     const supabaseAdmin = createClient(config.supabase.url, config.supabase.serviceRoleKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
-      },
-      realtime: {
-        ws: ws
       }
     });
     

@@ -1,7 +1,6 @@
 const { createClient } = require('@supabase/supabase-js')
 const config = require('../config/env')
 const { ApiResponse } = require('./apiResponse')
-const ws = require('ws')
 
 // Validate environment variables before initializing Supabase client
 if (!config.supabase.url || !config.supabase.serviceRoleKey) {
@@ -10,22 +9,23 @@ if (!config.supabase.url || !config.supabase.serviceRoleKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Initialize Supabase client for JWT verification with WebSocket transport for Node.js < 22
+// Initialize Supabase client for JWT verification (Realtime disabled - not used in backend)
 let supabase
 try {
   supabase = createClient(config.supabase.url, config.supabase.serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
-    },
-    realtime: {
-      ws: ws
     }
   })
   console.log('✅ Supabase client initialized successfully')
 } catch (error) {
-  console.error('❌ Failed to initialize Supabase client:', error)
-  throw new Error(`Supabase client initialization failed: ${error.message}`)
+  console.error('❌ Failed to initialize Supabase client:')
+  console.error('   Error:', error.message)
+  console.error('   Supabase URL:', config.supabase.url ? '✓ Configured' : '✗ Missing')
+  console.error('   Service Role Key:', config.supabase.serviceRoleKey ? '✓ Configured' : '✗ Missing')
+  console.error('\n   Please check your environment variables and Supabase configuration.')
+  process.exit(1)
 }
 
 // Supabase JWT verification middleware
