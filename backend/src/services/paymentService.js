@@ -1,5 +1,6 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { createClient } = require('@supabase/supabase-js');
+const ws = require('ws');
 const logger = require('../utils/logger');
 const { ApiResponse } = require('../middleware/apiResponse');
 
@@ -11,6 +12,9 @@ const supabase = createClient(
     auth: {
       autoRefreshToken: false,
       persistSession: false
+    },
+    realtime: {
+      transport: ws
     }
   }
 );

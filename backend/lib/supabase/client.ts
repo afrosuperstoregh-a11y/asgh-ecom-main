@@ -20,10 +20,14 @@ export function getSupabaseClient() {
       auth: {
         persistSession: false,
         autoRefreshToken: false
+      },
+      realtime: {
+        transport: ws
       }
     })
   }
   return supabaseClient
 }
 
+export { getSupabaseClient as supabase }
 export { getSupabaseClient as supabase }

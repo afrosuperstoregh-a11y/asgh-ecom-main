@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import ws from 'ws'
 import { Database } from '../../types/database'
 
 // Singleton Supabase client for server-side operations
@@ -17,6 +18,9 @@ export function getSupabaseServer() {
       auth: {
         autoRefreshToken: false,
         persistSession: false
+      },
+      realtime: {
+        transport: ws
       }
     })
   }

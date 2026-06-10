@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+const ws = require('ws')
 const config = require('../config/env')
 const { ApiResponse } = require('./apiResponse')
 
@@ -16,6 +17,9 @@ try {
     auth: {
       autoRefreshToken: false,
       persistSession: false
+    },
+    realtime: {
+      transport: ws
     }
   })
   console.log('✅ Supabase client initialized successfully')
