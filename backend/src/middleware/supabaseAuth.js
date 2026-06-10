@@ -21,9 +21,13 @@ try {
   console.log('✅ Supabase client initialized successfully')
 } catch (error) {
   console.error('❌ Failed to initialize Supabase client:')
+  console.error('   File: supabaseAuth.js')
+  console.error('   Line: 15')
   console.error('   Error:', error.message)
+  console.error('   Stack:', error.stack)
   console.error('   Supabase URL:', config.supabase.url ? '✓ Configured' : '✗ Missing')
   console.error('   Service Role Key:', config.supabase.serviceRoleKey ? '✓ Configured' : '✗ Missing')
+  console.error('   Supabase SDK Version: @supabase/supabase-js@^2.105.3')
   console.error('\n   Please check your environment variables and Supabase configuration.')
   process.exit(1)
 }
