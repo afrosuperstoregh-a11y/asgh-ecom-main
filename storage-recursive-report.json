@@ -1,0 +1,800 @@
+{
+  "product-images": {
+    "files": [
+      {
+        "name": "1774742870936-8jwkj7hb1n9.png",
+        "size": 3521707,
+        "contentType": "unknown",
+        "path": "1774742870936-8jwkj7hb1n9.png"
+      },
+      {
+        "name": "1774913373433-n36khi0lutl.png",
+        "size": 3549480,
+        "contentType": "unknown",
+        "path": "1774913373433-n36khi0lutl.png"
+      },
+      {
+        "name": "1777578114838-n3rclh17ntk.jpg",
+        "size": 68416,
+        "contentType": "unknown",
+        "path": "1777578114838-n3rclh17ntk.jpg"
+      },
+      {
+        "name": "1777923471735-77nmfd1oowt.jpg",
+        "size": 150965,
+        "contentType": "unknown",
+        "path": "1777923471735-77nmfd1oowt.jpg"
+      },
+      {
+        "name": "h&bproduct1.jpg",
+        "size": 525365,
+        "contentType": "unknown",
+        "path": "beauty&health/h&bproduct1.jpg"
+      },
+      {
+        "name": "h&bproduct2.jpg",
+        "size": 136009,
+        "contentType": "unknown",
+        "path": "beauty&health/h&bproduct2.jpg"
+      },
+      {
+        "name": "h&bproduct3.jpg",
+        "size": 525365,
+        "contentType": "unknown",
+        "path": "beauty&health/h&bproduct3.jpg"
+      },
+      {
+        "name": "b&mproduct1.jpg",
+        "size": 525365,
+        "contentType": "unknown",
+        "path": "books&media/b&mproduct1.jpg"
+      },
+      {
+        "name": "b&mproduct2.jpg",
+        "size": 136009,
+        "contentType": "unknown",
+        "path": "books&media/b&mproduct2.jpg"
+      },
+      {
+        "name": "b&mproduct3.jpg",
+        "size": 525365,
+        "contentType": "unknown",
+        "path": "books&media/b&mproduct3.jpg"
+      },
+      {
+        "name": "dell-latitude-e5440-1.jpg",
+        "size": 525365,
+        "contentType": "unknown",
+        "path": "electronics/dell-latitude-e5440-1.jpg"
+      },
+      {
+        "name": "dell-latitude-e5440-2.jpg",
+        "size": 265645,
+        "contentType": "unknown",
+        "path": "electronics/dell-latitude-e5440-2.jpg"
+      },
+      {
+        "name": "dell-lattitude-1.jpg",
+        "size": 437999,
+        "contentType": "unknown",
+        "path": "electronics/dell-lattitude-1.jpg"
+      },
+      {
+        "name": "dell-lattitude-2.jpg",
+        "size": 293839,
+        "contentType": "unknown",
+        "path": "electronics/dell-lattitude-2.jpg"
+      },
+      {
+        "name": "dell-lattitude-3.jpg",
+        "size": 309988,
+        "contentType": "unknown",
+        "path": "electronics/dell-lattitude-3.jpg"
+      },
+      {
+        "name": "dell-lattitude-4.jpg",
+        "size": 392988,
+        "contentType": "unknown",
+        "path": "electronics/dell-lattitude-4.jpg"
+      },
+      {
+        "name": "dell-lattitude-e5510-1.jpg",
+        "size": 447032,
+        "contentType": "unknown",
+        "path": "electronics/dell-lattitude-e5510-1.jpg"
+      },
+      {
+        "name": "dell-lattitude-e5510-2.jpg",
+        "size": 163832,
+        "contentType": "unknown",
+        "path": "electronics/dell-lattitude-e5510-2.jpg"
+      },
+      {
+        "name": "dell-lattitude-e5510-3.jpg",
+        "size": 274858,
+        "contentType": "unknown",
+        "path": "electronics/dell-lattitude-e5510-3.jpg"
+      },
+      {
+        "name": "dell-lattitude-i3-1.jpg",
+        "size": 451525,
+        "contentType": "unknown",
+        "path": "electronics/dell-lattitude-i3-1.jpg"
+      },
+      {
+        "name": "dell-lattitude-i3-2.jpg",
+        "size": 292483,
+        "contentType": "unknown",
+        "path": "electronics/dell-lattitude-i3-2.jpg"
+      },
+      {
+        "name": "dell-lattitude-i3-3.jpg",
+        "size": 206645,
+        "contentType": "unknown",
+        "path": "electronics/dell-lattitude-i3-3.jpg"
+      },
+      {
+        "name": "dell-lattitude-i7-1.jpg",
+        "size": 358041,
+        "contentType": "unknown",
+        "path": "electronics/dell-lattitude-i7-1.jpg"
+      },
+      {
+        "name": "dell-lattitude-i7-2.jpg",
+        "size": 354988,
+        "contentType": "unknown",
+        "path": "electronics/dell-lattitude-i7-2.jpg"
+      },
+      {
+        "name": "dell-lattitude-i7-3.jpg",
+        "size": 383434,
+        "contentType": "unknown",
+        "path": "electronics/dell-lattitude-i7-3.jpg"
+      },
+      {
+        "name": "dell-lattitude-i7-4.jpg",
+        "size": 414695,
+        "contentType": "unknown",
+        "path": "electronics/dell-lattitude-i7-4.jpg"
+      },
+      {
+        "name": "dell-vostro-i3-1.jpg",
+        "size": 257658,
+        "contentType": "unknown",
+        "path": "electronics/dell-vostro-i3-1.jpg"
+      },
+      {
+        "name": "dell-vostro-i3-2.jpg",
+        "size": 302964,
+        "contentType": "unknown",
+        "path": "electronics/dell-vostro-i3-2.jpg"
+      },
+      {
+        "name": "dell-vostro-i3-3.jpg",
+        "size": 253075,
+        "contentType": "unknown",
+        "path": "electronics/dell-vostro-i3-3.jpg"
+      },
+      {
+        "name": "dell-vostro-i3-4.jpg",
+        "size": 264135,
+        "contentType": "unknown",
+        "path": "electronics/dell-vostro-i3-4.jpg"
+      },
+      {
+        "name": "dell-vostro-i3-5.jpg",
+        "size": 311164,
+        "contentType": "unknown",
+        "path": "electronics/dell-vostro-i3-5.jpg"
+      },
+      {
+        "name": "dell-vostro-i3-6.jpg",
+        "size": 325788,
+        "contentType": "unknown",
+        "path": "electronics/dell-vostro-i3-6.jpg"
+      },
+      {
+        "name": "hp-elitebook-i5-1.jpg",
+        "size": 136009,
+        "contentType": "unknown",
+        "path": "electronics/hp-elitebook-i5-1.jpg"
+      },
+      {
+        "name": "hp-elitebook-i5-2.jpg",
+        "size": 361942,
+        "contentType": "unknown",
+        "path": "electronics/hp-elitebook-i5-2.jpg"
+      },
+      {
+        "name": "hp-elitebook-i7-1.jpg",
+        "size": 136009,
+        "contentType": "unknown",
+        "path": "electronics/hp-elitebook-i7-1.jpg"
+      },
+      {
+        "name": "hp-elitebook-i7-2.jpg",
+        "size": 361942,
+        "contentType": "unknown",
+        "path": "electronics/hp-elitebook-i7-2.jpg"
+      },
+      {
+        "name": "lenovo-thinkpad-i5-1.jpg",
+        "size": 328848,
+        "contentType": "unknown",
+        "path": "electronics/lenovo-thinkpad-i5-1.jpg"
+      },
+      {
+        "name": "lenovo-thinkpad-i5-2.jpg",
+        "size": 295886,
+        "contentType": "unknown",
+        "path": "electronics/lenovo-thinkpad-i5-2.jpg"
+      },
+      {
+        "name": "lenovo-thinkpad-i7-1.jpg",
+        "size": 327242,
+        "contentType": "unknown",
+        "path": "electronics/lenovo-thinkpad-i7-1.jpg"
+      },
+      {
+        "name": "lenovo-thinkpad-i7-2.jpg",
+        "size": 328105,
+        "contentType": "unknown",
+        "path": "electronics/lenovo-thinkpad-i7-2.jpg"
+      },
+      {
+        "name": "lenovo-thinkpad-i7-3.jpg",
+        "size": 286054,
+        "contentType": "unknown",
+        "path": "electronics/lenovo-thinkpad-i7-3.jpg"
+      },
+      {
+        "name": "all-ghanaian-foods-party-orders-1.jpg",
+        "size": 322217,
+        "contentType": "unknown",
+        "path": "food&beverages/all-ghanaian-foods-party-orders-1.jpg"
+      },
+      {
+        "name": "all-ghanaian-foods-party-orders-2.jpg",
+        "size": 252828,
+        "contentType": "unknown",
+        "path": "food&beverages/all-ghanaian-foods-party-orders-2.jpg"
+      },
+      {
+        "name": "all-ghanaian-foods-party-orders-3.jpg",
+        "size": 277731,
+        "contentType": "unknown",
+        "path": "food&beverages/all-ghanaian-foods-party-orders-3.jpg"
+      },
+      {
+        "name": "banku&okro-stew-with-meat-1.jpg",
+        "size": 227849,
+        "contentType": "unknown",
+        "path": "food&beverages/banku&okro-stew-with-meat-1.jpg"
+      },
+      {
+        "name": "banku&okro-stew-with-meat-2.jpg",
+        "size": 298347,
+        "contentType": "unknown",
+        "path": "food&beverages/banku&okro-stew-with-meat-2.jpg"
+      },
+      {
+        "name": "banku&okro-stew-with-meat-3.jpg",
+        "size": 217927,
+        "contentType": "unknown",
+        "path": "food&beverages/banku&okro-stew-with-meat-3.jpg"
+      },
+      {
+        "name": "banku&okro-stew-with-meat-4.jpg",
+        "size": 283300,
+        "contentType": "unknown",
+        "path": "food&beverages/banku&okro-stew-with-meat-4.jpg"
+      },
+      {
+        "name": "banku-flour.jpg",
+        "size": 44056,
+        "contentType": "unknown",
+        "path": "food&beverages/banku-flour.jpg"
+      },
+      {
+        "name": "banku-mix.png",
+        "size": 532535,
+        "contentType": "unknown",
+        "path": "food&beverages/banku-mix.png"
+      },
+      {
+        "name": "banku-with-tilapia-1.jpg",
+        "size": 275886,
+        "contentType": "unknown",
+        "path": "food&beverages/banku-with-tilapia-1.jpg"
+      },
+      {
+        "name": "banku-with-tilapia-2.jpg",
+        "size": 273199,
+        "contentType": "unknown",
+        "path": "food&beverages/banku-with-tilapia-2.jpg"
+      },
+      {
+        "name": "banku-with-tilapia-3.jpg",
+        "size": 329517,
+        "contentType": "unknown",
+        "path": "food&beverages/banku-with-tilapia-3.jpg"
+      },
+      {
+        "name": "banku-with-tilapia-4.jpg",
+        "size": 275485,
+        "contentType": "unknown",
+        "path": "food&beverages/banku-with-tilapia-4.jpg"
+      },
+      {
+        "name": "barbeque.png",
+        "size": 637391,
+        "contentType": "unknown",
+        "path": "food&beverages/barbeque.png"
+      },
+      {
+        "name": "beans-stew-with-platain-1.jpg",
+        "size": 314686,
+        "contentType": "unknown",
+        "path": "food&beverages/beans-stew-with-platain-1.jpg"
+      },
+      {
+        "name": "beans-stew-with-platain-2.jpg",
+        "size": 252658,
+        "contentType": "unknown",
+        "path": "food&beverages/beans-stew-with-platain-2.jpg"
+      },
+      {
+        "name": "beans-stew-with-platain-3.jpg",
+        "size": 338515,
+        "contentType": "unknown",
+        "path": "food&beverages/beans-stew-with-platain-3.jpg"
+      },
+      {
+        "name": "cabbage-stew.png",
+        "size": 546190,
+        "contentType": "unknown",
+        "path": "food&beverages/cabbage-stew.png"
+      },
+      {
+        "name": "chicken-wings-ghanaian-style-2.jpg",
+        "size": 313645,
+        "contentType": "unknown",
+        "path": "food&beverages/chicken-wings-ghanaian-style-2.jpg"
+      },
+      {
+        "name": "chicken-wings-ghanaian-style.jpg",
+        "size": 289658,
+        "contentType": "unknown",
+        "path": "food&beverages/chicken-wings-ghanaian-style.jpg"
+      },
+      {
+        "name": "chicken.png",
+        "size": 630837,
+        "contentType": "unknown",
+        "path": "food&beverages/chicken.png"
+      },
+      {
+        "name": "different-stew-party-orders-1.jpg",
+        "size": 310765,
+        "contentType": "unknown",
+        "path": "food&beverages/different-stew-party-orders-1.jpg"
+      },
+      {
+        "name": "different-stew-party-orders-2.jpg",
+        "size": 286512,
+        "contentType": "unknown",
+        "path": "food&beverages/different-stew-party-orders-2.jpg"
+      },
+      {
+        "name": "different-stew-party-orders-3.jpg",
+        "size": 246269,
+        "contentType": "unknown",
+        "path": "food&beverages/different-stew-party-orders-3.jpg"
+      },
+      {
+        "name": "different-stew-party-orders-4.jpg",
+        "size": 283130,
+        "contentType": "unknown",
+        "path": "food&beverages/different-stew-party-orders-4.jpg"
+      },
+      {
+        "name": "fried-fish-2.jpg",
+        "size": 256836,
+        "contentType": "unknown",
+        "path": "food&beverages/fried-fish-2.jpg"
+      },
+      {
+        "name": "fried-fish.jpg",
+        "size": 235103,
+        "contentType": "unknown",
+        "path": "food&beverages/fried-fish.jpg"
+      },
+      {
+        "name": "fried-rice-and-chicken.jpg",
+        "size": 353988,
+        "contentType": "unknown",
+        "path": "food&beverages/fried-rice-and-chicken.jpg"
+      },
+      {
+        "name": "fried-rice-with-chicken-combo-2.jpg",
+        "size": 205246,
+        "contentType": "unknown",
+        "path": "food&beverages/fried-rice-with-chicken-combo-2.jpg"
+      },
+      {
+        "name": "fried-rice-with-chicken-combo-3.jpg",
+        "size": 243602,
+        "contentType": "unknown",
+        "path": "food&beverages/fried-rice-with-chicken-combo-3.jpg"
+      },
+      {
+        "name": "fried-rice-with-chicken-combo-4.jpg",
+        "size": 224348,
+        "contentType": "unknown",
+        "path": "food&beverages/fried-rice-with-chicken-combo-4.jpg"
+      },
+      {
+        "name": "fried-rice-with-chicken-combo.jpg",
+        "size": 241469,
+        "contentType": "unknown",
+        "path": "food&beverages/fried-rice-with-chicken-combo.jpg"
+      },
+      {
+        "name": "ghana-nkulenu-plam-sauce.jpeg",
+        "size": 36875,
+        "contentType": "unknown",
+        "path": "food&beverages/ghana-nkulenu-plam-sauce.jpeg"
+      },
+      {
+        "name": "jollof-combo.jpg",
+        "size": 260198,
+        "contentType": "unknown",
+        "path": "food&beverages/jollof-combo.jpg"
+      },
+      {
+        "name": "jollof-rice.jpg",
+        "size": 473144,
+        "contentType": "unknown",
+        "path": "food&beverages/jollof-rice.jpg"
+      },
+      {
+        "name": "jolof-rice,-plaintain-vegetables-&-chicken.png",
+        "size": 595262,
+        "contentType": "unknown",
+        "path": "food&beverages/jolof-rice,-plaintain-vegetables-&-chicken.png"
+      },
+      {
+        "name": "kenkey.jpg",
+        "size": 32642,
+        "contentType": "unknown",
+        "path": "food&beverages/kenkey.jpg"
+      },
+      {
+        "name": "khebab-1.jpg",
+        "size": 205302,
+        "contentType": "unknown",
+        "path": "food&beverages/khebab-1.jpg"
+      },
+      {
+        "name": "khebab-2.jpg",
+        "size": 254116,
+        "contentType": "unknown",
+        "path": "food&beverages/khebab-2.jpg"
+      },
+      {
+        "name": "kontomire-stew.jpg",
+        "size": 276845,
+        "contentType": "unknown",
+        "path": "food&beverages/kontomire-stew.jpg"
+      },
+      {
+        "name": "meat-pie.png",
+        "size": 300110,
+        "contentType": "unknown",
+        "path": "food&beverages/meat-pie.png"
+      },
+      {
+        "name": "neat-fufu.png",
+        "size": 330969,
+        "contentType": "unknown",
+        "path": "food&beverages/neat-fufu.png"
+      },
+      {
+        "name": "nigerian-egusi-stew.jpg",
+        "size": 459910,
+        "contentType": "unknown",
+        "path": "food&beverages/nigerian-egusi-stew.jpg"
+      },
+      {
+        "name": "palm-oil.jpg",
+        "size": 19856,
+        "contentType": "unknown",
+        "path": "food&beverages/palm-oil.jpg"
+      },
+      {
+        "name": "pasta.png",
+        "size": 662910,
+        "contentType": "unknown",
+        "path": "food&beverages/pasta.png"
+      },
+      {
+        "name": "rice-with-green-pea.png",
+        "size": 650391,
+        "contentType": "unknown",
+        "path": "food&beverages/rice-with-green-pea.png"
+      },
+      {
+        "name": "sierra-leone-food.jpg",
+        "size": 264818,
+        "contentType": "unknown",
+        "path": "food&beverages/sierra-leone-food.jpg"
+      },
+      {
+        "name": "spaghetti.jpg",
+        "size": 449174,
+        "contentType": "unknown",
+        "path": "food&beverages/spaghetti.jpg"
+      },
+      {
+        "name": "stew.jpg",
+        "size": 359838,
+        "contentType": "unknown",
+        "path": "food&beverages/stew.jpg"
+      },
+      {
+        "name": "tuozafi-2.jpg",
+        "size": 263930,
+        "contentType": "unknown",
+        "path": "food&beverages/tuozafi-2.jpg"
+      },
+      {
+        "name": "tuozafi.jpg",
+        "size": 244177,
+        "contentType": "unknown",
+        "path": "food&beverages/tuozafi.jpg"
+      },
+      {
+        "name": "vegetables&bake-beans.png",
+        "size": 536078,
+        "contentType": "unknown",
+        "path": "food&beverages/vegetables&bake-beans.png"
+      },
+      {
+        "name": "waakye-with-fish-combo-1.jpg",
+        "size": 285138,
+        "contentType": "unknown",
+        "path": "food&beverages/waakye-with-fish-combo-1.jpg"
+      },
+      {
+        "name": "waakye-with-fish-combo-2.jpg",
+        "size": 262308,
+        "contentType": "unknown",
+        "path": "food&beverages/waakye-with-fish-combo-2.jpg"
+      },
+      {
+        "name": "waakye.png",
+        "size": 611368,
+        "contentType": "unknown",
+        "path": "food&beverages/waakye.png"
+      },
+      {
+        "name": "h&lproduct1.jpg",
+        "size": 525365,
+        "contentType": "unknown",
+        "path": "home&living/h&lproduct1.jpg"
+      },
+      {
+        "name": "h&lproduct2.jpg",
+        "size": 136009,
+        "contentType": "unknown",
+        "path": "home&living/h&lproduct2.jpg"
+      },
+      {
+        "name": "h&lproduct3.jpg",
+        "size": 525365,
+        "contentType": "unknown",
+        "path": "home&living/h&lproduct3.jpg"
+      },
+      {
+        "name": "j&aproduct1.jpg",
+        "size": 525365,
+        "contentType": "unknown",
+        "path": "jewelry&accessories/j&aproduct1.jpg"
+      },
+      {
+        "name": "j&aproduct2.jpg",
+        "size": 136009,
+        "contentType": "unknown",
+        "path": "jewelry&accessories/j&aproduct2.jpg"
+      },
+      {
+        "name": "j&aproduct3.jpg",
+        "size": 525365,
+        "contentType": "unknown",
+        "path": "jewelry&accessories/j&aproduct3.jpg"
+      },
+      {
+        "name": "dashiki-shirt-1.jpeg",
+        "size": 71985,
+        "contentType": "unknown",
+        "path": "men-fashion/dashiki-shirt-1.jpeg"
+      },
+      {
+        "name": "dashiki-shirt-2.jpeg",
+        "size": 78807,
+        "contentType": "unknown",
+        "path": "men-fashion/dashiki-shirt-2.jpeg"
+      },
+      {
+        "name": "dashiki-shirt-3.jpeg",
+        "size": 1267787,
+        "contentType": "unknown",
+        "path": "men-fashion/dashiki-shirt-3.jpeg"
+      },
+      {
+        "name": "dashiki-shirt-4.jpeg",
+        "size": 127069,
+        "contentType": "unknown",
+        "path": "men-fashion/dashiki-shirt-4.jpeg"
+      },
+      {
+        "name": "s&fproduct1.jpg",
+        "size": 525365,
+        "contentType": "unknown",
+        "path": "sport&fitness/s&fproduct1.jpg"
+      },
+      {
+        "name": "s&fproduct2.jpg",
+        "size": 136009,
+        "contentType": "unknown",
+        "path": "sport&fitness/s&fproduct2.jpg"
+      },
+      {
+        "name": "s&fproduct3.jpg",
+        "size": 525365,
+        "contentType": "unknown",
+        "path": "sport&fitness/s&fproduct3.jpg"
+      },
+      {
+        "name": "calculator.jpg",
+        "size": 30663,
+        "contentType": "unknown",
+        "path": "stationery/calculator.jpg"
+      },
+      {
+        "name": "desk-organizer.jpg",
+        "size": 50729,
+        "contentType": "unknown",
+        "path": "stationery/desk-organizer.jpg"
+      },
+      {
+        "name": "gel-pens.jpg",
+        "size": 12971,
+        "contentType": "unknown",
+        "path": "stationery/gel-pens.jpg"
+      },
+      {
+        "name": "notebook-set.jpg",
+        "size": 16918,
+        "contentType": "unknown",
+        "path": "stationery/notebook-set.jpg"
+      },
+      {
+        "name": "sticky-notes.jpg",
+        "size": 12226,
+        "contentType": "unknown",
+        "path": "stationery/sticky-notes.jpg"
+      },
+      {
+        "name": "dashiki-ladies1.jpg",
+        "size": 656772,
+        "contentType": "unknown",
+        "path": "womem-fashion/dashiki-ladies1.jpg"
+      },
+      {
+        "name": "dashiki-ladies2.jpg",
+        "size": 53270,
+        "contentType": "unknown",
+        "path": "womem-fashion/dashiki-ladies2.jpg"
+      }
+    ],
+    "folders": [
+      "beauty&health",
+      "books&media",
+      "electronics",
+      "food&beverages",
+      "home&living",
+      "jewelry&accessories",
+      "men-fashion",
+      "sport&fitness",
+      "stationery",
+      "womem-fashion"
+    ]
+  },
+  "products": {
+    "files": [
+      {
+        "name": "placeholder-product.svg",
+        "size": 690,
+        "contentType": "unknown",
+        "path": "placeholder-product.svg"
+      }
+    ],
+    "folders": []
+  },
+  "category-images": {
+    "files": [
+      {
+        "name": "accessories.jpg",
+        "size": 539051,
+        "contentType": "unknown",
+        "path": "accessories.jpg"
+      },
+      {
+        "name": "beauty.png",
+        "size": 264921,
+        "contentType": "unknown",
+        "path": "beauty.png"
+      },
+      {
+        "name": "books.png",
+        "size": 468870,
+        "contentType": "unknown",
+        "path": "books.png"
+      },
+      {
+        "name": "clothing.jpg",
+        "size": 396226,
+        "contentType": "unknown",
+        "path": "clothing.jpg"
+      },
+      {
+        "name": "electronics.png",
+        "size": 443169,
+        "contentType": "unknown",
+        "path": "electronics.png"
+      },
+      {
+        "name": "food.png",
+        "size": 503079,
+        "contentType": "unknown",
+        "path": "food.png"
+      },
+      {
+        "name": "home-decor.jpg",
+        "size": 310502,
+        "contentType": "unknown",
+        "path": "home-decor.jpg"
+      },
+      {
+        "name": "Jewelry.png",
+        "size": 539051,
+        "contentType": "unknown",
+        "path": "Jewelry.png"
+      },
+      {
+        "name": "men.png",
+        "size": 485362,
+        "contentType": "unknown",
+        "path": "men.png"
+      },
+      {
+        "name": "sports.png",
+        "size": 324887,
+        "contentType": "unknown",
+        "path": "sports.png"
+      },
+      {
+        "name": "women.png",
+        "size": 396226,
+        "contentType": "unknown",
+        "path": "women.png"
+      }
+    ],
+    "folders": []
+  },
+  "user-avatars": {
+    "files": [],
+    "folders": []
+  }
+}

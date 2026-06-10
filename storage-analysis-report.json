@@ -1,0 +1,164 @@
+{
+  "timestamp": "2026-06-10T20:02:07.012Z",
+  "storage": {
+    "product-images": {
+      "files": [
+        {
+          "name": "1774742870936-8jwkj7hb1n9.png",
+          "size": 3521707,
+          "contentType": "unknown"
+        },
+        {
+          "name": "1774913373433-n36khi0lutl.png",
+          "size": 3549480,
+          "contentType": "unknown"
+        },
+        {
+          "name": "1777578114838-n3rclh17ntk.jpg",
+          "size": 68416,
+          "contentType": "unknown"
+        },
+        {
+          "name": "1777923471735-77nmfd1oowt.jpg",
+          "size": 150965,
+          "contentType": "unknown"
+        },
+        {
+          "name": "beauty&health",
+          "size": 0,
+          "contentType": "unknown"
+        },
+        {
+          "name": "books&media",
+          "size": 0,
+          "contentType": "unknown"
+        },
+        {
+          "name": "electronics",
+          "size": 0,
+          "contentType": "unknown"
+        },
+        {
+          "name": "food&beverages",
+          "size": 0,
+          "contentType": "unknown"
+        },
+        {
+          "name": "home&living",
+          "size": 0,
+          "contentType": "unknown"
+        },
+        {
+          "name": "jewelry&accessories",
+          "size": 0,
+          "contentType": "unknown"
+        },
+        {
+          "name": "men-fashion",
+          "size": 0,
+          "contentType": "unknown"
+        },
+        {
+          "name": "sport&fitness",
+          "size": 0,
+          "contentType": "unknown"
+        },
+        {
+          "name": "stationery",
+          "size": 0,
+          "contentType": "unknown"
+        },
+        {
+          "name": "womem-fashion",
+          "size": 0,
+          "contentType": "unknown"
+        }
+      ],
+      "folders": {}
+    },
+    "products": {
+      "files": [
+        {
+          "name": "placeholder-product.svg",
+          "size": 690,
+          "contentType": "unknown"
+        }
+      ],
+      "folders": {}
+    },
+    "category-images": {
+      "files": [
+        {
+          "name": "accessories.jpg",
+          "size": 539051,
+          "contentType": "unknown"
+        },
+        {
+          "name": "beauty.png",
+          "size": 264921,
+          "contentType": "unknown"
+        },
+        {
+          "name": "books.png",
+          "size": 468870,
+          "contentType": "unknown"
+        },
+        {
+          "name": "clothing.jpg",
+          "size": 396226,
+          "contentType": "unknown"
+        },
+        {
+          "name": "electronics.png",
+          "size": 443169,
+          "contentType": "unknown"
+        },
+        {
+          "name": "food.png",
+          "size": 503079,
+          "contentType": "unknown"
+        },
+        {
+          "name": "home-decor.jpg",
+          "size": 310502,
+          "contentType": "unknown"
+        },
+        {
+          "name": "Jewelry.png",
+          "size": 539051,
+          "contentType": "unknown"
+        },
+        {
+          "name": "men.png",
+          "size": 485362,
+          "contentType": "unknown"
+        },
+        {
+          "name": "sports.png",
+          "size": 324887,
+          "contentType": "unknown"
+        },
+        {
+          "name": "women.png",
+          "size": 396226,
+          "contentType": "unknown"
+        }
+      ],
+      "folders": {}
+    },
+    "user-avatars": {
+      "files": [],
+      "folders": {}
+    }
+  },
+  "database": {
+    "categories": 12,
+    "products": 120,
+    "productImages": 0
+  },
+  "summary": {
+    "totalStorageFiles": 26,
+    "productsWithoutImages": 0,
+    "gap": 26
+  }
+}

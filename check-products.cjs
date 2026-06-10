@@ -11,7 +11,7 @@ async function checkProducts() {
     
     const { data, error } = await supabase
       .from('products')
-      .select('id, name, image_url, images')
+      .select('id, name, images')
       .limit(20);
     
     if (error) {
@@ -23,15 +23,13 @@ async function checkProducts() {
     
     let productsWithImages = 0;
     data.forEach(product => {
-      if (product.image_url || (product.images && product.images.length > 0)) {
+      if (product.images && product.images.length > 0) {
         productsWithImages++;
         console.log(`✅ ${product.name}:`);
-        if (product.image_url) {
-          console.log(`   Main image: ${product.image_url}`);
-        }
-        if (product.images && product.images.length > 0) {
-          console.log(`   Images array: ${product.images.join(', ')}`);
-        }
+        console.log(`   Images: ${product.images.length} images`);
+        product.images.forEach((img, idx) => {
+          console.log(`     ${idx + 1}. ${img}`);
+        });
       } else {
         console.log(`❌ ${product.name}: No images`);
       }
