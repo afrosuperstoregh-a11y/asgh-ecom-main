@@ -57,17 +57,19 @@ function normalizeImagePath(path: string): string {
 /**
  * Encodes path components for URL safety
  * Preserves special characters like & that are valid in Supabase Storage paths
+ * BUT properly encodes [ and ] characters which cause 400 errors in Next.js Image optimization
  */
 function encodePathComponents(path: string): string {
   return path.split('/').map(segment => {
     // Encode only unsafe characters, preserve & and other valid characters
+    // DO NOT preserve [ and ] - they cause 400 errors in Next.js Image optimization
     return encodeURIComponent(segment)
       .replace(/%26/g, '&')  // Preserve &
       .replace(/%2F/g, '/')  // Preserve /
       .replace(/%3F/g, '?')  // Preserve ?
-      .replace(/%23/g, '#')  // Preserve #
-      .replace(/%5B/g, '[')  // Preserve [
-      .replace(/%5D/g, ']'); // Preserve ]
+      .replace(/%23/g, '#'); // Preserve #
+      // Removed: .replace(/%5B/g, '[') and .replace(/%5D/g, ']')
+      // These characters must remain encoded to avoid 400 errors
   }).join('/');
 }
 
