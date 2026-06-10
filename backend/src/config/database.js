@@ -7,8 +7,18 @@ const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL
 
 let pool = null;
 if (connectionString) {
+  // Force IPv4 by modifying connection string if needed
+  let modifiedConnectionString = connectionString;
+
+  // If connection string contains a hostname (not IP), add family hint
+  if (!connectionString.match(/\/\d+\.\d+\.\d+\.\d+/) && !connectionString.includes('family=')) {
+    // Add family parameter to force IPv4
+    const separator = connectionString.includes('?') ? '&' : '?';
+    modifiedConnectionString = `${connectionString}${separator}family=4`;
+  }
+
   pool = new Pool({
-    connectionString,
+    connectionString: modifiedConnectionString,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     family: 4, // Force IPv4 to prevent IPv6 connection issues
     connectionTimeoutMillis: 10000, // 10 second timeout

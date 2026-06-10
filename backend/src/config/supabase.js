@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const ws = require('ws');
 
 // Singleton Supabase client for server-side operations
 let supabaseServer = null;
@@ -16,6 +17,9 @@ function getSupabaseServer() {
       auth: {
         autoRefreshToken: false,
         persistSession: false
+      },
+      realtime: {
+        transport: ws
       }
     });
   }
