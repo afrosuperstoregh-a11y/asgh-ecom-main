@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
-import ws from 'ws'
 import { Database } from '../../types/database'
+const ws = require('ws')
 
 // Singleton Supabase client for server-side operations
 let supabaseServer: ReturnType<typeof createClient<Database>> | null = null

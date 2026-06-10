@@ -110,6 +110,19 @@ const requiredEnvVars = [
   { name: 'NODE_ENV', minLength: 3 },
 ];
 
+// Validate database connection strings (at least one required)
+const hasDatabaseUrl = process.env.DATABASE_URL && process.env.DATABASE_URL.length > 10;
+const hasSupabaseDbUrl = process.env.SUPABASE_DB_URL && process.env.SUPABASE_DB_URL.length > 10;
+
+if (!hasDatabaseUrl && !hasSupabaseDbUrl) {
+  console.error('❌ Environment Configuration Error:');
+  console.error('Missing required database connection string');
+  console.error('Either DATABASE_URL or SUPABASE_DB_URL must be set');
+  console.error('\nPlease set one of these environment variables before starting the server.');
+  console.error('See backend/.env.example for required variables.');
+  process.exit(1);
+}
+
 const missingEnvVars = [];
 const invalidEnvVars = [];
 
@@ -124,20 +137,30 @@ requiredEnvVars.forEach(({ name, minLength }) => {
 
 if (missingEnvVars.length > 0 || invalidEnvVars.length > 0) {
   console.error('❌ Environment Configuration Error:');
-  
+
   if (missingEnvVars.length > 0) {
     console.error('Missing required environment variables:', missingEnvVars.join(', '));
   }
-  
+
   if (invalidEnvVars.length > 0) {
     console.error('Invalid environment variables:', invalidEnvVars.join(', '));
   }
-  
+
   console.error('\nPlease set these environment variables before starting the server.');
   console.error('See backend/.env.example for required variables.');
-  
+
   // Always fail on missing/invalid env vars - no fallbacks for security
   process.exit(1);
 }
+
+// Validate Supabase URL format
+if (process.env.SUPABASE_URL && !process.env.SUPABASE_URL.startsWith('https://')) {
+  console.error('❌ Environment Configuration Error:');
+  console.error('SUPABASE_URL must start with https://');
+  console.error('Current value:', process.env.SUPABASE_URL);
+  process.exit(1);
+}
+
+console.log('✅ Environment variables validated');
 
 module.exports = config;

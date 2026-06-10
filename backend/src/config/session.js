@@ -7,17 +7,17 @@ let redisClient;
 let sessionStore;
 
 try {
-  // Only initialize Redis if REDIS_URL is provided
+  // Redis is optional - only initialize if REDIS_URL is provided
   if (!process.env.REDIS_URL) {
-    console.log('ℹ️  REDIS_URL not configured - using MemoryStore for sessions');
+    console.log('⚠️  Redis disabled - using MemoryStore for sessions');
   } else {
     redisClient = createClient({
       url: process.env.REDIS_URL,
       socket: {
         reconnectStrategy: (retries) => {
-          if (retries > 10) {
-            console.error('❌ Redis reconnection failed after 10 retries');
-            return new Error('Redis reconnection failed');
+          if (retries > 3) {
+            console.error('❌ Redis reconnection failed after 3 retries - using MemoryStore');
+            return false; // Stop reconnecting
           }
           return Math.min(retries * 100, 3000);
         }
@@ -25,34 +25,41 @@ try {
     });
 
     redisClient.on('error', (err) => {
-      console.error('❌ Redis Client Error:', err);
+      // Silently handle Redis errors - it's optional
+      console.error('Redis client error:', err.message);
     });
 
     redisClient.on('connect', () => {
       console.log('✅ Redis client connected');
     });
 
-    // Only connect in production or if REDIS_ENABLED is true and REDIS_URL is set
-    if (process.env.NODE_ENV === 'production' || process.env.REDIS_ENABLED === 'true') {
+    // Only connect if explicitly enabled
+    if (process.env.REDIS_ENABLED === 'true') {
       redisClient.connect().catch(err => {
-        console.error('❌ Failed to connect to Redis:', err);
-        console.warn('⚠️  Falling back to MemoryStore (not recommended for production)');
+        console.error('❌ Failed to connect to Redis:', err.message);
+        console.warn('⚠️  Falling back to MemoryStore');
+        redisClient = null;
+        sessionStore = null;
       });
-    }
 
-    // Create Redis store if Redis is available
-    if (process.env.NODE_ENV === 'production' || process.env.REDIS_ENABLED === 'true') {
-      sessionStore = new RedisStore({
-        client: redisClient,
-        prefix: 'asca:sess:',
-        ttl: parseInt(process.env.SESSION_MAX_AGE) || 24 * 60 * 60, // 24 hours in seconds
-      });
-      console.log('✅ Redis session store configured');
+      // Create Redis store if connection succeeds
+      if (redisClient) {
+        sessionStore = new RedisStore({
+          client: redisClient,
+          prefix: 'asca:sess:',
+          ttl: parseInt(process.env.SESSION_MAX_AGE) || 24 * 60 * 60, // 24 hours in seconds
+        });
+        console.log('✅ Redis session store configured');
+      }
+    } else {
+      console.log('⚠️  Redis disabled by REDIS_ENABLED flag - using MemoryStore');
     }
   }
 } catch (error) {
-  console.error('❌ Failed to initialize Redis:', error);
-  console.warn('⚠️  Falling back to MemoryStore (not recommended for production)');
+  console.error('❌ Failed to initialize Redis:', error.message);
+  console.warn('⚠️  Falling back to MemoryStore');
+  redisClient = null;
+  sessionStore = null;
 }
 
 const sessionConfig = {
@@ -189,5 +196,6 @@ module.exports = {
   sessionMiddleware: createSessionMiddleware(),
   sessionConfig,
   sessionHelpers,
+  redisClient,
 };
 

@@ -329,47 +329,59 @@ const server = app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Afro Superstore Backend API running on port ${PORT}`);
   console.log(`📊 Health check available at /api/health`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  
-  // Initialize database tables if direct PostgreSQL connection is available
-  const { pool } = require('./config/database');
-  const { createAuditLogTable } = require('./middleware/auditLog');
-  const { createSettingsTable, initializeDefaultSettings } = require('./routes/settings');
-  
-  if (pool) {
-    try {
-      await createAuditLogTable();
-      await createSettingsTable();
-      await initializeDefaultSettings();
-    } catch (error) {
-      console.error('❌ Error initializing database tables:', error);
-    }
-  } else {
-    console.log('ℹ️  Direct PostgreSQL connection not available - skipping table initialization');
-  }
-  
-  // Test Supabase connection
+
+  // Test Supabase connection (critical - must succeed)
   try {
     const dbConnected = await testConnection();
     if (dbConnected) {
-      console.log('🔐 Supabase connection established');
+      console.log('✓ Supabase connected');
     } else {
-      console.log('❌ Supabase connection failed');
+      console.error('❌ Supabase connection failed - server may not function correctly');
     }
   } catch (error) {
     console.error('❌ Supabase connection test error:', error.message);
   }
-  
-  // Test Redis connection
+
+  // Test Redis connection (optional - failure is acceptable)
   try {
     const redisConnected = await testRedisConnection();
     if (redisConnected) {
-      console.log('🔥 Redis connection established');
+      console.log('✓ Redis connected');
     } else {
-      console.log('❌ Redis connection failed - caching disabled');
+      console.log('⚠ Redis disabled - using MemoryStore');
     }
   } catch (error) {
-    console.error('❌ Redis connection test error:', error.message);
+    console.log('⚠ Redis disabled - using MemoryStore');
   }
+
+  // Initialize database tables if direct PostgreSQL connection is available
+  const { pool } = require('./config/database');
+  const { createAuditLogTable } = require('./middleware/auditLog');
+  const { createSettingsTable, initializeDefaultSettings } = require('./routes/settings');
+
+  if (pool) {
+    try {
+      await createAuditLogTable();
+    } catch (error) {
+      console.warn('⚠ Audit log table initialization skipped:', error.message);
+    }
+
+    try {
+      await createSettingsTable();
+    } catch (error) {
+      console.warn('⚠ Settings table initialization skipped:', error.message);
+    }
+
+    try {
+      await initializeDefaultSettings();
+    } catch (error) {
+      console.warn('⚠ Default settings initialization skipped:', error.message);
+    }
+  } else {
+    console.log('⚠ Direct PostgreSQL connection not available - skipping table initialization');
+  }
+
+  console.log('✓ Server startup complete');
 });
 
 // Handle server errors

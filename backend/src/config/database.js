@@ -10,7 +10,9 @@ if (connectionString) {
   pool = new Pool({
     connectionString,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    family: 4 // Force IPv4
+    family: 4, // Force IPv4 to prevent IPv6 connection issues
+    connectionTimeoutMillis: 10000, // 10 second timeout
+    idleTimeoutMillis: 30000, // 30 second idle timeout
   });
 }
 
@@ -26,8 +28,13 @@ async function testConnection() {
     client.release();
     return true;
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
-    console.error('   Ensure DATABASE_URL or SUPABASE_DB_URL is set correctly');
+    console.error('❌ Database connection failed:', error.message);
+    if (error.code === 'ENETUNREACH') {
+      console.error('   Network unreachable - check DATABASE_URL/SUPABASE_DB_URL format');
+      console.error('   Ensure IPv4 is being used (family: 4)');
+    } else if (error.code === 'ECONNREFUSED') {
+      console.error('   Connection refused - check host and port in connection string');
+    }
     return false;
   }
 }

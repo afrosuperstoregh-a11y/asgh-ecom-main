@@ -7,8 +7,11 @@ const path = require('path')
 
 // Import production configurations
 const { testSupabaseConnection } = require('../lib/supabase/server')
-const cacheService = require('../lib/cache/redis')
+const getCacheService = require('../lib/cache/redis')
 const { globalErrorHandler, notFoundHandler } = require('../middleware/errorHandler')
+
+// Cache service is optional
+const cacheService = getCacheService()
 
 // Import API routes
 const productsRouter = require('../api/products')
@@ -68,8 +71,8 @@ app.use(express.urlencoded({
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
   const supabaseStatus = await testSupabaseConnection()
-  const redisStatus = await cacheService.testConnection()
-  
+  const redisStatus = cacheService ? await cacheService.testConnection() : false
+
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -77,7 +80,7 @@ app.get('/api/health', async (req, res) => {
     version: '2.0.0',
     services: {
       supabase: supabaseStatus ? 'connected' : 'disconnected',
-      redis: redisStatus ? 'connected' : 'disconnected'
+      redis: redisStatus ? 'connected' : 'disabled'
     }
   })
 })
@@ -108,21 +111,28 @@ app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Afro Superstore Production API running on port ${PORT}`)
   console.log(`📊 Health check available at /api/health`)
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
-  
-  // Test connections
+
+  // Test Supabase connection (critical)
   const supabaseConnected = await testSupabaseConnection()
   if (supabaseConnected) {
-    console.log('🔐 Supabase connection established')
+    console.log('✓ Supabase connected')
   } else {
-    console.log('❌ Supabase connection failed')
+    console.error('❌ Supabase connection failed')
   }
-  
-  const redisConnected = await cacheService.testConnection()
-  if (redisConnected) {
-    console.log('🔥 Redis connection established')
+
+  // Test Redis connection (optional)
+  if (cacheService) {
+    const redisConnected = await cacheService.testConnection()
+    if (redisConnected) {
+      console.log('✓ Redis connected')
+    } else {
+      console.log('⚠ Redis disabled - caching unavailable')
+    }
   } else {
-    console.log('❌ Redis connection failed - caching disabled')
+    console.log('⚠ Redis disabled - caching unavailable')
   }
+
+  console.log('✓ Server startup complete')
 })
 
 module.exports = app

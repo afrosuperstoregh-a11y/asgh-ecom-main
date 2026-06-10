@@ -3,11 +3,14 @@ import Redis from 'ioredis'
 // Redis client singleton
 let redisClient: Redis | null = null
 
-export function getRedisClient(): Redis {
+export function getRedisClient(): Redis | null {
+  // Redis is optional - only connect if REDIS_URL is provided
+  if (!process.env.REDIS_URL) {
+    return null
+  }
+
   if (!redisClient) {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
-    
-    redisClient = new Redis(redisUrl, {
+    redisClient = new Redis(process.env.REDIS_URL, {
       maxRetriesPerRequest: 3,
       lazyConnect: true,
       connectTimeout: 10000,
@@ -15,6 +18,7 @@ export function getRedisClient(): Redis {
     })
 
     redisClient.on('error', (err) => {
+      // Silently handle Redis errors - it's optional
       console.error('Redis connection error:', err)
     })
 
@@ -31,7 +35,11 @@ export class CacheService {
   private redis: Redis
 
   constructor() {
-    this.redis = getRedisClient()
+    const client = getRedisClient()
+    if (!client) {
+      throw new Error('Redis is not configured')
+    }
+    this.redis = client
   }
 
   // Get cached data
@@ -119,4 +127,13 @@ export const CACHE_PATTERNS = {
   ALL: '*'
 }
 
-export default new CacheService()
+// Export factory function instead of default instance
+export function getCacheService(): CacheService | null {
+  try {
+    return new CacheService()
+  } catch (error) {
+    return null
+  }
+}
+
+export default getCacheService()

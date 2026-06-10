@@ -8,15 +8,15 @@ class RedisClient {
   }
 
   connect() {
-    if (!this.isEnabled) {
-      console.log('ℹ️ Redis is disabled');
+    // Redis is optional - only connect if REDIS_URL is provided
+    if (!process.env.REDIS_URL) {
+      console.log('⚠️  Redis disabled (REDIS_URL not set)');
+      this.isEnabled = false;
       return null;
     }
 
-    // Require REDIS_URL or individual Redis config
-    if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
-      console.log('ℹ️ Redis configuration not provided - Redis disabled');
-      this.isEnabled = false;
+    if (!this.isEnabled) {
+      console.log('⚠️  Redis disabled (REDIS_ENABLED=false)');
       return null;
     }
 
@@ -41,12 +41,12 @@ class RedisClient {
       });
 
       this.client.on('error', (err) => {
-        console.error('❌ Redis connection error:', err);
+        // Silently handle Redis errors - it's optional
+        console.error('Redis connection error:', err.message);
         this.isConnected = false;
       });
 
       this.client.on('close', () => {
-        console.log('🔌 Redis connection closed');
         this.isConnected = false;
       });
 
@@ -56,27 +56,31 @@ class RedisClient {
 
       return this.client;
     } catch (error) {
-      console.error('❌ Failed to initialize Redis:', error);
+      console.error('❌ Failed to initialize Redis:', error.message);
       return null;
     }
   }
 
   async testConnection() {
-    if (!this.isEnabled) {
-      console.log('ℹ️ Redis is disabled, skipping connection test');
-      return true;
+    if (!this.isEnabled || !process.env.REDIS_URL) {
+      console.log('⚠️  Redis disabled - skipping connection test');
+      return false; // Return false to indicate Redis is not available
     }
 
     try {
       if (!this.client) {
         this.client = this.connect();
       }
-      
+
+      if (!this.client) {
+        return false;
+      }
+
       await this.client.ping();
       console.log('✅ Redis connection test successful');
       return true;
     } catch (error) {
-      console.error('❌ Redis connection test failed:', error);
+      console.error('❌ Redis connection test failed:', error.message);
       return false;
     }
   }

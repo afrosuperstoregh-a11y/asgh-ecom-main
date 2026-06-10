@@ -591,3 +591,5 @@ router.put('/', authenticateToken, requireAdmin, auditLog('BULK_UPDATE', 'settin
 });
 
 module.exports = router;
+module.exports.createSettingsTable = createSettingsTable;
+module.exports.initializeDefaultSettings = initializeDefaultSettings;
