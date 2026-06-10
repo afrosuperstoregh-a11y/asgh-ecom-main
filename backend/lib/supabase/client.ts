@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+const ws = require('ws')
 
 // Singleton Supabase client for backend operations
 let supabaseClient: ReturnType<typeof createClient> | null = null
@@ -29,5 +30,4 @@ export function getSupabaseClient() {
   return supabaseClient
 }
 
-export { getSupabaseClient as supabase }
 export { getSupabaseClient as supabase }
