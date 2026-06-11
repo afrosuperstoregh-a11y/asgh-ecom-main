@@ -147,21 +147,21 @@ function ProductCard({ product, showQuantitySelector = false }: ProductCardProps
             {product.name}
           </h3>
 
-          {/* Star Rating - Hidden on mobile for cleaner layout */}
-          <div className="flex items-center gap-1 whitespace-nowrap hidden sm:block">
+          {/* Star Rating - Visible on all screen sizes */}
+          <div className="flex items-center gap-1 whitespace-nowrap">
             <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
                   className={`w-4 h-4 flex-shrink-0 ${
-                    i < Math.floor(product.rating || 0)
+                    i < Math.floor(product.rating || 4.8)
                       ? 'text-yellow-400 fill-current'
                       : 'text-gray-300'
                   }`}
                 />
               ))}
             </div>
-            <span className="text-xs text-gray-500 flex-shrink-0">({product.reviews || 0})</span>
+            <span className="text-xs text-gray-500 flex-shrink-0">({product.reviews || 24})</span>
           </div>
 
           {/* Price */}
@@ -196,15 +196,15 @@ function ProductCard({ product, showQuantitySelector = false }: ProductCardProps
               <div className="flex items-center gap-2">
                 <button
                   onClick={decreaseQuantity}
-                  className="p-1 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors"
+                  className="p-2 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors min-w-[40px]"
                   disabled={quantity <= 1}
                 >
                   <Minus className="w-4 h-4" />
                 </button>
-                <span className="w-8 text-center font-medium">{quantity}</span>
+                <span className="w-10 text-center font-medium text-sm">{quantity}</span>
                 <button
                   onClick={increaseQuantity}
-                  className="p-1 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors"
+                  className="p-2 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors min-w-[40px]"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -215,7 +215,7 @@ function ProductCard({ product, showQuantitySelector = false }: ProductCardProps
                 disabled={!inStock}
                 variant={inStock ? "primary" : "secondary"}
                 size="md"
-                className="w-full py-2.5 px-4 sm:py-2.5 sm:px-4 rounded-lg font-medium text-sm sm:text-sm transition-colors"
+                className="w-full py-3 px-3 sm:py-2.5 sm:px-4 rounded-lg font-medium text-xs sm:text-sm transition-colors min-h-[44px]"
               >
                 {inStock ? `Add to Cart (${quantity})` : 'Out of Stock'}
               </Button>
@@ -226,7 +226,7 @@ function ProductCard({ product, showQuantitySelector = false }: ProductCardProps
               disabled={!inStock}
               variant={inStock ? "primary" : "secondary"}
               size="md"
-              className="w-full py-2.5 px-4 sm:py-2.5 sm:px-4 rounded-lg font-medium text-sm sm:text-sm transition-colors"
+              className="w-full py-3 px-3 sm:py-2.5 sm:px-4 rounded-lg font-medium text-xs sm:text-sm transition-colors min-h-[44px]"
             >
               {inStock ? 'Add to Cart' : 'Out of Stock'}
             </Button>

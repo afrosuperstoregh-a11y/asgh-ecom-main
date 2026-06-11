@@ -50,7 +50,7 @@ export default function Header() {
           <nav className="hidden lg:block">
             <ul className="flex items-center space-x-8">
               <li><Link href="/products" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">Shop</Link></li>
-              <li><Link href="/food-beverages" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">Auto Parts</Link></li>
+              <li><Link href="/auto-parts" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">Auto Parts</Link></li>
               <li><Link href="/categories" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">Categories</Link></li>
               <li><Link href="/deals" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">Deals</Link></li>
               <li><Link href="/about" className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">About</Link></li>
@@ -151,7 +151,7 @@ export default function Header() {
               </form>
               
               <Link href="/products" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>Shop</Link>
-              <Link href="/food-beverages" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>Auto Parts</Link>
+              <Link href="/auto-parts" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>Auto Parts</Link>
               <Link href="/categories" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>Categories</Link>
               <Link href="/deals" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>Deals</Link>
               <Link href="/about" className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all duration-200 touch-target" onClick={() => setIsMenuOpen(false)}>About</Link>

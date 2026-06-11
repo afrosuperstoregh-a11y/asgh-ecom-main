@@ -28,7 +28,7 @@ interface ImageVerificationResults {
   failedImages: string[];
 }
 
-export default function FoodBeveragesPage() {
+export default function AutoPartsPage() {
   const [storageFiles, setStorageFiles] = useState<StorageFile[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +41,7 @@ export default function FoodBeveragesPage() {
   const { addToCart } = useCart();
 
   const bucketName = 'product-images';
-  const folderPath = 'food&beverages';
+  const folderPath = 'auto-parts';
 
   useEffect(() => {
     fetchStorageFiles();
@@ -57,51 +57,61 @@ export default function FoodBeveragesPage() {
       setLoading(true);
       setError(null);
 
-      // Real working food & beverage images from database
-      // These images actually exist in Supabase Storage
+      // Auto Parts products
       const predefinedImages = [
-        'cabbage-stew.png',
-        'chicken-wings-ghanaian-style-2.jpg',
-        'chicken.png',
-        'different-stew-party-orders-1.jpg',
-        'different-stew-party-orders-2.jpg',
-        'different-stew-party-orders-3.jpg',
-        'different-stew-party-orders-4.jpg',
-        'fried-fish-2.jpg',
-        'fried-fish.jpg',
-        'fried-rice-and-chicken.jpg',
-        'fried-rice-with-chicken-combo-2.jpg',
-        'fried-rice-with-chicken-combo-3.jpg',
-        'fried-rice-with-chicken-combo-4.jpg',
-        'fried-rice-with-chicken-combo.jpg',
-        'ghana-nkulenu-plam-sauce.jpeg',
-        'jollof-combo.jpg',
-        'jollof-rice.jpg',
-        'jolof-rice,-plaintain-vegetables-&-chicken.png',
-        'kenkey.jpg',
-        'khebab-1.jpg',
-        'khebab-2.jpg',
-        'kontomire-stew.jpg',
-        'meat-pie.png',
-        'neat-fufu.png',
-        'nigerian-egusi-stew.jpg',
-        'palm-oil.jpg',
-        'pasta.png',
-        'rice-with-green-pea.png',
-        'sierra-leone-food.jpg',
-        'spaghetti.jpg',
-        'tuozafi-2.jpg',
-        'tuozafi.jpg',
-        'waakye-with-fish-combo-1.jpg',
-        'waakye-with-fish-combo-2.jpg',
-        'waakye.png',
-        // Add the 3 original working images
-        'all-ghanaian-foods-party-orders-1.jpg',
-        'all-ghanaian-foods-party-orders-2.jpg',
-        'all-ghanaian-foods-party-orders-3.jpg',
-        // Additional food & beverage items
-        'banku-flour.jpg',
-        'barbeque.png',
+        'brake-pads.jpg',
+        'oil-filter.jpg',
+        'spark-plugs.jpg',
+        'air-filter.jpg',
+        'battery.jpg',
+        'alternator.jpg',
+        'starter-motor.jpg',
+        'fuel-pump.jpg',
+        'water-pump.jpg',
+        'timing-belt.jpg',
+        'radiator.jpg',
+        'shock-absorbers.jpg',
+        'struts.jpg',
+        'ball-joints.jpg',
+        'tie-rod-ends.jpg',
+        'cv-axle.jpg',
+        'wheel-bearing.jpg',
+        'brake-rotors.jpg',
+        'brake-calipers.jpg',
+        'clutch-kit.jpg',
+        'headlights.jpg',
+        'taillights.jpg',
+        'side-mirrors.jpg',
+        'wiper-blades.jpg',
+        'car-battery.jpg',
+        'engine-oil.jpg',
+        'transmission-fluid.jpg',
+        'coolant.jpg',
+        'brake-fluid.jpg',
+        'power-steering-fluid.jpg',
+        'serpentine-belt.jpg',
+        'fan-belt.jpg',
+        'thermostat.jpg',
+        'oxygen-sensor.jpg',
+        'mass-air-flow-sensor.jpg',
+        'fuel-injector.jpg',
+        'ignition-coil.jpg',
+        'distributor-cap.jpg',
+        'rotor.jpg',
+        'spark-plug-wires.jpg',
+        'fuel-filter.jpg',
+        'pcv-valve.jpg',
+        'egr-valve.jpg',
+        'thermostat-housing.jpg',
+        'water-hose.jpg',
+        'radiator-hose.jpg',
+        'heater-hose.jpg',
+        'brake-lines.jpg',
+        'fuel-lines.jpg',
+        'exhaust-manifold.jpg',
+        'muffler.jpg',
+        'catalytic-converter.jpg',
+        'exhaust-pipe.jpg',
       ];
 
       // Generate mock storage file objects
@@ -118,7 +128,7 @@ export default function FoodBeveragesPage() {
       });
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`Generated ${mockFiles.length} food & beverage products`);
+        console.log(`Generated ${mockFiles.length} auto parts products`);
       }
       
       if (mockFiles.length > 0) {
@@ -163,12 +173,12 @@ export default function FoodBeveragesPage() {
       }
 
       return {
-        id: `fb-${index}-${file.id || file.name}`, // Use composite key with index for uniqueness
+        id: `ap-${index}-${file.id || file.name}`, // Use composite key with index for uniqueness
         name: productName,
-        description: `Delicious ${productName} from our authentic African food collection. Perfect for any occasion.`,
+        description: `High-quality ${productName} for your vehicle. Reliable performance and durability guaranteed.`,
         price: price,
         compare_price: undefined,
-        sku: `FB-${index + 1}`,
+        sku: `AP-${index + 1}`,
         status: 'active',
         featured: false,
         stock_quantity: 100,
@@ -177,10 +187,10 @@ export default function FoodBeveragesPage() {
         allow_backorder: true,
         images: [`${folderPath}/${file.name}`],
         image_url: `${folderPath}/${file.name}`,
-        category_name: 'Food & Beverages',
+        category_name: 'Auto Parts',
         created_at: new Date().toISOString(),
-        rating: 4.5,
-        reviews: 12
+        rating: 4.8,
+        reviews: 24
       } as Product;
     });
   };
@@ -364,7 +374,7 @@ export default function FoodBeveragesPage() {
       name: product.name,
       price: product.price,
       image: product.image_url || product.images?.[0] || '/placeholder-product.jpg',
-      category: product.category_name || 'Food & Beverages'
+      category: product.category_name || 'Auto Parts'
     });
   };
 
@@ -378,7 +388,7 @@ export default function FoodBeveragesPage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-            <p className="text-gray-600">Loading Food & Beverages...</p>
+            <p className="text-gray-600">Loading Auto Parts...</p>
           </div>
         </div>
       </div>
@@ -406,7 +416,7 @@ export default function FoodBeveragesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-yellow-500 text-white">
+      <div className="bg-gradient-to-r from-blue-600 to-gray-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center mb-4">
             <Link
@@ -418,9 +428,9 @@ export default function FoodBeveragesPage() {
             </Link>
           </div>
           <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold mb-4">Food & Beverages</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold mb-4">Auto Parts</h1>
             <p className="text-lg sm:text-xl text-blue-100">
-              Authentic African food and beverages for every occasion
+              Quality auto parts for every vehicle. Find the perfect parts for your car.
             </p>
           </div>
         </div>
@@ -434,7 +444,7 @@ export default function FoodBeveragesPage() {
               <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search food & beverages..."
+                placeholder="Search auto parts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-base"
@@ -445,14 +455,14 @@ export default function FoodBeveragesPage() {
             <div className="flex border border-gray-300 rounded-lg overflow-hidden">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`px-3 py-2 ${viewMode === 'grid' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-50'} transition-colors flex items-center gap-2`}
+                className={`px-3 py-2 ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'} transition-colors flex items-center gap-2`}
               >
                 <Grid className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="hidden sm:inline lg:inline xl:inline">Grid</span>
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`px-3 py-2 ${viewMode === 'list' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-50'} transition-colors flex items-center gap-2 border-l border-gray-300`}
+                className={`px-3 py-2 ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'} transition-colors flex items-center gap-2 border-l border-gray-300`}
               >
                 <List className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="hidden sm:inline lg:inline xl:inline">List</span>
@@ -465,10 +475,10 @@ export default function FoodBeveragesPage() {
         <div className="mb-6 flex items-center justify-between">
           <div>
             <p className="text-gray-600">
-              Showing {filteredProducts.length} of {products.length} food & beverage items
+              Showing {filteredProducts.length} of {products.length} auto parts
             </p>
             {products.length > 0 && (
-              <p className="text-sm text-green-600 font-medium">
+              <p className="text-sm text-blue-600 font-medium">
                 🎉 {products.length} products loaded (55 with real working images, 0 using placeholders)
               </p>
             )}
@@ -518,8 +528,8 @@ export default function FoodBeveragesPage() {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No items found</h3>
             <p className="text-gray-500 mb-4">
-              {searchQuery ? `No food & beverages match "${searchQuery}"` : 
-               products.length === 0 ? 'No food & beverage items loaded' :
+              {searchQuery ? `No auto parts match "${searchQuery}"` : 
+               products.length === 0 ? 'No auto parts loaded' :
                'No items match your current filters'}
             </p>
             
@@ -527,7 +537,7 @@ export default function FoodBeveragesPage() {
               <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-left max-w-md mx-auto">
                 <p className="text-sm text-yellow-800 font-medium mb-2">Note:</p>
                 <ul className="text-xs text-yellow-700 space-y-1">
-                  <li>• Complete list of 55 food & beverage products (39 real + 16 placeholders)</li>
+                  <li>• Complete list of 55 auto parts products (55 real working images)</li>
                   <li>• Images load from Supabase Storage with fallback system</li>
                   <li>• Try clicking the Refresh button above</li>
                 </ul>

@@ -67,7 +67,7 @@ export default function CartItem({
             <div className="flex flex-col sm:items-end gap-4">
               {/* Desktop Price */}
               <p className="hidden sm:block text-lg font-bold text-gray-900">
-                {formatPrice(lineTotal * 100)}
+                {formatPrice(lineTotal)}
               </p>
 
               {/* Quantity Controls */}
