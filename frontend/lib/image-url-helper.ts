@@ -44,13 +44,16 @@ function normalizeImagePath(imagePath: string | null | undefined): string {
 }
 
 /**
- * Encodes path components for URL safety while preserving special characters
+ * Encodes path components for URL safety
+ * Properly encodes all special characters including & to prevent 400 errors
  */
 function encodePathComponents(path: string): string {
   return path.split('/').map(segment => {
+    // Encode all special characters - do NOT decode %26 back to &
+    // This prevents browsers from interpreting & as query parameter separator
     return encodeURIComponent(segment)
-      .replace(/%26/g, '&')  // Preserve &
-      .replace(/%2F/g, '/'); // Preserve /
+      .replace(/%2F/g, '/'); // Preserve / (path separator)
+      // Removed: .replace(/%26/g, '&') - this was causing 400 errors
   }).join('/');
 }
 

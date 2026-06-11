@@ -1,0 +1,112 @@
+{
+  "statistics": {
+    "total": 12,
+    "withPlaceholders": 0,
+    "withEmptyImages": 0,
+    "withValidImages": 12,
+    "withInvalidImages": 0,
+    "inactive": 0,
+    "active": 12
+  },
+  "placeholderProducts": [],
+  "emptyImageProducts": [],
+  "validImageProducts": [
+    {
+      "id": 1,
+      "name": "Traditional Dashiki Shirt",
+      "images": [
+        "https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/books&stationeries/holy_bible_KJV2.jpg"
+      ],
+      "status": "active"
+    },
+    {
+      "id": 11,
+      "name": "African Basket Set",
+      "images": [
+        "https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/books&stationeries/rubber_bands(ties)2.jpg"
+      ],
+      "status": "active"
+    },
+    {
+      "id": 12,
+      "name": "Tribal Mask Wall Art",
+      "images": [
+        "https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/books&stationeries/A5_dairy2.jpg"
+      ],
+      "status": "active"
+    },
+    {
+      "id": 15,
+      "name": "African Painting",
+      "images": [
+        "https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/books&stationeries/board_duster4.jpg"
+      ],
+      "status": "active"
+    },
+    {
+      "id": 8,
+      "name": "African Head Wrap",
+      "images": [
+        "https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/books&stationeries/a5_brown_envelopes3.jpg"
+      ],
+      "status": "active"
+    },
+    {
+      "id": 17,
+      "name": "African Coffee Blend",
+      "images": [
+        "https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/books&stationeries/new_elite_colour_pencil_12_in_a_pack2.jpg"
+      ],
+      "status": "active"
+    },
+    {
+      "id": 19,
+      "name": "African Honey",
+      "images": [
+        "https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/books&stationeries/sharpener&eraser3.jpg"
+      ],
+      "status": "active"
+    },
+    {
+      "id": 18,
+      "name": "Traditional African Spices",
+      "images": [
+        "https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/books&stationeries/jojo_waterproof_glossy_photo_paper3.jpg"
+      ],
+      "status": "active"
+    },
+    {
+      "id": 23,
+      "name": "SAMPLE",
+      "images": [
+        "https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/books&stationeries/scissors1.jpg"
+      ],
+      "status": "active"
+    },
+    {
+      "id": 2,
+      "name": "Kente Cloth Wrap",
+      "images": [
+        "https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/books&stationeries/jojo_waterproof_glossy_photo_paper3.jpg"
+      ],
+      "status": "active"
+    },
+    {
+      "id": 7,
+      "name": "Maasai Beaded Bracelet",
+      "images": [
+        "https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/books&stationeries/sticky_notes1.jpg"
+      ],
+      "status": "active"
+    },
+    {
+      "id": 3,
+      "name": "Ankara Print Dress",
+      "images": [
+        "https://lljxxaejmueoxsaqaowf.supabase.co/storage/v1/object/public/product-images/books&stationeries/monAmi_poster_colours2.jpg"
+      ],
+      "status": "active"
+    }
+  ],
+  "invalidImageProducts": []
+}

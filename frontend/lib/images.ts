@@ -89,7 +89,11 @@ export function getProductImageUrl(
     console.warn('[IMAGES] NEXT_PUBLIC_SUPABASE_URL is not configured, using fallback');
     return fallback;
   }
-  return sharedGetProductImageUrl(SUPABASE_URL, imagePath, fallback);
+  const result = sharedGetProductImageUrl(SUPABASE_URL, imagePath, fallback);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[IMAGES] getProductImageUrl:', { imagePath, result });
+  }
+  return result;
 }
 
 /**

@@ -3,6 +3,11 @@
  * Used in API routes and server components
  */
 
+import {
+  encodePathComponents,
+  normalizeImagePath,
+} from '@shared/lib/url-encoding';
+
 // Bucket names
 export const BUCKETS = {
   PRODUCTS: 'product-images',
@@ -20,6 +25,7 @@ export const FALLBACK_IMAGES = {
   GENERIC: '/placeholder-product.svg',
 } as const;
 
+
 /**
  * Validates if a string is a valid image path
  */
@@ -27,55 +33,7 @@ function isValidImagePath(path: unknown): path is string {
   return typeof path === 'string' && path.trim().length > 0;
 }
 
-/**
- * Cleans and normalizes image paths
- */
-function normalizeImagePath(path: string): string {
-  let cleanPath = path.trim();
-  
-  // Remove leading slash
-  if (cleanPath.startsWith('/')) {
-    cleanPath = cleanPath.slice(1);
-  }
-  
-  // Remove bucket prefix if it exists (to avoid duplication)
-  Object.values(BUCKETS).forEach(bucket => {
-    const prefix = `${bucket}/`;
-    if (cleanPath.startsWith(prefix)) {
-      cleanPath = cleanPath.slice(prefix.length);
-    }
-  });
-  
-  // Remove 'storage/v1/object/public/' prefix if it exists
-  if (cleanPath.includes('storage/v1/object/public/')) {
-    cleanPath = cleanPath.split('storage/v1/object/public/').pop() || cleanPath;
-  }
-  
-  return cleanPath;
-}
 
-/**
- * Encodes path components for URL safety
- * Preserves special characters like & that are valid in Supabase Storage paths
- * BUT properly encodes [ and ] characters which cause 400 errors in Next.js Image optimization
- */
-function encodePathComponents(path: string): string {
-  return path.split('/').map(segment => {
-    // Encode only unsafe characters, preserve & and other valid characters
-    // DO NOT preserve [ and ] - they cause 400 errors in Next.js Image optimization
-    return encodeURIComponent(segment)
-      .replace(/%26/g, '&')  // Preserve &
-      .replace(/%2F/g, '/')  // Preserve /
-      .replace(/%3F/g, '?')  // Preserve ?
-      .replace(/%23/g, '#'); // Preserve #
-      // Removed: .replace(/%5B/g, '[') and .replace(/%5D/g, ']')
-      // These characters must remain encoded to avoid 400 errors
-  }).join('/');
-}
-
-/**
- * Constructs a full Supabase Storage public URL (server-side)
- */
 export function constructSupabaseUrl(supabaseUrl: string, bucket: string, path: string): string {
   if (!supabaseUrl) {
     return FALLBACK_IMAGES.GENERIC;

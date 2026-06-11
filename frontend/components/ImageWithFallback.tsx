@@ -40,6 +40,15 @@ export default function ImageWithFallback({
 
   const handleError = () => {
     if (!imageError) {
+      // Log image failure for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[ImageWithFallback] Image load failed', {
+          src: imageSrc,
+          alt,
+          fallback,
+        });
+      }
+      
       setImageError(true);
       setImageSrc(fallback);
     }

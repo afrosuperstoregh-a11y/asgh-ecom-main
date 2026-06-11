@@ -26,6 +26,22 @@ function ProductCard({ product, showQuantitySelector = false }: ProductCardProps
   const hasDiscount = product.compare_price && product.compare_price > product.price;
   const inStock = product.inventory_quantity > 0 || product.allow_backorder;
 
+  const imageUrl = getSafeImageUrl(getProductImageUrl(product.image_url || product.image_urls?.[0] || product.images?.[0] || product.image), '/placeholder-product.svg');
+
+  const handleImageError = () => {
+    if (!imageError) {
+      // Log image failure for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[ProductCard] Image load failed', {
+          productId: product.id,
+          productName: product.name,
+          imageUrl,
+        });
+      }
+      setImageError(true);
+    }
+  };
+
   const increaseQuantity = () => {
     setQuantity(prev => prev + 1);
   };
@@ -70,13 +86,13 @@ function ProductCard({ product, showQuantitySelector = false }: ProductCardProps
       {/* Product Image */}
       <div className="relative flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-xl w-full aspect-[4/3] sm:aspect-[16/9]">
         <Image
-          src={imageError ? '/placeholder-product.svg' : getSafeImageUrl(getProductImageUrl(product.image_url || product.image_urls?.[0] || product.images?.[0] || product.image), '/placeholder-product.svg')}
+          src={imageError ? '/placeholder-product.svg' : imageUrl}
           alt={product.name}
           fill
           className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105 rounded-t-xl"
           {...PRODUCT_CARD_IMAGE_PROPS}
           priority={false}
-          onError={() => setImageError(true)}
+          onError={handleImageError}
           sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
         />
         

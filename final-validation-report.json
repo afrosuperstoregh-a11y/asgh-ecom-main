@@ -1,0 +1,21 @@
+{
+  "imagesFound": 318,
+  "productsCreated": 318,
+  "productsUpdated": 0,
+  "missingImages": 0,
+  "brokenUrls": 0,
+  "http400Errors": 0,
+  "http404Errors": 0,
+  "frontendVisibleProducts": 318,
+  "statistics": {
+    "totalProducts": 318,
+    "activeProducts": 318,
+    "withImages": 318,
+    "withPlaceholderImages": 0,
+    "withSupabaseImages": 318,
+    "withInvalidImages": 0,
+    "withEmptyImages": 0
+  },
+  "placeholderProducts": [],
+  "invalidImageProducts": []
+}
