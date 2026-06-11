@@ -60,6 +60,13 @@ function slugify(text) {
     .replace(/\-\-+/g, '-');
 }
 
+function encodeStoragePath(path) {
+  // Split the path into parts and encode each part separately
+  const parts = path.split('/');
+  const encodedParts = parts.map(part => encodeURIComponent(part));
+  return encodedParts.join('/');
+}
+
 function generateSKU(name) {
   const prefix = name.substring(0, 3).toUpperCase();
   const random = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -218,7 +225,11 @@ async function createProductImage(productId, imagePath, isPrimary = false) {
       if (fetchError) throw fetchError;
       
       const currentImages = product.images || [];
-      const imageUrl = `${supabaseUrl}/storage/v1/object/public/${BUCKET_NAME}/${imagePath}`;
+      // Use Supabase's getPublicUrl to handle encoding correctly
+      const { data: { publicUrl } } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(imagePath);
+      const imageUrl = publicUrl;
       
       if (!currentImages.includes(imageUrl)) {
         if (DRY_RUN) {
@@ -245,7 +256,11 @@ async function createProductImage(productId, imagePath, isPrimary = false) {
     }
     
     // Check if image already exists
-    const imageUrl = `${supabaseUrl}/storage/v1/object/public/${BUCKET_NAME}/${imagePath}`;
+    // Use Supabase's getPublicUrl to handle encoding correctly
+    const { data: { publicUrl } } = supabase.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(imagePath);
+    const imageUrl = publicUrl;
     const { data: existingImage, error: findError } = await supabase
       .from('product_images')
       .select('*')
