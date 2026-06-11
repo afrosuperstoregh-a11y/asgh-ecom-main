@@ -20,6 +20,7 @@
     "test-category-generation": "npx ts-node scripts/test-category-generation.ts"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "concurrently": "^8.2.2",
