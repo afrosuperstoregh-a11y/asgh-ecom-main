@@ -45,7 +45,16 @@ export function getProductImageUrl(image: string | undefined | null, fallback: s
       }
       
       // Encode special characters in path (especially & in folder names)
-      const encodedPath = cleanPath.split('/').map(encodeURIComponent).join('/');
+      // DO NOT preserve [ and ] - they cause 400 errors in Next.js Image optimization
+      const encodedPath = cleanPath.split('/').map(segment => {
+        return encodeURIComponent(segment)
+          .replace(/%26/g, '&')  // Preserve &
+          .replace(/%2F/g, '/')  // Preserve /
+          .replace(/%3F/g, '?')  // Preserve ?
+          .replace(/%23/g, '#'); // Preserve #
+          // Removed: .replace(/%5B/g, '[') and .replace(/%5D/g, ']')
+          // These characters must remain encoded to avoid 400 errors
+      }).join('/');
       
       return `${supabaseUrl}/storage/v1/object/public/product-images/${encodedPath}`;
     } else {
